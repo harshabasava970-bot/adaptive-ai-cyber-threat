@@ -52,31 +52,67 @@ class URLRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Request body for suspicious login behaviour detection."""
-    hour_of_day:          int   = Field(..., ge=0,  le=23)
-    day_of_week:          int   = Field(..., ge=0,  le=6)
-    login_duration:       float = Field(..., ge=0)
-    failed_attempts:      int   = Field(..., ge=0)
-    ip_country_mismatch:  int   = Field(..., ge=0,  le=1)
-    new_device:           int   = Field(..., ge=0,  le=1)
-    new_location:         int   = Field(..., ge=0,  le=1)
-    typing_speed_anomaly: float = Field(..., ge=0.0, le=1.0)
-    session_duration:     float = Field(..., ge=0)
-    concurrent_sessions:  int   = Field(..., ge=1)
+    """Human-readable login behaviour request.
+
+    Users provide realistic cybersecurity context — not raw ML features.
+    Internal conversion to anomaly indicators happens in the detector.
+    """
+    username:          str   = Field(default="unknown_user", description="Username or user ID")
+    country:           str   = Field(default="IN", description="Login origin country code")
+    hour_of_day:       int   = Field(..., ge=0,  le=23, description="Hour of login (0-23)")
+    day_of_week:       int   = Field(..., ge=0,  le=6,  description="Day of week (0=Monday)")
+    failed_attempts:   int   = Field(default=0, ge=0,   description="Failed attempts before success")
+    known_device:      int   = Field(default=1, ge=0, le=1, description="1=Known device, 0=Unknown")
+    vpn_enabled:       int   = Field(default=0, ge=0, le=1, description="1=VPN detected, 0=No VPN")
+    new_location:      int   = Field(default=0, ge=0, le=1, description="1=New location, 0=Known location")
+    is_business_hours: int   = Field(default=1, ge=0, le=1, description="1=Business hours, 0=Outside")
+    # Derived internally — kept for API compatibility
+    login_duration:       float = Field(default=120.0, ge=0)
+    ip_country_mismatch:  int   = Field(default=0, ge=0, le=1)
+    new_device:           int   = Field(default=0, ge=0, le=1)
+    typing_speed_anomaly: float = Field(default=0.1, ge=0.0, le=1.0)
+    session_duration:     float = Field(default=1800.0, ge=0)
+    concurrent_sessions:  int   = Field(default=1, ge=1)
+
+    @field_validator("country")
+    @classmethod
+    def uppercase_country(cls, v: str) -> str:
+        return v.upper().strip()
+
+    def model_post_init(self, __context) -> None:
+        """Derive internal fields from human-readable inputs."""
+        # Derive ip_country_mismatch from country if not explicitly set
+        if self.known_device == 0:
+            object.__setattr__(self, "new_device", 1)
+        if self.country not in ("IN", "US", "GB", "CA", "AU"):
+            object.__setattr__(self, "ip_country_mismatch", 1)
     bytes_transferred:    float = Field(default=5000.0, ge=0)
     login_frequency_24h:  int   = Field(default=2,  ge=0)
 
 
 class NetworkRequest(BaseModel):
-    """Request body for network anomaly detection.
+    """Human-readable network connection request.
 
-    Accepts a dictionary of NSL-KDD feature name → value mappings.
-    Unknown keys are ignored; missing keys default to 0.
+    Accepts protocol-level inputs. Internal conversion to NSL-KDD
+    compatible features happens in the detector.
     """
     features: dict[str, float] = Field(
-        ...,
-        description="NSL-KDD feature dictionary. Missing features default to 0.",
-        examples=[{"duration": 0, "protocol_type": 0, "src_bytes": 491, "dst_bytes": 0}],
+        default_factory=dict,
+        description=(
+            "Network connection features. Supported keys: "
+            "protocol_type (0=tcp,1=udp,2=icmp), src_bytes, dst_bytes, "
+            "duration, serror_rate, rerror_rate, root_shell, "
+            "num_failed_logins, same_srv_rate, dst_host_count, "
+            "packets_per_sec, bytes_per_sec."
+        ),
+        examples=[{
+            "protocol_type": 0,
+            "src_bytes": 1000,
+            "dst_bytes": 500,
+            "duration": 2,
+            "serror_rate": 0.0,
+            "root_shell": 0,
+        }],
     )
 
 
@@ -108,16 +144,19 @@ class PredictionResponse(BaseModel):
 
 
 class FusedResponse(BaseModel):
-    """Response from the Threat Fusion Engine endpoint."""
-    report_id:           str
-    timestamp:           str
+    """Response from the Adaptive Threat Fusion Engine endpoint."""
+    report_id:            str
+    timestamp:            str
     composite_risk_score: float
-    risk_level:          str
-    is_threat:           bool
-    active_threats:      list[str]
-    predictions:         dict[str, Any]
-    summary:             str
-    recommendations:     list[str]
+    risk_level:           str
+    is_threat:            bool
+    active_threats:       list[str]
+    predictions:          dict[str, Any]
+    summary:              str
+    recommendations:      list[str]
+    confidence:           float = 0.0
+    contributing_modules: list[str] = []
+    fusion_method:        str = "adaptive_confidence_weighted"
 
 
 class HealthResponse(BaseModel):
