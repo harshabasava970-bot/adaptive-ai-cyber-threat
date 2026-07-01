@@ -17,15 +17,22 @@ from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
-import torch
-import torch.nn as nn
-from torch.optim import AdamW
-from torch.utils.data import DataLoader, Dataset
-from transformers import (
-    DistilBertForSequenceClassification,
-    DistilBertTokenizerFast,
-    get_linear_schedule_with_warmup,
-)
+
+# Torch and transformers are imported lazily to allow the API to start
+# even when torch is not installed (CPU-only inference mode).
+try:
+    import torch
+    import torch.nn as nn
+    from torch.optim import AdamW
+    from torch.utils.data import DataLoader, Dataset
+    from transformers import (
+        DistilBertForSequenceClassification,
+        DistilBertTokenizerFast,
+        get_linear_schedule_with_warmup,
+    )
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
 from sklearn.metrics import (
     accuracy_score, classification_report, confusion_matrix,
     f1_score, precision_score, recall_score, roc_auc_score,
@@ -100,6 +107,8 @@ class DistilBERTPhishingDetector(BaseDetectionModel):
 
     def _load_tokeniser(self) -> None:
         """Load DistilBERT tokeniser from HuggingFace Hub (cached locally)."""
+        if not TORCH_AVAILABLE:
+            return
         if self.tokeniser is None:
             hf_model = self.config.get(
                 "model_config.phishing.distilbert.model_name",
@@ -135,6 +144,11 @@ class DistilBERTPhishingDetector(BaseDetectionModel):
             ModelTrainingError: If training fails.
         """
         try:
+            if not TORCH_AVAILABLE:
+                raise ModelTrainingError(
+                    self.MODEL_NAME,
+                    "PyTorch is not installed. Run: pip install torch transformers"
+                )
             self._load_tokeniser()
             cfg = self.config.get("model_config", {}).get("phishing", {}).get("distilbert", {})
             hf_model_name = cfg.get("model_name", "distilbert-base-uncased")

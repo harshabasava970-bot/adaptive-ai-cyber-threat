@@ -1,13 +1,12 @@
 # render.yaml — Render.com Deployment Config (Free tier)
-# Deploys FastAPI backend automatically on git push
-
 services:
   - type: web
     name: cyber-threat-api
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt
+    pythonVersion: "3.11.9"
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -19,3 +18,5 @@ services:
         value: sqlite:///./data/threat_db.sqlite
       - key: SECRET_KEY
         generateValue: true
+      - key: DEBUG
+        value: "false"
