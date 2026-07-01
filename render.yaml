@@ -5,8 +5,10 @@ services:
     env: python
     region: oregon
     plan: free
-    pythonVersion: "3.11.9"
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: >
+      pip install --upgrade pip &&
+      pip install --only-binary=:all: -r requirements.txt ||
+      pip install -r requirements.txt
     startCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -20,3 +22,5 @@ services:
         generateValue: true
       - key: DEBUG
         value: "false"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
