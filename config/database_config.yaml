@@ -1,0 +1,46 @@
+# =============================================================================
+# database_config.yaml — Database Configuration
+# Adaptive AI for Cyber Threat Detection
+# SQLite for development; designed for PostgreSQL migration in production.
+# =============================================================================
+
+development:
+  engine: "sqlite"
+  url: "sqlite:///./data/threat_db.sqlite"
+  echo: false           # Set true to log all SQL queries (debug only)
+  pool_pre_ping: true
+  connect_args:
+    check_same_thread: false
+
+staging:
+  engine: "postgresql"
+  url: "${DATABASE_URL}"   # Loaded from environment variable
+  echo: false
+  pool_size: 5
+  max_overflow: 10
+  pool_timeout: 30
+  pool_recycle: 1800
+  pool_pre_ping: true
+
+production:
+  engine: "postgresql"
+  url: "${DATABASE_URL}"
+  echo: false
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  pool_recycle: 1800
+  pool_pre_ping: true
+
+# ---------------------------------------------------------------------------
+# Table Names (prevents typo-related bugs)
+# ---------------------------------------------------------------------------
+tables:
+  threats: "threats"
+  phishing_detections: "phishing_detections"
+  url_detections: "url_detections"
+  login_events: "login_events"
+  network_events: "network_events"
+  model_metrics: "model_metrics"
+  audit_logs: "audit_logs"
+  reports: "reports"

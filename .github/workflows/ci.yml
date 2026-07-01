@@ -1,0 +1,63 @@
+name: CI — Adaptive AI Cyber Threat Detection
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Copy env file
+        run: cp .env.example .env
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/unit/ \
+            -v --tb=short \
+            --override-ini="addopts="
+
+      - name: Run integration tests
+        run: |
+          python -m pytest tests/integration/ \
+            -v --tb=short \
+            --override-ini="addopts="
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install flake8 black isort
+      - name: Check formatting (black)
+        run: black --check src/ tests/ --line-length 88
+        continue-on-error: true
+      - name: Check imports (isort)
+        run: isort --check-only src/ tests/
+        continue-on-error: true
+      - name: Lint (flake8)
+        run: flake8 src/ --max-line-length=88 --extend-ignore=E203,W503
+        continue-on-error: true

@@ -1,0 +1,122 @@
+# =============================================================================
+# logging_config.yaml — Centralised Logging Configuration
+# Adaptive AI for Cyber Threat Detection
+# Follows Python logging best practices for production systems.
+# =============================================================================
+
+version: 1
+disable_existing_loggers: false
+
+# ---------------------------------------------------------------------------
+# Formatters
+# ---------------------------------------------------------------------------
+formatters:
+  standard:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s:%(lineno)d | %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  detailed:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(process)d | %(thread)d | %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  json:
+    # JSON format for production log aggregation (e.g., ELK stack)
+    format: '{"time": "%(asctime)s", "level": "%(levelname)s", "module": "%(name)s", "line": %(lineno)d, "message": "%(message)s"}'
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+
+# ---------------------------------------------------------------------------
+# Handlers
+# ---------------------------------------------------------------------------
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: standard
+    stream: ext://sys.stdout
+
+  file_app:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: detailed
+    filename: logs/app.log
+    maxBytes: 10485760   # 10 MB
+    backupCount: 5
+    encoding: utf8
+
+  file_error:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: detailed
+    filename: logs/error.log
+    maxBytes: 10485760   # 10 MB
+    backupCount: 5
+    encoding: utf8
+
+  file_security:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: detailed
+    filename: logs/security.log
+    maxBytes: 10485760   # 10 MB
+    backupCount: 10
+    encoding: utf8
+
+  file_model:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/model.log
+    maxBytes: 10485760   # 10 MB
+    backupCount: 5
+    encoding: utf8
+
+# ---------------------------------------------------------------------------
+# Loggers
+# ---------------------------------------------------------------------------
+loggers:
+  # Root application logger
+  src:
+    level: DEBUG
+    handlers: [console, file_app, file_error]
+    propagate: false
+
+  # Security events (threat detections, authentication)
+  src.security:
+    level: INFO
+    handlers: [console, file_security]
+    propagate: false
+
+  # ML model events (training, inference)
+  src.models:
+    level: DEBUG
+    handlers: [console, file_model]
+    propagate: false
+
+  # API access logs
+  src.api:
+    level: INFO
+    handlers: [console, file_app]
+    propagate: false
+
+  # FastAPI / Uvicorn
+  uvicorn:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  uvicorn.error:
+    level: INFO
+    handlers: [console, file_error]
+    propagate: false
+
+  uvicorn.access:
+    level: INFO
+    handlers: [console, file_app]
+    propagate: false
+
+# ---------------------------------------------------------------------------
+# Root Logger
+# ---------------------------------------------------------------------------
+root:
+  level: WARNING
+  handlers: [console, file_app]

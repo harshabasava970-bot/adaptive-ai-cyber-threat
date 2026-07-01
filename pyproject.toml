@@ -1,0 +1,122 @@
+# =============================================================================
+# pyproject.toml — Modern Python Packaging Configuration
+# Adaptive AI for Cyber Threat Detection
+# =============================================================================
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "adaptive-ai-cyber-threat"
+version = "1.0.0"
+description = "Intelligent AI-based cybersecurity platform for multi-threat detection"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+keywords = [
+    "cybersecurity",
+    "machine-learning",
+    "deep-learning",
+    "threat-detection",
+    "explainable-ai",
+    "phishing",
+    "anomaly-detection",
+    "bert",
+    "xgboost",
+    "shap"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/adaptive-ai-cyber-threat"
+Documentation = "https://your-app.onrender.com/docs"
+
+[project.scripts]
+cyber-threat-api = "src.api.main:run"
+cyber-threat-dashboard = "src.dashboard.app:run"
+
+# ---------------------------------------------------------------------------
+# Tool: Black (Code Formatter)
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  | .venv
+  | build
+  | dist
+  | data
+)/
+'''
+
+# ---------------------------------------------------------------------------
+# Tool: isort (Import Sorter)
+# ---------------------------------------------------------------------------
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+# ---------------------------------------------------------------------------
+# Tool: pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "-v",
+    "--cov=src",
+    "--cov-report=html:htmlcov",
+    "--cov-report=term-missing",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Tests that take longer than 5 seconds",
+    "model: Tests requiring trained models",
+]
+
+# ---------------------------------------------------------------------------
+# Tool: mypy (Static Type Checker)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["data/", "notebooks/", ".venv/"]
+
+# ---------------------------------------------------------------------------
+# Tool: coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

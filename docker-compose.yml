@@ -1,0 +1,74 @@
+# =============================================================================
+# docker-compose.yml — Multi-Service Orchestration
+# Adaptive AI for Cyber Threat Detection
+#
+# Services:
+#   api        — FastAPI backend (port 8000)
+#   dashboard  — Streamlit dashboard (port 8501)
+#
+# Usage:
+#   docker-compose up --build
+#   docker-compose down
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ---------------------------------------------------------------------------
+  # FastAPI Backend
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: cyber_threat_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - API_PORT=8000
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # Streamlit Dashboard
+  # ---------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: cyber_threat_dashboard
+    command: >
+      streamlit run src/dashboard/app.py
+      --server.port=8501
+      --server.address=0.0.0.0
+      --server.headless=true
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  data:
+  logs:

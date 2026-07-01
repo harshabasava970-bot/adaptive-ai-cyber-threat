@@ -1,0 +1,104 @@
+# =============================================================================
+# settings.yaml — Application-Wide Configuration
+# Adaptive AI for Cyber Threat Detection
+# Environment variables (from .env) override these defaults at runtime.
+# =============================================================================
+
+application:
+  name: "AdaptiveAICyberThreat"
+  version: "1.0.0"
+  description: "Intelligent AI-based cybersecurity platform for multi-threat detection"
+  environment: "development"   # development | staging | production
+
+# ---------------------------------------------------------------------------
+# API Server Configuration
+# ---------------------------------------------------------------------------
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  reload: true
+  log_level: "info"
+  title: "Adaptive AI Cyber Threat Detection API"
+  description: "REST API for AI-powered cybersecurity threat detection"
+  version: "1.0.0"
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  openapi_url: "/openapi.json"
+  allowed_origins:
+    - "http://localhost:8501"
+    - "http://localhost:3000"
+    - "https://your-app.streamlit.app"
+  rate_limit:
+    requests: 100
+    window_seconds: 60
+
+# ---------------------------------------------------------------------------
+# Dashboard Configuration
+# ---------------------------------------------------------------------------
+dashboard:
+  port: 8501
+  theme: "dark"
+  refresh_interval_seconds: 30
+  max_alerts_displayed: 50
+  chart_height: 400
+
+# ---------------------------------------------------------------------------
+# Data Paths
+# ---------------------------------------------------------------------------
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  models_dir: "data/models"
+  reports_dir: "data/reports"
+  logs_dir: "logs"
+
+# ---------------------------------------------------------------------------
+# Threat Detection Thresholds
+# ---------------------------------------------------------------------------
+thresholds:
+  phishing:
+    high_risk: 0.85
+    medium_risk: 0.60
+    low_risk: 0.40
+  malicious_url:
+    high_risk: 0.80
+    medium_risk: 0.55
+    low_risk: 0.35
+  login_behaviour:
+    high_risk: 0.75
+    medium_risk: 0.50
+    low_risk: 0.30
+  network_anomaly:
+    high_risk: 0.80
+    medium_risk: 0.55
+    low_risk: 0.35
+
+# ---------------------------------------------------------------------------
+# Risk Score Weights (Threat Fusion Engine)
+# ---------------------------------------------------------------------------
+fusion:
+  weights:
+    phishing: 0.30
+    malicious_url: 0.25
+    login_behaviour: 0.25
+    network_anomaly: 0.20
+  risk_levels:
+    critical: 0.85
+    high: 0.65
+    medium: 0.45
+    low: 0.25
+    info: 0.0
+
+# ---------------------------------------------------------------------------
+# Report Generation
+# ---------------------------------------------------------------------------
+reports:
+  max_entries: 1000
+  formats:
+    - "pdf"
+    - "csv"
+    - "json"
+  include_shap_plots: true
+  include_confusion_matrix: true
+  logo_path: "docs/assets/logo.png"
