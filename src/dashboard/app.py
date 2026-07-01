@@ -67,7 +67,11 @@ st.markdown("""
 
 
 # ── Constants ──────────────────────────────────────────────────────
-API_BASE = "http://localhost:8000/api/v1"
+import os
+API_BASE = os.environ.get(
+    "API_BASE_URL",
+    "https://cyber-threat-api-4gms.onrender.com"
+).rstrip("/") + "/api/v1"
 RISK_COLORS = {
     "critical": "#ff2d55", "high": "#ff6b35",
     "medium": "#ffd60a",   "low": "#06d6a0", "info": "#8ecae6",
@@ -131,9 +135,10 @@ with st.sidebar:
     st.divider()
 
     # API status indicator
-    health = _api_get("/health") if False else None  # lazy check
     try:
-        health = requests.get("http://localhost:8000/health", timeout=2).json()
+        health = requests.get(
+            "https://cyber-threat-api-4gms.onrender.com/health", timeout=5
+        ).json()
         api_status = "🟢 API Online"
     except Exception:
         api_status = "🔴 API Offline (Demo Mode)"
@@ -460,7 +465,7 @@ elif page == "📋 Reports":
         st.write("Export all threat detections as a CSV spreadsheet.")
         if st.button("⬇️ Download CSV"):
             try:
-                r = requests.get("http://localhost:8000/api/v1/reports/csv", timeout=15)
+                r = requests.get(f"https://cyber-threat-api-4gms.onrender.com/api/v1/reports/csv", timeout=15)
                 if r.status_code == 200:
                     st.download_button(
                         "💾 Save CSV File",
