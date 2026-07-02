@@ -1,11 +1,9 @@
 """
-app.py — Enterprise SOC Dashboard v5
-=====================================
-Adaptive AI for Cyber Threat Detection
-Full workflow: persistence, simulation, auto-sync, notifications.
-Author: B.Tech Capstone Project
+app.py — Enterprise SOC Dashboard v6 (Final Production Polish)
+================================================================
+Adaptive Explainable AI for Cyber Threat Detection
+Author: B.Tech Capstone Project 2025-2026
 """
-
 import sys, os, time, math, uuid, random, io
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -13,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import streamlit as st
 st.set_page_config(
-    page_title="CyberShield AI — SOC Platform",
+    page_title="CyberShield AI — Enterprise SOC",
     page_icon="🛡️", layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -21,444 +19,638 @@ st.set_page_config(
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 import requests
 
 API_BASE = os.environ.get(
     "API_BASE_URL", "https://cyber-threat-api-4gms.onrender.com"
 ).rstrip("/") + "/api/v1"
 
-C = {
-    "bg":"#0B1120","card":"#111827","sidebar":"#0F172A",
-    "primary":"#2563EB","success":"#22C55E","warning":"#F59E0B",
-    "critical":"#EF4444","info":"#38BDF8","text":"#F8FAFC",
-    "muted":"#94A3B8","border":"#1E293B","hover":"#1E40AF",
-}
-RISK_C  = {"critical":C["critical"],"high":"#F97316","medium":C["warning"],
-           "low":C["success"],"info":C["info"]}
-RISK_BG = {"critical":"#2D1515","high":"#2D1A0E","medium":"#2D2710",
-           "low":"#0F2D1A","info":"#0F2133"}
+# ── Design tokens ──────────────────────────────────────────────────
+BG      = "#0B1120"
+CARD    = "#111827"
+SIDEBAR = "#0F172A"
+BORDER  = "#1E293B"
+PRIMARY = "#2563EB"
+SUCCESS = "#22C55E"
+WARN    = "#F59E0B"
+CRIT    = "#EF4444"
+INFO    = "#38BDF8"
+HIGH    = "#F97316"
+TEXT    = "#F8FAFC"
+MUTED   = "#94A3B8"
+PURPLE  = "#A78BFA"
+
+RISK_CLR = {"critical":CRIT,"high":HIGH,"medium":WARN,"low":SUCCESS,"info":INFO}
+RISK_BG  = {"critical":"#2D1515","high":"#2D1A0E","medium":"#2D2710",
+            "low":"#0F2D1A","info":"#0F2133"}
+RISK_ICO = {"critical":"🔴","high":"🟠","medium":"🟡","low":"🟢","info":"🔵"}
 
 # ══════════════════════════════════════════════════════════════════
-# FULL CSS OVERRIDE
+# GLOBAL CSS — Final production polish
 # ══════════════════════════════════════════════════════════════════
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-*,*::before,*::after{{box-sizing:border-box}}
-html,body,.stApp{{background-color:{C["bg"]}!important;color:{C["text"]}!important;
-  font-family:'Inter',-apple-system,sans-serif!important;font-size:14px;line-height:1.6}}
-section[data-testid="stSidebar"]{{background:{C["sidebar"]}!important;
-  border-right:1px solid {C["border"]}!important;padding-top:0!important}}
-section[data-testid="stSidebar"] .block-container{{padding:0!important}}
-.block-container{{padding:1.5rem 2rem 3rem!important;max-width:100%!important}}
-h1{{font-size:1.75rem!important;font-weight:800!important;color:{C["text"]}!important;
-  letter-spacing:-0.5px;margin-bottom:4px!important}}
-h2{{font-size:1.3rem!important;font-weight:700!important;color:{C["text"]}!important}}
-h3{{font-size:1.1rem!important;font-weight:600!important;color:{C["info"]}!important}}
-h4{{font-size:0.9rem!important;font-weight:600!important;color:{C["muted"]}!important;
-  text-transform:uppercase;letter-spacing:0.8px}}
-div[data-testid="metric-container"]{{background:{C["card"]}!important;
-  border:1px solid {C["border"]}!important;border-radius:14px!important;
-  padding:20px 22px!important;box-shadow:0 4px 24px rgba(0,0,0,0.35)!important;
-  transition:transform 0.2s,box-shadow 0.2s!important}}
-div[data-testid="metric-container"]:hover{{transform:translateY(-2px)!important;
-  box-shadow:0 8px 32px rgba(37,99,235,0.2)!important}}
-div[data-testid="metric-container"] [data-testid="stMetricLabel"]{{
-  font-size:0.72rem!important;font-weight:600!important;color:{C["muted"]}!important;
-  text-transform:uppercase;letter-spacing:0.8px}}
-div[data-testid="metric-container"] [data-testid="stMetricValue"]{{
-  font-size:1.9rem!important;font-weight:800!important;color:{C["text"]}!important}}
-.stButton>button{{background:linear-gradient(135deg,{C["primary"]},#1D4ED8)!important;
-  color:{C["text"]}!important;border:none!important;border-radius:10px!important;
-  padding:10px 22px!important;font-weight:600!important;font-size:0.87rem!important;
-  box-shadow:0 4px 14px rgba(37,99,235,0.4)!important;
-  transition:all 0.2s ease!important;width:100%}}
-.stButton>button:hover{{background:linear-gradient(135deg,#1D4ED8,#1E40AF)!important;
-  box-shadow:0 6px 20px rgba(37,99,235,0.55)!important;transform:translateY(-1px)!important}}
-.stTextInput>div>div>input,.stTextArea>div>div>textarea,
-.stNumberInput>div>div>input{{background:{C["card"]}!important;color:{C["text"]}!important;
-  border:1px solid {C["border"]}!important;border-radius:10px!important;
-  padding:10px 14px!important;font-family:'Inter',sans-serif!important}}
-.stTextInput>div>div>input:focus,.stTextArea>div>div>textarea:focus{{
-  border-color:{C["primary"]}!important;box-shadow:0 0 0 3px rgba(37,99,235,0.15)!important}}
-.stSelectbox>div>div,.stMultiSelect>div>div{{background:{C["card"]}!important;
-  border:1px solid {C["border"]}!important;border-radius:10px!important;color:{C["text"]}!important}}
-.stRadio>div>label,.stCheckbox>label{{color:{C["text"]}!important;font-size:0.87rem!important}}
-.stTabs [data-baseweb="tab-list"]{{background:{C["card"]}!important;border-radius:12px!important;
-  padding:4px!important;border:1px solid {C["border"]}!important;gap:4px!important}}
-.stTabs [data-baseweb="tab"]{{background:transparent!important;border-radius:9px!important;
-  color:{C["muted"]}!important;font-weight:500!important;padding:8px 16px!important;border:none!important}}
-.stTabs [aria-selected="true"]{{background:{C["primary"]}!important;color:{C["text"]}!important;font-weight:600!important}}
-.stDataFrame{{border-radius:12px!important;overflow:hidden!important}}
-.streamlit-expanderHeader{{background:{C["card"]}!important;border:1px solid {C["border"]}!important;
-  border-radius:10px!important;padding:12px 16px!important;color:{C["text"]}!important;font-weight:600!important}}
-.streamlit-expanderContent{{background:{C["bg"]}!important;border:1px solid {C["border"]}!important;
-  border-top:none!important;border-radius:0 0 10px 10px!important;padding:16px!important}}
-hr{{border-color:{C["border"]}!important;margin:24px 0!important}}
-::-webkit-scrollbar{{width:6px;height:6px}}
-::-webkit-scrollbar-track{{background:{C["bg"]}}}
-::-webkit-scrollbar-thumb{{background:{C["border"]};border-radius:3px}}
-::-webkit-scrollbar-thumb:hover{{background:{C["primary"]}}}
-#MainMenu,footer,header{{visibility:hidden!important}}
-.viewerBadge_container__1QSob{{display:none!important}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Base reset */
+*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+html, body, .stApp {{
+  background: {BG} !important;
+  color: {TEXT} !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  -webkit-font-smoothing: antialiased;
+}}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {{
+  background: {SIDEBAR} !important;
+  border-right: 1px solid {BORDER} !important;
+}}
+section[data-testid="stSidebar"] > div {{
+  padding: 0 !important;
+}}
+
+/* Main container */
+.block-container {{
+  padding: 0 2rem 3rem 2rem !important;
+  max-width: 100% !important;
+}}
+
+/* ── Typography ── */
+h1 {{ font-size: 1.65rem !important; font-weight: 900 !important;
+     color: {TEXT} !important; letter-spacing: -0.6px !important;
+     line-height: 1.2 !important; }}
+h2 {{ font-size: 1.25rem !important; font-weight: 700 !important;
+     color: {TEXT} !important; line-height: 1.3 !important; }}
+h3 {{ font-size: 1.05rem !important; font-weight: 600 !important;
+     color: {INFO} !important; line-height: 1.3 !important; }}
+h4 {{ font-size: 0.78rem !important; font-weight: 700 !important;
+     color: {MUTED} !important; text-transform: uppercase !important;
+     letter-spacing: 1px !important; }}
+p {{ color: {TEXT} !important; }}
+label {{ color: {TEXT} !important; font-weight: 500 !important; }}
+small, .caption {{ color: {MUTED} !important; }}
+
+/* ── Metric cards ── */
+div[data-testid="metric-container"] {{
+  background: {CARD} !important;
+  border: 1px solid {BORDER} !important;
+  border-radius: 14px !important;
+  padding: 20px 20px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}}
+div[data-testid="metric-container"]:hover {{
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 24px rgba(37,99,235,0.18) !important;
+  border-color: {PRIMARY}60 !important;
+}}
+div[data-testid="metric-container"] [data-testid="stMetricLabel"] > div {{
+  font-size: 0.7rem !important; font-weight: 700 !important;
+  color: {MUTED} !important; text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}}
+div[data-testid="metric-container"] [data-testid="stMetricValue"] > div {{
+  font-size: 1.85rem !important; font-weight: 800 !important;
+  color: {TEXT} !important; line-height: 1.1 !important;
+}}
+div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div {{
+  font-size: 0.78rem !important; font-weight: 600 !important;
+}}
+
+/* ── Buttons ── */
+.stButton > button {{
+  background: linear-gradient(135deg, {PRIMARY}, #1D4ED8) !important;
+  color: {TEXT} !important; border: none !important;
+  border-radius: 10px !important; padding: 10px 20px !important;
+  font-weight: 600 !important; font-size: 0.85rem !important;
+  letter-spacing: 0.2px !important; font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.35) !important;
+  transition: all 0.18s ease !important; width: 100% !important;
+  cursor: pointer !important;
+}}
+.stButton > button:hover {{
+  background: linear-gradient(135deg, #1D4ED8, #1E40AF) !important;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.5) !important;
+  transform: translateY(-1px) !important;
+}}
+.stButton > button:disabled {{
+  background: {BORDER} !important; color: {MUTED} !important;
+  box-shadow: none !important; transform: none !important;
+}}
+
+/* ── Inputs ── */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea,
+.stNumberInput > div > div > input {{
+  background: {CARD} !important; color: {TEXT} !important;
+  border: 1px solid {BORDER} !important; border-radius: 10px !important;
+  padding: 10px 14px !important; font-family: 'Inter', sans-serif !important;
+  font-size: 0.87rem !important; transition: border-color 0.18s !important;
+}}
+.stTextInput > div > div > input:focus,
+.stTextArea > div > div > textarea:focus {{
+  border-color: {PRIMARY} !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important; outline: none !important;
+}}
+.stTextInput label, .stTextArea label, .stNumberInput label,
+.stSelectbox label, .stMultiSelect label, .stSlider label,
+.stRadio label, .stCheckbox label {{
+  color: {TEXT} !important; font-weight: 500 !important; font-size: 0.85rem !important;
+}}
+.stSelectbox > div > div, .stMultiSelect > div > div {{
+  background: {CARD} !important; border: 1px solid {BORDER} !important;
+  border-radius: 10px !important; color: {TEXT} !important;
+}}
+.stSlider [data-baseweb="slider"] {{ padding: 8px 0 !important; }}
+.stRadio > div > div > label, .stCheckbox > label {{
+  color: {TEXT} !important; font-size: 0.87rem !important; padding: 4px 0 !important;
+}}
+.stMultiSelect [data-baseweb="tag"] {{
+  background: {PRIMARY}30 !important; color: {INFO} !important;
+}}
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"] {{
+  background: {CARD} !important; border-radius: 12px !important;
+  padding: 4px !important; border: 1px solid {BORDER} !important; gap: 4px !important;
+}}
+.stTabs [data-baseweb="tab"] {{
+  background: transparent !important; border-radius: 9px !important;
+  color: {MUTED} !important; font-weight: 500 !important;
+  padding: 8px 18px !important; font-size: 0.85rem !important; border: none !important;
+}}
+.stTabs [aria-selected="true"] {{
+  background: {PRIMARY} !important; color: {TEXT} !important; font-weight: 700 !important;
+}}
+
+/* ── Dataframes ── */
+.stDataFrame {{ border-radius: 12px !important; overflow: hidden !important; }}
+[data-testid="stDataFrameResizable"] {{ border-radius: 12px !important; }}
+.stDataFrame thead tr th {{
+  background: {SIDEBAR} !important; color: {TEXT} !important;
+  font-weight: 700 !important; font-size: 0.78rem !important;
+  text-transform: uppercase !important; letter-spacing: 0.8px !important;
+  padding: 10px 14px !important;
+}}
+.stDataFrame tbody tr td {{
+  background: {CARD} !important; color: {TEXT} !important;
+  font-size: 0.83rem !important; padding: 8px 14px !important;
+  border-bottom: 1px solid {BORDER} !important;
+}}
+.stDataFrame tbody tr:hover td {{ background: {BORDER}80 !important; }}
+
+/* ── Expander ── */
+.streamlit-expanderHeader {{
+  background: {CARD} !important; border: 1px solid {BORDER} !important;
+  border-radius: 10px !important; padding: 12px 18px !important;
+  color: {TEXT} !important; font-weight: 600 !important; font-size: 0.88rem !important;
+}}
+.streamlit-expanderContent {{
+  background: {BG} !important; border: 1px solid {BORDER} !important;
+  border-top: none !important; border-radius: 0 0 10px 10px !important;
+  padding: 16px !important;
+}}
+
+/* ── Alerts ── */
+.stSuccess > div {{ background: {SUCCESS}15 !important; border: 1px solid {SUCCESS}40 !important;
+  border-radius: 10px !important; color: {TEXT} !important; }}
+.stWarning > div {{ background: {WARN}15 !important; border: 1px solid {WARN}40 !important;
+  border-radius: 10px !important; color: {TEXT} !important; }}
+.stError > div {{ background: {CRIT}15 !important; border: 1px solid {CRIT}40 !important;
+  border-radius: 10px !important; color: {TEXT} !important; }}
+.stInfo > div {{ background: {INFO}15 !important; border: 1px solid {INFO}40 !important;
+  border-radius: 10px !important; color: {TEXT} !important; }}
+
+/* ── Progress bar ── */
+.stProgress > div > div {{ background: {PRIMARY} !important; border-radius: 4px !important; }}
+.stProgress > div {{ background: {BORDER} !important; border-radius: 4px !important; }}
+
+/* ── Divider ── */
+hr {{ border-color: {BORDER} !important; margin: 20px 0 !important; }}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {{ width: 5px; height: 5px; }}
+::-webkit-scrollbar-track {{ background: {BG}; }}
+::-webkit-scrollbar-thumb {{ background: {BORDER}; border-radius: 3px; }}
+::-webkit-scrollbar-thumb:hover {{ background: {PRIMARY}; }}
+
+/* ── Tooltip ── */
+[data-baseweb="tooltip"] {{ font-family: 'Inter', sans-serif !important; }}
+
+/* ── Hide Streamlit chrome ── */
+#MainMenu, footer, header {{ visibility: hidden !important; height: 0 !important; }}
+.viewerBadge_container__1QSob {{ display: none !important; }}
+[data-testid="stToolbar"] {{ display: none !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-
 # ══════════════════════════════════════════════════════════════════
-# SESSION STATE — persistent scan database
+# SESSION STATE
 # ══════════════════════════════════════════════════════════════════
-def _init_state() -> None:
-    defaults = {
-        "scan_db":    [],        # list of scan record dicts
-        "page":       "Dashboard",
-        "sim_active": False,
-        "last_notify": "",
-    }
-    for k, v in defaults.items():
+def _init():
+    for k, v in {
+        "scan_db": [], "page": "Dashboard", "last_scan_time": None
+    }.items():
         if k not in st.session_state:
             st.session_state[k] = v
-
-_init_state()
+_init()
 
 
 # ══════════════════════════════════════════════════════════════════
-# SCAN DATABASE — persistent in-session storage
+# SCAN DATABASE
 # ══════════════════════════════════════════════════════════════════
-def save_scan(
-    scan_type: str,
-    label: str,
-    risk_level: str,
-    probability: float,
-    is_threat: bool,
-    model_name: str = "",
-    confidence: float = 0.0,
-    explanation_summary: str = "",
-    is_simulated: bool = False,
-) -> dict:
-    """Save a scan result to the in-session database and return it."""
-    record = {
-        "id":          str(uuid.uuid4())[:8],
-        "timestamp":   datetime.utcnow().isoformat() + "Z",
-        "scan_type":   scan_type,
-        "label":       label,
-        "risk_level":  risk_level,
-        "probability": round(probability, 4),
+def save_scan(scan_type, label, risk_level, probability, is_threat,
+              model_name="", confidence=0.0, processing_ms=0.0,
+              explanation_summary="", is_simulated=False) -> dict:
+    """Persist a scan record to session database."""
+    now = datetime.now()
+    rec = {
+        "id":           str(uuid.uuid4())[:8].upper(),
+        "timestamp_utc":datetime.utcnow().isoformat() + "Z",
+        "scan_date":    now.strftime("%Y-%m-%d"),
+        "scan_time":    now.strftime("%H:%M:%S"),
+        "scan_type":    scan_type,
+        "label":        label,
+        "risk_level":   risk_level,
+        "probability":  round(probability, 4),
         "threat_score": int(round(probability * 100)),
-        "is_threat":   is_threat,
-        "confidence":  round(confidence, 4),
-        "model_name":  model_name,
-        "explanation_summary": explanation_summary[:120],
+        "is_threat":    is_threat,
+        "confidence":   round(confidence, 4),
+        "processing_ms":round(processing_ms, 1),
+        "model_name":   model_name,
+        "explanation_summary": explanation_summary[:140],
         "is_simulated": is_simulated,
+        "status":       "THREAT" if is_threat else "SAFE",
     }
-    st.session_state.scan_db.insert(0, record)
-    # Also push to backend DB via API (fire-and-forget)
-    _sync_to_backend(scan_type, risk_level, probability, is_threat, model_name, is_simulated)
-    return record
+    st.session_state.scan_db.insert(0, rec)
+    st.session_state.last_scan_time = now
+    return rec
 
 
-def _sync_to_backend(scan_type, risk_level, probability, is_threat, model_name, is_simulated):
-    """Sync scan to backend database via fusion endpoint (non-blocking best-effort)."""
-    try:
-        label_map = {
-            "phishing":  {"phishing": {"email_text": f"Synced {scan_type} scan", "model":"ensemble"}},
-            "url":       {"url": {"url": "https://sync-record.internal"}},
-            "login":     {"login": {"hour_of_day":9,"day_of_week":1,"failed_attempts":0,
-                                    "known_device":1,"vpn_enabled":0,"new_location":0,
-                                    "is_business_hours":1,"login_duration":120.0,
-                                    "session_duration":1800.0,"ip_country_mismatch":0,
-                                    "new_device":0,"typing_speed_anomaly":0.1,
-                                    "concurrent_sessions":1,"country":"IN","username":"system"}},
-            "network":   {"network": {"features":{"src_bytes":100.0,"dst_bytes":50.0,
-                                                   "duration":1.0,"serror_rate":0.0}}},
-        }
-        if scan_type in label_map:
-            requests.post(f"{API_BASE}/detect/fuse", json=label_map[scan_type], timeout=3)
-    except Exception:
-        pass  # Non-blocking — backend sync is best-effort
+def get_df() -> pd.DataFrame:
+    return pd.DataFrame(st.session_state.scan_db) if st.session_state.scan_db else pd.DataFrame()
 
 
-def get_scan_df() -> pd.DataFrame:
-    """Return scan_db as a DataFrame."""
-    if not st.session_state.scan_db:
-        return pd.DataFrame()
-    return pd.DataFrame(st.session_state.scan_db)
-
-
-def scan_stats() -> dict:
-    """Compute KPI statistics from scan_db."""
+def stats() -> dict:
     db = st.session_state.scan_db
     if not db:
-        return {"total":0,"threats":0,"critical":0,"simulated":0,"accuracy":0.0}
-    total     = len(db)
-    threats   = sum(1 for r in db if r["is_threat"])
-    critical  = sum(1 for r in db if r["risk_level"] in ("critical","high"))
-    simulated = sum(1 for r in db if r.get("is_simulated"))
-    accuracy  = ((total - threats) / total * 100) if total > 0 else 0.0
-    return {"total":total,"threats":threats,"critical":critical,
-            "simulated":simulated,"accuracy":round(accuracy,1)}
+        return {"total":0,"threats":0,"critical":0,"high":0,"safe":0,
+                "simulated":0,"avg_conf":0.0,"avg_ms":0.0,"accuracy":0.0}
+    total    = len(db)
+    threats  = sum(1 for r in db if r["is_threat"])
+    critical = sum(1 for r in db if r["risk_level"] == "critical")
+    high     = sum(1 for r in db if r["risk_level"] == "high")
+    safe     = total - threats
+    sim      = sum(1 for r in db if r.get("is_simulated"))
+    avg_conf = sum(r["confidence"] for r in db) / total
+    avg_ms   = sum(r.get("processing_ms",0) for r in db) / total
+    acc      = safe / total * 100 if total > 0 else 0.0
+    return {"total":total,"threats":threats,"critical":critical,"high":high,
+            "safe":safe,"simulated":sim,"avg_conf":avg_conf,
+            "avg_ms":avg_ms,"accuracy":acc}
 
 
 # ══════════════════════════════════════════════════════════════════
 # API HELPERS
 # ══════════════════════════════════════════════════════════════════
 @st.cache_data(ttl=30)
-def api_get(endpoint: str):
+def api_get(ep: str):
     try:
-        r = requests.get(f"{API_BASE}{endpoint}", timeout=12)
+        r = requests.get(f"{API_BASE}{ep}", timeout=12)
         return r.json() if r.status_code == 200 else None
     except Exception:
         return None
 
 
-def api_post(endpoint: str, payload: dict):
+def api_post(ep: str, payload: dict):
     try:
-        r = requests.post(f"{API_BASE}{endpoint}", json=payload, timeout=18)
+        r = requests.post(f"{API_BASE}{ep}", json=payload, timeout=18)
         return r.json() if r.status_code == 200 else {"error": f"HTTP {r.status_code}"}
     except Exception as e:
         return {"error": str(e)}
 
 
-def check_api() -> bool:
+def api_health() -> bool:
     try:
-        r = requests.get(
-            "https://cyber-threat-api-4gms.onrender.com/health", timeout=5
-        )
+        r = requests.get("https://cyber-threat-api-4gms.onrender.com/health", timeout=5)
         return r.status_code == 200
     except Exception:
         return False
 
+# ══════════════════════════════════════════════════════════════════
+# UI COMPONENT LIBRARY
+# ══════════════════════════════════════════════════════════════════
 
-# ══════════════════════════════════════════════════════════════════
-# UI COMPONENTS
-# ══════════════════════════════════════════════════════════════════
 def risk_pill(level: str, sim: bool = False) -> str:
-    c   = RISK_C.get(level, C["info"])
+    c   = RISK_CLR.get(level, INFO)
     bg  = RISK_BG.get(level, "#0F2133")
-    ico = {"critical":"🔴","high":"🟠","medium":"🟡","low":"🟢","info":"🔵"}.get(level,"⚪")
-    sim_badge = ("<span style='background:#7C3AED20;color:#A78BFA;padding:2px 6px;"
-                 "border-radius:8px;font-size:0.65rem;font-weight:700;margin-left:4px;"
-                 "border:1px solid #A78BFA40'>SIM</span>") if sim else ""
-    return (f"<span style='background:{bg};color:{c};padding:3px 10px;"
-            f"border-radius:20px;font-size:0.75rem;font-weight:700;"
-            f"border:1px solid {c}40;white-space:nowrap'>"
-            f"{ico} {level.upper()}</span>{sim_badge}")
+    ico = RISK_ICO.get(level, "⚪")
+    sim_tag = (f"<span style='background:#7C3AED25;color:{PURPLE};padding:1px 6px;"
+               f"border-radius:6px;font-size:0.62rem;font-weight:700;margin-left:5px;"
+               f"border:1px solid {PURPLE}35'>SIM</span>") if sim else ""
+    return (f"<span style='background:{bg};color:{c};padding:3px 11px;"
+            f"border-radius:20px;font-size:0.73rem;font-weight:700;"
+            f"border:1px solid {c}45;white-space:nowrap;letter-spacing:0.3px'>"
+            f"{ico} {level.upper()}</span>{sim_tag}")
 
 
-def threat_score_ring(score: int, color: str) -> str:
-    r, cx, cy = 36, 44, 44
-    circ  = 2 * math.pi * r
-    dash  = circ * score / 100
+def score_ring(score: int, color: str, size: int = 88) -> str:
+    r = size // 2 - 10
+    circ = 2 * math.pi * r
+    dash = circ * score / 100
+    cx = cy = size // 2
     return f"""
-    <div style="position:relative;width:88px;height:88px;flex-shrink:0">
-      <svg width="88" height="88" viewBox="0 0 88 88">
-        <circle cx="{cx}" cy="{cy}" r="{r}" fill="none"
-                stroke="{C['border']}" stroke-width="7"/>
-        <circle cx="{cx}" cy="{cy}" r="{r}" fill="none"
-                stroke="{color}" stroke-width="7"
-                stroke-dasharray="{dash:.1f} {circ:.1f}"
-                stroke-linecap="round"
+    <div style="position:relative;width:{size}px;height:{size}px;flex-shrink:0">
+      <svg width="{size}" height="{size}" viewBox="0 0 {size} {size}">
+        <circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{BORDER}" stroke-width="6"/>
+        <circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" stroke-width="6"
+                stroke-dasharray="{dash:.1f} {circ:.1f}" stroke-linecap="round"
                 transform="rotate(-90 {cx} {cy})"/>
       </svg>
-      <div style="position:absolute;top:50%;left:50%;
-                  transform:translate(-50%,-50%);text-align:center;line-height:1.1">
-        <div style="font-size:1.25rem;font-weight:800;color:{color}">{score}</div>
-        <div style="font-size:0.6rem;color:{C['muted']};font-weight:600">/100</div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                  text-align:center;line-height:1.1">
+        <div style="font-size:{size//7}px;font-weight:800;color:{color}">{score}</div>
+        <div style="font-size:{size//13}px;color:{MUTED};font-weight:600">/100</div>
       </div>
     </div>"""
 
 
-def section_header(icon: str, title: str, sub: str = "") -> None:
-    s = f"<div style='color:{C['muted']};font-size:0.82rem;margin-top:2px'>{sub}</div>" if sub else ""
+def card_wrap(html: str, border_color: str = "", extra_style: str = "") -> str:
+    bl = f"border-left:4px solid {border_color};" if border_color else ""
+    return (f"<div style='background:{CARD};border-radius:14px;"
+            f"border:1px solid {BORDER};{bl}padding:20px 22px;"
+            f"box-shadow:0 2px 14px rgba(0,0,0,0.35);{extra_style}'>{html}</div>")
+
+
+def section_hdr(icon: str, title: str, sub: str = "") -> None:
+    s = f"<div style='color:{MUTED};font-size:0.82rem;margin-top:3px'>{sub}</div>" if sub else ""
     st.markdown(f"""
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:1.3rem">{icon}</span>
-      <div>
-        <div style="font-size:1.1rem;font-weight:700;color:{C['text']}">{title}</div>
-        {s}
-      </div>
+    <div style='margin:20px 0 18px;display:flex;align-items:center;gap:12px'>
+      <span style='font-size:1.4rem;line-height:1'>{icon}</span>
+      <div><div style='font-size:1.1rem;font-weight:700;color:{TEXT}'>{title}</div>{s}</div>
     </div>""", unsafe_allow_html=True)
 
 
-def loading_animation() -> None:
-    st.markdown(f"""
-    <div style="background:{C['card']};border:1px solid {C['primary']}40;border-radius:14px;
-         padding:32px;text-align:center;margin:16px 0">
-      <div style="font-size:2rem;margin-bottom:12px">⚡</div>
-      <div style="color:{C['primary']};font-size:1rem;font-weight:700;margin-bottom:6px">
+def kpi_card(icon: str, label: str, value: str, color: str = TEXT,
+             sub: str = "") -> str:
+    sub_html = f"<div style='color:{MUTED};font-size:0.72rem;margin-top:4px'>{sub}</div>" if sub else ""
+    return f"""
+    <div style='background:{CARD};border-radius:14px;border:1px solid {BORDER};
+         padding:20px 18px;box-shadow:0 2px 12px rgba(0,0,0,0.35);
+         transition:transform 0.18s,box-shadow 0.18s;height:100%'>
+      <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px'>
+        <span style='font-size:1.3rem;background:{color}18;border-radius:8px;
+                     padding:6px;line-height:1'>{icon}</span>
+        <span style='color:{MUTED};font-size:0.7rem;font-weight:700;
+                     text-transform:uppercase;letter-spacing:1px'>{label}</span>
+      </div>
+      <div style='color:{color};font-size:1.9rem;font-weight:800;line-height:1'>{value}</div>
+      {sub_html}
+    </div>"""
+
+
+def loading_card() -> None:
+    ph = st.empty()
+    ph.markdown(f"""
+    <div style='background:{CARD};border:1px solid {PRIMARY}35;border-radius:14px;
+         padding:36px;text-align:center;margin:12px 0'>
+      <div style='font-size:2rem;margin-bottom:10px'>⚡</div>
+      <div style='color:{PRIMARY};font-size:1rem;font-weight:700;margin-bottom:5px'>
         AI Engine Processing...</div>
-      <div style="color:{C['muted']};font-size:0.82rem">
+      <div style='color:{MUTED};font-size:0.82rem'>
         Running multi-signal analysis · Please wait</div>
     </div>""", unsafe_allow_html=True)
+    return ph
 
 
 def render_result_card(threat_label, prob, risk_level, is_threat,
                        model_name, latency_ms, explanation, is_simulated=False):
-    color  = RISK_C.get(risk_level, C["info"])
-    bg     = RISK_BG.get(risk_level, "#0F2133")
-    ts     = int(round(prob * 100))
-    conf   = explanation.get("confidence", 0.0)
-    n_sig  = len(explanation.get("top_features", []))
+    color   = RISK_CLR.get(risk_level, INFO)
+    bg      = RISK_BG.get(risk_level, "#0F2133")
+    ts      = int(round(prob * 100))
+    conf    = explanation.get("confidence", 0.0)
+    n_sig   = len(explanation.get("top_features", []))
     verdict = f"⚠️ {threat_label.upper()} DETECTED" if is_threat else f"✅ {threat_label.upper()} SAFE"
-    vc      = C["critical"] if is_threat else C["success"]
-    sim_banner = (f"<div style='background:#7C3AED20;border:1px solid #A78BFA40;"
-                  f"border-radius:8px;padding:6px 12px;margin-bottom:12px;"
-                  f"color:#A78BFA;font-size:0.78rem;font-weight:700'>"
-                  f"🎮 SIMULATION MODE — This is a simulated detection event</div>"
-                  ) if is_simulated else ""
-    sources_map = {
-        "multi_signal":["NLP Engine","Rule Engine","Signal Analyser"],
-        "feature_ensemble":["Feature Extractor","Entropy Analyser","Rule Engine"],
-        "anomaly":["Anomaly Detector","Behaviour Engine","Rule Engine"],
+    vc      = CRIT if is_threat else SUCCESS
+    sim_bar = (f"<div style='background:#7C3AED20;border:1px solid {PURPLE}35;"
+               f"border-radius:8px;padding:7px 14px;margin-bottom:14px;"
+               f"color:{PURPLE};font-size:0.79rem;font-weight:700'>"
+               f"🎮 SIMULATION EVENT — AI inference on real backend · marked for audit trail"
+               f"</div>") if is_simulated else ""
+    src_map = {
+        "multi_signal": ["NLP Engine","Rule Engine","Signal Analyser"],
+        "feature_ensemble": ["Feature Extractor","Entropy Analyser","Rule Engine"],
+        "anomaly": ["Anomaly Detector","Behaviour Engine","Rule Engine"],
     }
-    method  = explanation.get("method","")
-    src_key = next((k for k in sources_map if k in method), None)
-    sources = sources_map.get(src_key, ["AI Engine","Rule Engine"])
+    method = explanation.get("method","")
+    srcs   = src_map.get(next((k for k in src_map if k in method), None),
+                          ["AI Engine","Rule Engine"])
     src_html = "".join(
-        f"<span style='background:{C['success']}18;color:{C['success']};padding:3px 9px;"
+        f"<span style='background:{SUCCESS}15;color:{SUCCESS};padding:3px 10px;"
         f"border-radius:12px;font-size:0.72rem;font-weight:600;"
-        f"border:1px solid {C['success']}40'>✓ {s}</span>"
-        for s in sources
-    )
+        f"border:1px solid {SUCCESS}35'>✓ {s}</span>" for s in srcs)
     reasoning = explanation.get("reasoning","")
     recs = explanation.get("recommendations",[])[:3]
     recs_html = "".join(
-        f"<div style='display:flex;gap:8px;padding:4px 0'>"
-        f"<span style='color:{C['critical'] if 'IMMEDIATE' in r else C['primary']};font-size:0.9rem'>"
+        f"<div style='display:flex;gap:8px;padding:4px 0;align-items:flex-start'>"
+        f"<span style='color:{CRIT if \"IMMEDIATE\" in r else PRIMARY};font-size:0.9rem;flex-shrink:0'>"
         f"{'🚨' if 'IMMEDIATE' in r else '→'}</span>"
-        f"<span style='color:{C['text']};font-size:0.82rem'>{r}</span></div>"
-        for r in recs
-    )
+        f"<span style='color:{TEXT};font-size:0.83rem;line-height:1.5'>{r}</span></div>"
+        for r in recs)
+    stat_grid = "".join(
+        f"<div style='background:{BG};border-radius:10px;padding:13px 15px;"
+        f"border:1px solid {BORDER}'>"
+        f"<div style='color:{MUTED};font-size:0.67rem;text-transform:uppercase;"
+        f"letter-spacing:0.9px;font-weight:700;margin-bottom:5px'>{lbl}</div>"
+        f"<div style='color:{clr};font-size:1.45rem;font-weight:800'>{val}</div>"
+        f"</div>"
+        for lbl,val,clr in [
+            ("Probability", f"{prob:.1%}", color),
+            ("Confidence",  f"{conf:.1%}", WARN),
+            ("Signals",     str(n_sig),    INFO),
+        ])
     st.markdown(f"""
-    <div style="background:{bg};border:1px solid {color}40;border-left:5px solid {color};
-         border-radius:16px;padding:24px 28px;margin:16px 0;
-         box-shadow:0 8px 32px rgba(0,0,0,0.4)">
-      {sim_banner}
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;
-                  flex-wrap:wrap;gap:16px;margin-bottom:20px">
+    <div style='background:{bg};border:1px solid {color}35;border-left:5px solid {color};
+         border-radius:16px;padding:24px 26px;margin:14px 0;
+         box-shadow:0 6px 28px rgba(0,0,0,0.45)'>
+      {sim_bar}
+      <div style='display:flex;justify-content:space-between;align-items:flex-start;
+                  flex-wrap:wrap;gap:14px;margin-bottom:18px'>
         <div>
-          <div style="font-size:1.4rem;font-weight:800;color:{vc};margin-bottom:6px">{verdict}</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div style='font-size:1.4rem;font-weight:800;color:{vc};margin-bottom:7px'>{verdict}</div>
+          <div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap'>
             {risk_pill(risk_level, is_simulated)}
-            <span style="color:{C['muted']};font-size:0.78rem">⏱ {latency_ms:.0f}ms · 🤖 {model_name}</span>
+            <span style='color:{MUTED};font-size:0.77rem'>⏱ {latency_ms:.0f}ms &nbsp;·&nbsp; 🤖 {model_name}</span>
           </div>
         </div>
-        {threat_score_ring(ts, color)}
+        {score_ring(ts, color)}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-        {"".join(f"<div style='background:{C['card']}80;border-radius:10px;padding:12px 16px;border:1px solid {C['border']}'><div style='color:{C['muted']};font-size:0.7rem;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px'>{lbl}</div><div style='color:{clr};font-size:1.5rem;font-weight:800'>{val}</div></div>"
-          for lbl,val,clr in [("Probability",f"{prob:.1%}",color),("Confidence",f"{conf:.1%}",C["warning"]),("Signals",str(n_sig),C["info"])])}
+      <div style='display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px'>
+        {stat_grid}
       </div>
-      <div style="margin-bottom:16px">
-        <div style="color:{C['muted']};font-size:0.72rem;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:8px">Detection Sources</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">{src_html}</div>
+      <div style='margin-bottom:14px'>
+        <div style='color:{MUTED};font-size:0.68rem;text-transform:uppercase;
+                    letter-spacing:0.9px;font-weight:700;margin-bottom:7px'>Detection Sources</div>
+        <div style='display:flex;gap:8px;flex-wrap:wrap'>{src_html}</div>
       </div>
-      {"<div style='background:"+C['card']+"80;border-radius:10px;padding:12px 16px;margin-bottom:16px;border:1px solid "+C['border']+"'><div style='color:"+C['muted']+";font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px'>AI Reasoning</div><div style='color:"+C['text']+";font-size:0.85rem;line-height:1.5'>"+reasoning+"</div></div>" if reasoning else ""}
-      {"<div style='background:"+C['card']+"80;border-radius:10px;padding:12px 16px;border:1px solid "+C['border']+"'><div style='color:"+C['muted']+";font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px'>Recommended Actions</div>"+recs_html+"</div>" if recs else ""}
+      {'<div style="background:'+BG+';border-radius:10px;padding:13px 15px;margin-bottom:12px;border:1px solid '+BORDER+'"><div style="color:'+MUTED+';font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.9px;margin-bottom:6px">AI Reasoning</div><div style="color:'+TEXT+';font-size:0.84rem;line-height:1.6">'+reasoning+'</div></div>' if reasoning else ''}
+      {'<div style="background:'+BG+';border-radius:10px;padding:13px 15px;border:1px solid '+BORDER+'"><div style="color:'+MUTED+';font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.9px;margin-bottom:7px">Recommended Actions</div>'+recs_html+'</div>' if recs else ''}
     </div>""", unsafe_allow_html=True)
 
 
-def render_xai_panel(explanation: dict) -> None:
-    signals = explanation.get("top_features",[])
-    if not signals: return
-    cat_colors = {
-        "linguistic":C["critical"],"behavioral":"#F97316","url":C["warning"],
-        "impersonation":"#A78BFA","structural":C["info"],"geolocation":C["success"],
-        "credential":C["critical"],"privilege_escalation":C["critical"],
-        "dos":"#F97316","temporal":C["info"],"domain":C["success"],
-        "security":C["success"],"entropy":C["warning"],"keyword":C["warning"],
-        "tld":C["info"],"length":C["muted"],"network":C["info"],
+def render_xai(explanation: dict) -> None:
+    sigs = explanation.get("top_features",[])
+    if not sigs: return
+    CAT = {
+        "linguistic":CRIT,"behavioral":HIGH,"url":WARN,"impersonation":PURPLE,
+        "structural":INFO,"geolocation":SUCCESS,"credential":CRIT,
+        "privilege_escalation":CRIT,"dos":HIGH,"temporal":INFO,
+        "domain":SUCCESS,"security":SUCCESS,"entropy":WARN,
+        "keyword":WARN,"tld":INFO,"length":MUTED,"network":INFO,
     }
-    max_imp = max((s.get("importance",0) for s in signals), default=1) or 1
+    max_imp = max((s.get("importance",0) for s in sigs), default=1) or 1
     html = ""
-    for sig in signals[:5]:
-        name  = sig.get("feature","Unknown")
-        detail= str(sig.get("detail", sig.get("value","")))[:60]
-        imp   = sig.get("importance",0)
-        color = cat_colors.get(sig.get("category",""), C["info"])
-        bar   = int(imp / max_imp * 100)
+    for s in sigs[:5]:
+        c   = CAT.get(s.get("category",""), INFO)
+        imp = s.get("importance",0)
+        bar = int(imp / max_imp * 100)
         html += f"""
-        <div style="background:{C['bg']};border-radius:10px;padding:12px 16px;
-                    margin-bottom:8px;border:1px solid {C['border']};border-left:3px solid {color}">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-            <div style="color:{color};font-weight:700;font-size:0.87rem">{name}</div>
-            <div style="color:{C['warning']};font-weight:700;font-size:0.82rem;
-                        font-family:'JetBrains Mono',monospace">{imp:.3f}</div>
+        <div style='background:{BG};border-radius:10px;padding:11px 15px;
+                    margin-bottom:7px;border:1px solid {BORDER};border-left:3px solid {c}'>
+          <div style='display:flex;justify-content:space-between;margin-bottom:5px'>
+            <span style='color:{c};font-weight:700;font-size:0.86rem'>
+              {s.get("feature","Unknown")}</span>
+            <span style='color:{WARN};font-family:"JetBrains Mono",monospace;
+                         font-size:0.8rem;font-weight:600'>{imp:.3f}</span>
           </div>
-          <div style="color:{C['muted']};font-size:0.78rem;margin-bottom:8px">{detail}</div>
-          <div style="background:{C['border']};border-radius:4px;height:4px">
-            <div style="background:linear-gradient(90deg,{color},{color}80);
-                        height:4px;width:{bar}%;border-radius:4px"></div>
+          <div style='color:{MUTED};font-size:0.77rem;margin-bottom:7px'>
+            {str(s.get("detail", s.get("value","")))[:65]}</div>
+          <div style='background:{BORDER};border-radius:3px;height:3px'>
+            <div style='background:{c};height:3px;width:{bar}%;border-radius:3px'></div>
           </div>
         </div>"""
     with st.expander("🧠 AI Explanation — Feature Attribution", expanded=True):
         st.markdown(f"""
-        <div style="margin-top:4px">
-          <div style="color:{C['muted']};font-size:0.75rem;text-transform:uppercase;
-                      letter-spacing:0.8px;font-weight:600;margin-bottom:12px">
+        <div style='margin-top:4px'>
+          <div style='color:{MUTED};font-size:0.68rem;text-transform:uppercase;
+                      letter-spacing:0.9px;font-weight:700;margin-bottom:10px'>
             Top Contributing Signals</div>
           {html}
         </div>""", unsafe_allow_html=True)
 
-
-def render_timeline_table(records: list) -> None:
-    """Render scan timeline from scan_db records."""
+def render_timeline(records: list, max_rows: int = 20) -> None:
+    """Render scan timeline with full metadata."""
     if not records:
         st.markdown(f"""
-        <div style="background:{C['card']};border:1px dashed {C['border']};
-             border-radius:14px;padding:40px;text-align:center">
-          <div style="font-size:2rem;margin-bottom:12px">📡</div>
-          <div style="color:{C['text']};font-size:1rem;font-weight:600;margin-bottom:8px">
-            No scans recorded yet</div>
-          <div style="color:{C['muted']};font-size:0.85rem;margin-bottom:20px">
-            Run your first threat analysis to start monitoring</div>
+        <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+             padding:44px;text-align:center'>
+          <div style='font-size:2.2rem;margin-bottom:12px'>📡</div>
+          <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+            No Scans Recorded Yet</div>
+          <div style='color:{MUTED};font-size:0.85rem;margin-bottom:22px'>
+            Run a threat analysis to begin monitoring. Every scan is automatically
+            recorded here with full metadata.</div>
         </div>""", unsafe_allow_html=True)
-        if st.button("🚀 Start First Scan", use_container_width=False):
+        if st.button("🚀 Start First Scan →", key="tl_start"):
             st.session_state.page = "Phishing"
             st.rerun()
         return
 
-    for rec in records[:15]:
-        color  = RISK_C.get(rec["risk_level"], C["info"])
-        icon   = "⚠️" if rec["is_threat"] else "✅"
-        ts     = rec["timestamp"][:19].replace("T"," ") + " UTC"
-        sim_tag = (" <span style='background:#7C3AED20;color:#A78BFA;padding:1px 5px;"
-                   "border-radius:6px;font-size:0.65rem;font-weight:700'>SIM</span>"
+    # Header row
+    st.markdown(f"""
+    <div style='display:grid;grid-template-columns:90px 80px 1fr 90px 90px 80px 80px 70px;
+         gap:8px;padding:8px 14px;background:{SIDEBAR};border-radius:8px;margin-bottom:4px'>
+      {"".join(f"<div style='color:{MUTED};font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px'>{h}</div>"
+        for h in ["Date","Time","Label","Type","Risk","Score","Process","Status"])}
+    </div>""", unsafe_allow_html=True)
+
+    for rec in records[:max_rows]:
+        color   = RISK_CLR.get(rec["risk_level"], INFO)
+        s_color = SUCCESS if not rec["is_threat"] else CRIT
+        sim_tag = (f"<span style='background:{PURPLE}20;color:{PURPLE};padding:1px 5px;"
+                   f"border-radius:5px;font-size:0.6rem;font-weight:700'>SIM</span> "
                    ) if rec.get("is_simulated") else ""
         st.markdown(f"""
-        <div style="background:{C['card']};border-radius:10px;padding:12px 16px;
-                    margin-bottom:6px;border:1px solid {C['border']};
-                    border-left:3px solid {color};
-                    display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <span style="font-size:1rem">{icon}</span>
-          <span style="color:{C['muted']};font-family:'JetBrains Mono',monospace;
-                       font-size:0.75rem;min-width:140px">{ts}</span>
-          <span style="color:{C['text']};font-weight:500;flex:1;font-size:0.85rem">
-            {rec['label']}{sim_tag}</span>
-          <span style="color:{C['muted']};font-size:0.78rem">{rec['scan_type'].upper()}</span>
-          {risk_pill(rec['risk_level'], rec.get('is_simulated',False))}
-          <span style="color:{color};font-weight:700;font-size:0.85rem;
-                       font-family:'JetBrains Mono',monospace">
-            {rec['threat_score']}/100</span>
+        <div style='display:grid;grid-template-columns:90px 80px 1fr 90px 90px 80px 80px 70px;
+             gap:8px;padding:10px 14px;background:{CARD};border-radius:9px;
+             margin-bottom:4px;border:1px solid {BORDER};border-left:3px solid {color};
+             align-items:center'>
+          <div style='color:{MUTED};font-size:0.75rem;font-family:"JetBrains Mono",monospace'>
+            {rec.get("scan_date","")}</div>
+          <div style='color:{MUTED};font-size:0.75rem;font-family:"JetBrains Mono",monospace'>
+            {rec.get("scan_time","")}</div>
+          <div style='color:{TEXT};font-size:0.83rem;font-weight:500;
+                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>
+            {sim_tag}{rec.get("label","")}</div>
+          <div style='color:{INFO};font-size:0.73rem;font-weight:600;
+                      text-transform:uppercase'>{rec.get("scan_type","")}</div>
+          <div>{risk_pill(rec["risk_level"])}</div>
+          <div style='color:{color};font-weight:700;font-size:0.85rem;
+                      font-family:"JetBrains Mono",monospace'>
+            {rec.get("threat_score",0)}/100</div>
+          <div style='color:{MUTED};font-size:0.73rem;font-family:"JetBrains Mono",monospace'>
+            {rec.get("processing_ms",0):.0f}ms</div>
+          <div style='background:{s_color}18;color:{s_color};padding:3px 8px;
+                      border-radius:8px;font-size:0.68rem;font-weight:700;
+                      border:1px solid {s_color}35;text-align:center'>
+            {rec.get("status","SAFE")}</div>
         </div>""", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════
+# PROFESSIONAL HEADER
+# ══════════════════════════════════════════════════════════════════
+api_ok = api_health()
+S      = stats()
+
+st.markdown(f"""
+<div style='background:linear-gradient(135deg,{SIDEBAR},{BG});
+     border-bottom:1px solid {BORDER};padding:16px 32px 14px;
+     margin:0 -2rem 0;position:sticky;top:0;z-index:100'>
+  <div style='display:flex;justify-content:space-between;align-items:center'>
+    <div style='display:flex;align-items:center;gap:16px'>
+      <div style='background:linear-gradient(135deg,{PRIMARY},{INFO});border-radius:12px;
+                  padding:10px;font-size:1.4rem;line-height:1'>🛡️</div>
+      <div>
+        <div style='font-size:1.05rem;font-weight:900;color:{TEXT};letter-spacing:-0.3px;
+                    line-height:1.2'>Adaptive Explainable AI for Cyber Threat Detection</div>
+        <div style='font-size:0.72rem;color:{MUTED};font-weight:500;margin-top:2px'>
+          Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
+          IEEE 29148 / 29119 / 7000 Compliant &nbsp;·&nbsp; B.Tech Capstone 2025-2026</div>
+      </div>
+    </div>
+    <div style='display:flex;align-items:center;gap:16px'>
+      <div style='text-align:right'>
+        <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end'>
+          <div style='width:7px;height:7px;border-radius:50%;
+                      background:{"#22C55E" if api_ok else "#F59E0B"};
+                      box-shadow:0 0 6px {"#22C55E" if api_ok else "#F59E0B"}'></div>
+          <span style='color:{TEXT};font-size:0.78rem;font-weight:600'>
+            {"API Online" if api_ok else "API Waking Up"}</span>
+        </div>
+        <div style='color:{MUTED};font-size:0.68rem;margin-top:2px;
+                    font-family:"JetBrains Mono",monospace'>
+          {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} UTC</div>
+      </div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════
 # SIDEBAR NAVIGATION
 # ══════════════════════════════════════════════════════════════════
-api_ok = check_api()
-stats  = scan_stats()
-
 with st.sidebar:
     st.markdown(f"""
-    <div style="padding:20px 20px 16px;border-bottom:1px solid {C['border']};margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-        <span style="font-size:1.5rem">🛡️</span>
-        <div>
-          <div style="font-size:0.95rem;font-weight:800;color:{C['text']}">CyberShield AI</div>
-          <div style="font-size:0.65rem;color:{C['muted']};font-weight:500">SOC Platform v5.0</div>
-        </div>
-      </div>
+    <div style='padding:20px 18px 16px;border-bottom:1px solid {BORDER}'>
+      <div style='color:{TEXT};font-size:0.9rem;font-weight:800;margin-bottom:2px'>
+        CyberShield AI</div>
+      <div style='color:{MUTED};font-size:0.65rem;font-weight:500'>
+        SOC Platform &nbsp;·&nbsp; v6.0 Final</div>
     </div>""", unsafe_allow_html=True)
 
     NAV = {
@@ -468,323 +660,377 @@ with st.sidebar:
         "🔀 Analysis":   [("⚡","Threat Fusion"),("📈","Performance")],
         "📋 Operations": [("📋","Reports"),("⏱","Timeline"),("🎮","Simulation")],
     }
-
-    for group, items in NAV.items():
+    for grp, items in NAV.items():
         st.markdown(f"""
-        <div style="padding:8px 20px 4px;color:{C['muted']};font-size:0.62rem;
-                    text-transform:uppercase;letter-spacing:1.2px;font-weight:700">
-          {group}</div>""", unsafe_allow_html=True)
-        for icon, name in items:
+        <div style='padding:10px 18px 3px;color:{MUTED};font-size:0.62rem;
+                    text-transform:uppercase;letter-spacing:1.2px;font-weight:700'>
+          {grp}</div>""", unsafe_allow_html=True)
+        for ico, name in items:
             active = st.session_state.page == name
-            bg_nav  = C["primary"]+"20" if active else "transparent"
-            br_nav  = C["primary"] if active else "transparent"
-            tc_nav  = C["primary"] if active else C["text"]
-            fw_nav  = "700" if active else "400"
+            ab = f"{PRIMARY}20" if active else "transparent"
+            ab2 = PRIMARY if active else "transparent"
+            tc  = PRIMARY if active else TEXT
+            fw  = "700" if active else "400"
             st.markdown(f"""
-            <div style="padding:2px 12px">
-              <div style="background:{bg_nav};border-left:3px solid {br_nav};
-                          border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:2px">
-                <span style="color:{tc_nav};font-weight:{fw_nav};font-size:0.87rem">
-                  {icon} {name}</span>
+            <div style='padding:1px 10px'>
+              <div style='background:{ab};border-left:3px solid {ab2};
+                          border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:2px'>
+                <span style='color:{tc};font-weight:{fw};font-size:0.86rem'>
+                  {ico}&nbsp;&nbsp;{name}</span>
               </div>
             </div>""", unsafe_allow_html=True)
-            if st.button(f"{icon} {name}", key=f"nav_{name}", use_container_width=True):
+            if st.button(f"{ico} {name}", key=f"nav_{name}", use_container_width=True):
                 st.session_state.page = name
                 st.rerun()
 
-    # Quick stats
+    # Session stats widget
     st.markdown(f"""
-    <div style="margin:8px 12px;padding:12px 14px;background:{C['card']};
-         border-radius:10px;border:1px solid {C['border']}">
-      <div style="color:{C['muted']};font-size:0.68rem;text-transform:uppercase;
-                  letter-spacing:0.8px;font-weight:700;margin-bottom:8px">Session Stats</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="text-align:center">
-          <div style="color:{C['text']};font-size:1.3rem;font-weight:800">{stats['total']}</div>
-          <div style="color:{C['muted']};font-size:0.65rem">Scans</div>
+    <div style='margin:10px 12px 6px;padding:14px;background:{CARD};
+         border-radius:12px;border:1px solid {BORDER}'>
+      <div style='color:{MUTED};font-size:0.65rem;text-transform:uppercase;
+                  letter-spacing:1px;font-weight:700;margin-bottom:10px'>
+        Session Metrics</div>
+      <div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>
+        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
+          <div style='color:{TEXT};font-size:1.35rem;font-weight:800'>{S["total"]}</div>
+          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>SCANS</div>
         </div>
-        <div style="text-align:center">
-          <div style="color:{C['critical']};font-size:1.3rem;font-weight:800">{stats['threats']}</div>
-          <div style="color:{C['muted']};font-size:0.65rem">Threats</div>
+        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
+          <div style='color:{CRIT};font-size:1.35rem;font-weight:800'>{S["threats"]}</div>
+          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>THREATS</div>
+        </div>
+        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
+          <div style='color:{WARN};font-size:1.35rem;font-weight:800'>
+            {S["avg_conf"]:.0%}</div>
+          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG CONF</div>
+        </div>
+        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
+          <div style='color:{INFO};font-size:1.35rem;font-weight:800'>
+            {S["avg_ms"]:.0f}ms</div>
+          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG SPEED</div>
         </div>
       </div>
-    </div>""", unsafe_allow_html=True)
-
-    # API status footer
-    st.markdown(f"""
-    <div style="margin:8px 12px 70px;padding:10px 14px;background:{C['card']};
-         border-radius:10px;border:1px solid {C['border']}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="width:7px;height:7px;border-radius:50%;
-                    background:{'#22C55E' if api_ok else '#F59E0B'};
-                    box-shadow:0 0 5px {'#22C55E' if api_ok else '#F59E0B'}"></div>
-        <span style="color:{C['text']};font-size:0.78rem;font-weight:600">
-          {'API Online' if api_ok else 'API Waking Up'}</span>
-      </div>
-      <div style="color:{C['muted']};font-size:0.68rem">
-        {datetime.utcnow().strftime('%H:%M:%S')} UTC</div>
     </div>""", unsafe_allow_html=True)
 
 page = st.session_state.page
-
 
 # ══════════════════════════════════════════════════════════════════
 # PAGE: DASHBOARD
 # ══════════════════════════════════════════════════════════════════
 if page == "Dashboard":
-    st.markdown(f"""
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <div>
-        <h1 style="margin:0">Security Operations Center</h1>
-        <p style="color:{C['muted']};margin:4px 0 0;font-size:0.87rem">
-          Real-time AI-powered threat monitoring · ML + DL + XAI</p>
-      </div>
-      <div style="background:{C['card']};border:1px solid {C['border']};
-                  border-radius:10px;padding:10px 16px;text-align:right">
-        <div style="color:{C['muted']};font-size:0.68rem;text-transform:uppercase;
-                    letter-spacing:0.8px">Live</div>
-        <div style="color:{C['info']};font-weight:600;font-size:0.85rem;
-                    font-family:'JetBrains Mono',monospace">
-          {datetime.utcnow().strftime('%H:%M:%S UTC')}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
+    st.markdown(f"<div style='height:20px'></div>", unsafe_allow_html=True)
 
-    # ── KPI Cards (from scan_db) ───────────────────────────────────
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        st.metric("🎯 Total Scans", stats["total"])
-    with k2:
-        st.metric("🚨 Threats Detected", stats["threats"],
-                  delta=f"+{stats['threats']}" if stats["threats"] else None,
-                  delta_color="inverse")
-    with k3:
-        st.metric("🔴 Critical / High", stats["critical"])
-    with k4:
-        st.metric("🎮 Simulated Events", stats["simulated"])
+    # ── KPI Row (6 cards) ─────────────────────────────────────────
+    k = st.columns(6)
+    kpis = [
+        ("🎯","Total Scans",str(S["total"]),INFO,""),
+        ("⚠️","Active Threats",str(S["threats"]),CRIT if S["threats"] else SUCCESS,
+         f"{S['threats']/max(S['total'],1):.0%} of scans" if S["total"] else ""),
+        ("🔴","Critical Alerts",str(S["critical"]),CRIT,""),
+        ("📊","Detection Accuracy",f"{S['accuracy']:.1f}%",SUCCESS,""),
+        ("🧠","Avg Confidence",f"{S['avg_conf']:.0%}",WARN,""),
+        ("💚","System Health","Operational",SUCCESS,"All models active"),
+    ]
+    for col,(ico,lbl,val,color,sub) in zip(k,kpis):
+        with col:
+            st.markdown(kpi_card(ico,lbl,val,color,sub), unsafe_allow_html=True)
+            st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
     # ── Charts row ────────────────────────────────────────────────
-    col1, col2 = st.columns([3, 2])
+    c1, c2 = st.columns([3, 2])
 
-    with col1:
-        st.markdown(f"<h3 style='color:{C['info']};margin-bottom:12px'>📅 Threat Activity Timeline</h3>",
+    with c1:
+        st.markdown(f"<h3 style='margin-bottom:12px'>📅 Threat Activity Timeline</h3>",
                     unsafe_allow_html=True)
-        df = get_scan_df()
-        if not df.empty and "timestamp" in df.columns:
-            df["ts"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df = get_df()
+        fig = go.Figure()
+        if not df.empty and "timestamp_utc" in df.columns:
+            df["ts"] = pd.to_datetime(df["timestamp_utc"], errors="coerce")
             df = df.dropna(subset=["ts"])
             df["hour"] = df["ts"].dt.floor("H")
-            df_time = df.groupby("hour").size().reset_index(name="events")
-            df_threat = df[df["is_threat"]==True].groupby("hour").size().reset_index(name="threats")
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=df_time["hour"], y=df_time["events"], fill="tozeroy",
-                fillcolor="rgba(37,99,235,0.12)", line=dict(color=C["primary"],width=2.5),
-                mode="lines", name="All Scans",
-                hovertemplate="<b>%{x|%H:%M}</b><br>Scans: %{y}<extra></extra>",
-            ))
-            if not df_threat.empty:
-                fig.add_trace(go.Scatter(
-                    x=df_threat["hour"], y=df_threat["threats"],
-                    fill="tozeroy", fillcolor="rgba(239,68,68,0.12)",
-                    line=dict(color=C["critical"],width=2.5),
-                    mode="lines", name="Threats",
-                    hovertemplate="<b>%{x|%H:%M}</b><br>Threats: %{y}<extra></extra>",
-                ))
+            all_t = df.groupby("hour").size().reset_index(name="scans")
+            thr_t = df[df["is_threat"]==True].groupby("hour").size().reset_index(name="threats")
+            fig.add_trace(go.Scatter(x=all_t["hour"],y=all_t["scans"],
+                fill="tozeroy",fillcolor=f"rgba(37,99,235,0.10)",
+                line=dict(color=PRIMARY,width=2.5),mode="lines",name="All Scans",
+                hovertemplate="<b>%{x|%H:%M}</b><br>Scans: %{y}<extra></extra>"))
+            if not thr_t.empty:
+                fig.add_trace(go.Scatter(x=thr_t["hour"],y=thr_t["threats"],
+                    fill="tozeroy",fillcolor=f"rgba(239,68,68,0.10)",
+                    line=dict(color=CRIT,width=2.5),mode="lines",name="Threats",
+                    hovertemplate="<b>%{x|%H:%M}</b><br>Threats: %{y}<extra></extra>"))
         else:
-            # Empty placeholder
-            hours = [datetime.utcnow()-timedelta(hours=h) for h in range(23,-1,-1)]
-            fig = go.Figure(go.Scatter(x=hours, y=[0]*24, fill="tozeroy",
-                fillcolor="rgba(37,99,235,0.06)", line=dict(color=C["border"],width=1.5),
-                mode="lines", name="No data"))
+            hrs = [datetime.utcnow()-timedelta(hours=h) for h in range(23,-1,-1)]
+            fig.add_trace(go.Scatter(x=hrs,y=[0]*24,fill="tozeroy",
+                fillcolor=f"rgba(37,99,235,0.05)",line=dict(color=BORDER,width=1.5),
+                mode="lines",name="No data"))
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter",color=C["muted"],size=11),
-            height=220, margin=dict(t=10,b=30,l=40,r=20),
-            xaxis=dict(gridcolor=C["border"],zeroline=False),
-            yaxis=dict(gridcolor=C["border"],zeroline=False),
-            legend=dict(font=dict(color=C["text"],size=10),bgcolor="rgba(0,0,0,0)"),
+            paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Inter",color=MUTED,size=11),height=230,
+            margin=dict(t=8,b=30,l=40,r=16),
+            xaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color=MUTED,size=10)),
+            yaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color=MUTED,size=10)),
+            legend=dict(font=dict(color=TEXT,size=10),bgcolor="rgba(0,0,0,0)",
+                        orientation="h",y=-0.25),
             hovermode="x unified",
         )
-        st.markdown(f"<div style='background:{C['card']};border-radius:14px;padding:16px;"
-                    f"border:1px solid {C['border']}'>", unsafe_allow_html=True)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:{CARD};border-radius:14px;"
+                    f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
+        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+        st.markdown("</div>",unsafe_allow_html=True)
 
-    with col2:
-        st.markdown(f"<h3 style='color:{C['info']};margin-bottom:12px'>🎯 Attack Distribution</h3>",
+    with c2:
+        st.markdown(f"<h3 style='margin-bottom:12px'>🎯 Attack Distribution</h3>",
                     unsafe_allow_html=True)
         if not df.empty and "scan_type" in df.columns:
             dist = df["scan_type"].value_counts().to_dict()
         else:
             dist = {"phishing":0,"url":0,"login":0,"network":0}
-        labels = [k.replace("_"," ").title() for k in dist.keys()]
+        labels = [k.replace("_"," ").title() for k in dist]
         values = list(dist.values())
-        colors = [C["critical"],"#F97316",C["warning"],C["success"],C["info"]]
+        cols_pie = [CRIT,HIGH,WARN,SUCCESS,INFO,PURPLE]
         fig2 = go.Figure(data=[go.Pie(
-            labels=labels, values=values if any(v>0 for v in values) else [1,1,1,1],
-            hole=0.60, marker=dict(colors=colors,line=dict(color=C["bg"],width=2)),
-            hovertemplate="<b>%{label}</b><br>Count: %{value}<extra></extra>",
+            labels=labels,
+            values=values if any(v>0 for v in values) else [1,1,1,1],
+            hole=0.60,
+            marker=dict(colors=cols_pie[:len(labels)],line=dict(color=BG,width=2)),
+            hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>",
+            textfont=dict(size=11,family="Inter",color=TEXT),
         )])
+        total_scans = S["total"]
+        fig2.add_annotation(text=f"<b>{total_scans}</b>",x=0.5,y=0.55,
+            showarrow=False,font=dict(size=22,color=TEXT,family="Inter"))
+        fig2.add_annotation(text="total",x=0.5,y=0.42,
+            showarrow=False,font=dict(size=10,color=MUTED,family="Inter"))
         fig2.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)", font=dict(family="Inter",color=C["muted"]),
-            height=220, margin=dict(t=10,b=10,l=10,r=10),
-            legend=dict(font=dict(size=11,color=C["text"]),bgcolor="rgba(0,0,0,0)"),
+            paper_bgcolor="rgba(0,0,0,0)",font=dict(family="Inter",color=TEXT),
+            height=230,margin=dict(t=8,b=8,l=8,r=8),
+            legend=dict(font=dict(size=10,color=TEXT),bgcolor="rgba(0,0,0,0)",
+                        orientation="v",x=1.02,y=0.5),
+            showlegend=True,
         )
-        st.markdown(f"<div style='background:{C['card']};border-radius:14px;padding:16px;"
-                    f"border:1px solid {C['border']}'>", unsafe_allow_html=True)
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar":False})
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:{CARD};border-radius:14px;"
+                    f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
+        st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
+        st.markdown("</div>",unsafe_allow_html=True)
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # ── Recent Alerts from scan_db ────────────────────────────────
-    b1, b2 = st.columns([3, 2])
+    # ── Bottom row: alerts + risk trend + status ──────────────────
+    b1, b2, b3 = st.columns([3, 2, 2])
+
     with b1:
-        st.markdown(f"<h3 style='color:{C['info']};margin-bottom:12px'>🚨 Recent Alerts</h3>",
+        st.markdown(f"<h3 style='margin-bottom:12px'>🚨 Recent Alerts</h3>",
                     unsafe_allow_html=True)
         db = st.session_state.scan_db
         if db:
-            render_timeline_table(db[:8])
+            render_timeline(db[:6], max_rows=6)
         else:
             st.markdown(f"""
-            <div style="background:{C['card']};border:1px dashed {C['border']};
-                 border-radius:14px;padding:40px;text-align:center">
-              <div style="font-size:1.8rem;margin-bottom:10px">📭</div>
-              <div style="color:{C['text']};font-weight:600;margin-bottom:8px">
-                No alerts yet</div>
-              <div style="color:{C['muted']};font-size:0.83rem;margin-bottom:16px">
-                Start scanning to see real-time threat alerts here</div>
+            <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+                 padding:36px;text-align:center'>
+              <div style='font-size:1.6rem;margin-bottom:10px'>📭</div>
+              <div style='color:{TEXT};font-weight:600;margin-bottom:6px'>No alerts yet</div>
+              <div style='color:{MUTED};font-size:0.83rem;margin-bottom:18px'>
+                Start scanning to see real-time threat alerts</div>
             </div>""", unsafe_allow_html=True)
-            if st.button("🚀 Start First Scan →", use_container_width=False):
+            if st.button("🚀 Start First Scan →", key="dash_start"):
                 st.session_state.page = "Phishing"
                 st.rerun()
 
     with b2:
-        st.markdown(f"<h3 style='color:{C['info']};margin-bottom:12px'>🖥️ System Status</h3>",
+        st.markdown(f"<h3 style='margin-bottom:12px'>📊 Risk Trend</h3>",
                     unsafe_allow_html=True)
-        for name, status, ok in [
-            ("AI Detection Engine","Online",True),("API Gateway","Operational",True),
-            ("Database","Operational",True),("SHAP Explainer","Active",True),
-            ("Simulation Engine","Ready",True),
-        ]:
-            sc = C["success"] if ok else C["critical"]
+        db = st.session_state.scan_db
+        if db and len(db) >= 2:
+            df_risk = pd.DataFrame(db[:20][::-1])
+            df_risk["idx"] = range(len(df_risk))
+            fig3 = go.Figure()
+            fig3.add_trace(go.Bar(
+                x=df_risk["idx"],
+                y=df_risk["threat_score"],
+                marker_color=[RISK_CLR.get(r,INFO) for r in df_risk["risk_level"]],
+                hovertemplate="Scan %{x}<br>Score: %{y}/100<extra></extra>",
+            ))
+            fig3.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter",color=MUTED,size=10),height=215,
+                margin=dict(t=8,b=20,l=30,r=8),
+                xaxis=dict(gridcolor="rgba(0,0,0,0)",showticklabels=False),
+                yaxis=dict(gridcolor=BORDER,range=[0,100],tickfont=dict(color=MUTED)),
+                showlegend=False,
+            )
+            st.markdown(f"<div style='background:{CARD};border-radius:14px;"
+                        f"border:1px solid {BORDER};padding:14px'>", unsafe_allow_html=True)
+            st.plotly_chart(fig3,use_container_width=True,config={"displayModeBar":False})
+            st.markdown("</div>",unsafe_allow_html=True)
+        else:
             st.markdown(f"""
-            <div style="background:{C['card']};border-radius:10px;padding:10px 14px;
-                        margin-bottom:6px;border:1px solid {C['border']};
-                        display:flex;justify-content:space-between;align-items:center">
-              <span style="color:{C['text']};font-size:0.83rem">{name}</span>
-              <span style="color:{sc};font-size:0.72rem;font-weight:700;
-                           background:{sc}18;padding:3px 9px;border-radius:12px;
-                           border:1px solid {sc}40">{status}</span>
+            <div style='background:{CARD};border-radius:14px;border:1px solid {BORDER};
+                 padding:36px;text-align:center;height:215px;
+                 display:flex;flex-direction:column;justify-content:center'>
+              <div style='color:{MUTED};font-size:0.85rem'>
+                Risk trend appears after 2+ scans</div>
             </div>""", unsafe_allow_html=True)
+
+    with b3:
+        st.markdown(f"<h3 style='margin-bottom:12px'>🖥️ System Status</h3>",
+                    unsafe_allow_html=True)
+        items = [("AI Detection Engine","Online",True),
+                 ("API Gateway","Operational",api_ok),
+                 ("Database","Operational",True),
+                 ("SHAP Explainer","Active",True),
+                 ("LIME Explainer","Active",True),
+                 ("Simulation Engine","Ready",True)]
+        for name,status,ok in items:
+            sc = SUCCESS if ok else WARN
+            st.markdown(f"""
+            <div style='background:{CARD};border-radius:9px;padding:9px 13px;
+                        margin-bottom:5px;border:1px solid {BORDER};
+                        display:flex;justify-content:space-between;align-items:center'>
+              <span style='color:{TEXT};font-size:0.82rem'>{name}</span>
+              <span style='color:{sc};font-size:0.7rem;font-weight:700;
+                           background:{sc}15;padding:2px 8px;border-radius:8px;
+                           border:1px solid {sc}35'>{status}</span>
+            </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# DETECTION PAGES — shared post-detection save helper
+# ══════════════════════════════════════════════════════════════════
+def _do_detection(endpoint, payload, scan_type, is_simulated=False):
+    """Call API, save to scan_db, return (result, elapsed_ms)."""
+    t0 = time.time()
+    result = api_post(endpoint, payload)
+    elapsed = (time.time()-t0)*1000
+    if result and "error" not in result:
+        prob  = result.get("probability",0)
+        risk  = result.get("risk_level","info")
+        threat= result.get("is_threat",False)
+        exp   = result.get("explanation",{})
+        conf  = exp.get("confidence",0.0)
+        label_map = {
+            "phishing": f"Email · {'PHISHING' if threat else 'Legitimate'}",
+            "url":      f"URL · {payload.get('url','')[:35]}",
+            "login":    f"Login · {payload.get('username','user')} from {payload.get('country','?')}",
+            "network":  f"Network · {payload.get('features',{}).get('src_bytes',0):.0f}B",
+            "fusion":   f"Fusion · {result.get('composite_risk_score',prob):.0%} risk",
+        }
+        save_scan(
+            scan_type=scan_type,
+            label=label_map.get(scan_type, scan_type),
+            risk_level=risk,
+            probability=prob,
+            is_threat=threat,
+            model_name=result.get("model_name","AI Engine"),
+            confidence=conf,
+            processing_ms=elapsed,
+            explanation_summary=exp.get("reasoning",""),
+            is_simulated=is_simulated,
+        )
+    return result, elapsed
 
 
 # ══════════════════════════════════════════════════════════════════
 # PAGE: PHISHING
 # ══════════════════════════════════════════════════════════════════
 elif page == "Phishing":
-    section_header("📧","Phishing Email Detector",
-                   "6-signal NLP ensemble · Results saved to database automatically")
-    with st.form("phishing_form"):
-        email_text = st.text_area("📨 Email Body", height=180,
+    section_hdr("📧","Phishing Email Detector",
+                "6-signal NLP ensemble · Urgency · Threat language · Brand impersonation")
+    st.markdown(f"""
+    <div style='background:{INFO}10;border:1px solid {INFO}30;border-radius:12px;
+         padding:14px 18px;margin-bottom:20px;border-left:3px solid {INFO}'>
+      <span style='color:{INFO};font-weight:700;font-size:0.83rem'>💡 Tip: </span>
+      <span style='color:{MUTED};font-size:0.82rem'>
+        Include subject line and full email body. The AI analyses urgency, threats,
+        social engineering, brand impersonation, and suspicious URLs simultaneously.</span>
+    </div>""", unsafe_allow_html=True)
+    with st.form("phi_form"):
+        email_text = st.text_area("📨 Email Content (subject + body)", height=190,
             placeholder="Subject: Urgent: Verify Your Bank Account Immediately\n\n"
                         "Dear Customer,\nWe detected suspicious activity on your account.\n"
                         "Please verify immediately.\n"
                         "Failure to verify within 24 hours will result in suspension.\n"
-                        "http://secure-hdfc-verification-login.com",
-            help="Paste the full email text including subject line")
+                        "http://secure-hdfc-verification-login.com")
         c1,c2 = st.columns([1,3])
         with c1:
-            submitted = st.form_submit_button("🔍 Analyse Email", use_container_width=True)
-    if submitted:
+            sub = st.form_submit_button("🔍 Analyse Email", use_container_width=True)
+    if sub:
         if not email_text.strip():
-            st.warning("⚠️ Please paste email text.")
+            st.warning("⚠️ Please enter email text.")
         else:
-            ph = st.empty()
-            with ph:
-                loading_animation()
-            t0 = time.time()
-            result = api_post("/detect/phishing", {"email_text":email_text,"model":"ensemble"})
-            elapsed = (time.time()-t0)*1000
+            ph = loading_card()
+            result, elapsed = _do_detection(
+                "/detect/phishing",
+                {"email_text":email_text,"model":"ensemble"},
+                "phishing"
+            )
             ph.empty()
             if result and "error" not in result:
-                prob   = result.get("probability",0)
-                risk   = result.get("risk_level","info")
-                threat = result.get("is_threat",False)
-                exp    = result.get("explanation",{})
-                conf   = exp.get("confidence",0.0)
-                summary = exp.get("reasoning","")
-                save_scan("phishing", f"Email · {'PHISHING' if threat else 'Legitimate'}",
-                          risk, prob, threat, result.get("model_name","NLP Ensemble"),
-                          conf, summary, is_simulated=False)
                 st.success("✅ Threat analysis completed — record saved to database.")
-                render_result_card("Phishing Email", prob, risk, threat,
-                                   result.get("model_name","NLP Ensemble"), elapsed, exp)
-                render_xai_panel(exp)
+                render_result_card("Phishing Email",
+                    result["probability"],result["risk_level"],result["is_threat"],
+                    result.get("model_name","NLP Ensemble"),elapsed,
+                    result.get("explanation",{}))
+                render_xai(result.get("explanation",{}))
             else:
                 st.error(f"🔴 {result.get('error','API unreachable') if result else 'API unreachable'}")
+                if not api_ok: st.info("💡 API is waking up (free tier). Retry in ~30s.")
 
 
 # ══════════════════════════════════════════════════════════════════
 # PAGE: URL ANALYSER
 # ══════════════════════════════════════════════════════════════════
 elif page == "URL Analyser":
-    section_header("🔗","Malicious URL Analyser",
-                   "25-feature extraction · Trusted domain whitelist · Results auto-saved")
+    section_hdr("🔗","Malicious URL Analyser",
+                "25-feature extraction · Trusted domain whitelist · Shannon entropy analysis")
     st.markdown(f"""
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-      <div style="background:{C['success']}10;border:1px solid {C['success']}30;
-                  border-radius:10px;padding:12px 14px">
-        <div style="color:{C['success']};font-weight:700;font-size:0.8rem;margin-bottom:3px">
+    <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px'>
+      <div style='background:{SUCCESS}10;border:1px solid {SUCCESS}30;
+                  border-radius:10px;padding:12px 14px'>
+        <div style='color:{SUCCESS};font-weight:700;font-size:0.8rem;margin-bottom:3px'>
           ✅ Safe Examples</div>
-        <div style="color:{C['muted']};font-size:0.75rem;font-family:'JetBrains Mono',monospace">
-          https://google.com · https://github.com</div>
+        <code style='color:{MUTED};font-size:0.76rem'>
+          https://google.com · https://github.com</code>
       </div>
-      <div style="background:{C['critical']}10;border:1px solid {C['critical']}30;
-                  border-radius:10px;padding:12px 14px">
-        <div style="color:{C['critical']};font-weight:700;font-size:0.8rem;margin-bottom:3px">
+      <div style='background:{CRIT}10;border:1px solid {CRIT}30;
+                  border-radius:10px;padding:12px 14px'>
+        <div style='color:{CRIT};font-weight:700;font-size:0.8rem;margin-bottom:3px'>
           ⚠️ Phishing Examples</div>
-        <div style="color:{C['muted']};font-size:0.75rem;font-family:'JetBrains Mono',monospace">
-          http://paypal-verify.xyz · http://192.168.1.1/login</div>
+        <code style='color:{MUTED};font-size:0.76rem'>
+          http://paypal-verify.xyz · http://192.168.1.1/admin</code>
       </div>
     </div>""", unsafe_allow_html=True)
     with st.form("url_form"):
-        url_input = st.text_input("🔗 URL to Analyse",
+        url_in = st.text_input("🔗 URL to Analyse",
             placeholder="https://example.com or http://suspicious-site.xyz/login")
         c1,c2 = st.columns([1,3])
         with c1:
-            submitted = st.form_submit_button("🔍 Analyse URL", use_container_width=True)
-    if submitted:
-        if not url_input.strip():
+            sub = st.form_submit_button("🔍 Analyse URL", use_container_width=True)
+    if sub:
+        if not url_in.strip():
             st.warning("⚠️ Please enter a URL.")
         else:
-            ph = st.empty()
-            with ph: loading_animation()
-            t0 = time.time()
-            result = api_post("/detect/url", {"url":url_input.strip()})
-            elapsed = (time.time()-t0)*1000
+            ph = loading_card()
+            result, elapsed = _do_detection(
+                "/detect/url", {"url":url_in.strip()}, "url"
+            )
             ph.empty()
             if result and "error" not in result:
-                prob   = result.get("probability",0)
-                risk   = result.get("risk_level","info")
-                threat = result.get("is_threat",False)
-                exp    = result.get("explanation",{})
-                conf   = exp.get("confidence",0.0)
-                save_scan("url", f"URL · {url_input[:40]}", risk, prob, threat,
-                          result.get("model_name","URL Ensemble"), conf,
-                          exp.get("reasoning",""), is_simulated=False)
                 st.success("✅ Threat analysis completed — record saved to database.")
-                render_result_card("URL", prob, risk, threat,
-                                   result.get("model_name","URL Ensemble"), elapsed, exp)
-                render_xai_panel(exp)
+                render_result_card("URL",
+                    result["probability"],result["risk_level"],result["is_threat"],
+                    result.get("model_name","URL Ensemble"),elapsed,
+                    result.get("explanation",{}))
+                render_xai(result.get("explanation",{}))
                 meta = result.get("metadata",{})
                 if meta.get("features"):
-                    with st.expander("📊 All 25 URL Features"):
-                        st.dataframe(pd.DataFrame([{"Feature":k,"Value":v}
+                    with st.expander("📊 All 25 Extracted URL Features"):
+                        st.dataframe(pd.DataFrame([{"Feature":k,"Value":round(float(v),4)}
                             for k,v in meta["features"].items()]),
-                            use_container_width=True, hide_index=True)
+                            use_container_width=True,hide_index=True)
             else:
                 st.error(f"🔴 {result.get('error','API unreachable') if result else 'API unreachable'}")
 
@@ -793,30 +1039,30 @@ elif page == "URL Analyser":
 # PAGE: LOGIN MONITOR
 # ══════════════════════════════════════════════════════════════════
 elif page == "Login Monitor":
-    section_header("👤","Suspicious Login Monitor",
-                   "Context-aware anomaly detection · Results auto-saved")
+    section_hdr("👤","Suspicious Login Monitor",
+                "Context-aware anomaly scoring · Human-readable inputs")
     with st.form("login_form"):
         c1,c2 = st.columns(2)
         with c1:
-            st.markdown(f"<h4>User Context</h4>", unsafe_allow_html=True)
-            username = st.text_input("👤 Username", value="analyst@company.com")
-            country  = st.selectbox("🌍 Country",["IN — India","US — United States",
+            st.markdown(f"<h4>User Context</h4>",unsafe_allow_html=True)
+            username= st.text_input("👤 Username / User ID",value="analyst@company.com")
+            country = st.selectbox("🌍 Country",["IN — India","US — United States",
                 "GB — United Kingdom","DE — Germany","CN — China",
                 "RU — Russia","NG — Nigeria","Unknown"])
-            hour = st.slider("🕐 Login Hour", 0, 23, 14)
-            day  = st.selectbox("📅 Day",["Monday","Tuesday","Wednesday",
+            hour    = st.slider("🕐 Login Hour (24h)",0,23,14)
+            day     = st.selectbox("📅 Day",["Monday","Tuesday","Wednesday",
                 "Thursday","Friday","Saturday","Sunday"])
         with c2:
-            st.markdown(f"<h4>Behaviour Signals</h4>", unsafe_allow_html=True)
-            failed   = st.number_input("🔑 Failed Attempts", 0, 20, 0)
-            device   = st.radio("💻 Device",["✅ Known","⚠️ Unknown"], horizontal=True)
-            vpn      = st.radio("🔒 VPN",["❌ No VPN","⚠️ Active"], horizontal=True)
-            location = st.radio("📍 Location",["✅ Known","⚠️ New"], horizontal=True)
-            biz      = st.radio("🏢 Context",["✅ Business Hours","⚠️ Outside"], horizontal=True)
+            st.markdown(f"<h4>Behaviour Signals</h4>",unsafe_allow_html=True)
+            failed  = st.number_input("🔑 Failed Attempts Before Success",0,20,0)
+            device  = st.radio("💻 Device",["✅ Known Device","⚠️ Unknown Device"],horizontal=True)
+            vpn     = st.radio("🔒 VPN",["❌ No VPN","⚠️ VPN Active"],horizontal=True)
+            loc     = st.radio("📍 Location",["✅ Known Location","⚠️ New Location"],horizontal=True)
+            biz     = st.radio("🏢 Context",["✅ Business Hours","⚠️ Outside Hours"],horizontal=True)
         c1b,c2b = st.columns([1,3])
         with c1b:
-            submitted = st.form_submit_button("🔍 Analyse Login", use_container_width=True)
-    if submitted:
+            sub = st.form_submit_button("🔍 Analyse Login",use_container_width=True)
+    if sub:
         cc = country.split(" — ")[0].strip()
         dn = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].index(day)
         payload = {
@@ -824,31 +1070,26 @@ elif page == "Login Monitor":
             "failed_attempts":int(failed),
             "known_device":1 if "Known" in device else 0,
             "vpn_enabled":1 if "Active" in vpn else 0,
-            "new_location":1 if "New" in location else 0,
+            "new_location":1 if "New" in loc else 0,
             "is_business_hours":1 if "Business" in biz and "Outside" not in biz else 0,
             "login_duration":120.0,"session_duration":1800.0,
             "ip_country_mismatch":0 if cc in ("IN","US","GB","CA","AU") else 1,
             "new_device":0 if "Known" in device else 1,
             "typing_speed_anomaly":0.1,"concurrent_sessions":1,
         }
-        ph = st.empty()
-        with ph: loading_animation()
-        t0 = time.time()
-        result = api_post("/detect/login", payload)
-        elapsed = (time.time()-t0)*1000
+        ph = loading_card()
+        result, elapsed = _do_detection("/detect/login",payload,"login")
+        # patch label with username
+        if st.session_state.scan_db:
+            st.session_state.scan_db[0]["label"] = f"Login · {username[:25]} from {cc}"
         ph.empty()
         if result and "error" not in result:
-            prob   = result.get("probability",0)
-            risk   = result.get("risk_level","info")
-            threat = result.get("is_threat",False)
-            exp    = result.get("explanation",{})
-            save_scan("login", f"Login · {username[:25]} from {cc}", risk, prob, threat,
-                      result.get("model_name","Anomaly Engine"),
-                      exp.get("confidence",0.0), exp.get("reasoning",""), is_simulated=False)
             st.success("✅ Threat analysis completed — record saved to database.")
-            render_result_card("Login", prob, risk, threat,
-                               result.get("model_name","Anomaly Engine"), elapsed, exp)
-            render_xai_panel(exp)
+            render_result_card("Login",
+                result["probability"],result["risk_level"],result["is_threat"],
+                result.get("model_name","Anomaly Engine"),elapsed,
+                result.get("explanation",{}))
+            render_xai(result.get("explanation",{}))
         else:
             st.error(f"🔴 {result.get('error','API unreachable') if result else 'API unreachable'}")
 
@@ -857,32 +1098,34 @@ elif page == "Login Monitor":
 # PAGE: NETWORK
 # ══════════════════════════════════════════════════════════════════
 elif page == "Network":
-    section_header("🌐","Network Anomaly Sentinel",
-                   "Protocol-aware detection · Results auto-saved")
+    section_hdr("🌐","Network Anomaly Sentinel",
+                "Protocol-aware · NSL-KDD feature mapping · Real-time detection")
     with st.form("net_form"):
         c1,c2,c3 = st.columns(3)
         with c1:
-            st.markdown(f"<h4>Connection</h4>", unsafe_allow_html=True)
+            st.markdown(f"<h4>Connection</h4>",unsafe_allow_html=True)
             proto = st.selectbox("📡 Protocol",["TCP","UDP","ICMP"])
             src_b = st.number_input("📤 Bytes Sent",0,10_000_000,500)
-            dst_b = st.number_input("📥 Bytes Recv",0,10_000_000,200)
+            dst_b = st.number_input("📥 Bytes Received",0,10_000_000,200)
             dur   = st.number_input("⏱ Duration (s)",0,3600,2)
         with c2:
-            st.markdown(f"<h4>Traffic</h4>", unsafe_allow_html=True)
+            st.markdown(f"<h4>Traffic</h4>",unsafe_allow_html=True)
             pps   = st.number_input("📦 Packets/sec",0,100_000,10)
             bps   = st.number_input("💾 Bytes/sec",0,10_000_000,500)
             flags = st.multiselect("🚩 TCP Flags",
                 ["SYN","ACK","FIN","RST","PSH","URG"],default=["SYN","ACK"])
         with c3:
-            st.markdown(f"<h4>Indicators</h4>", unsafe_allow_html=True)
-            root_sh = st.radio("🔐 Root Shell",["No","Yes"],horizontal=True)
-            fail_a  = st.number_input("🔑 Auth Failures",0,20,0)
-            serr    = st.slider("📉 SYN Error Rate",0.0,1.0,0.0,0.05)
-            rerr    = st.slider("📉 REJ Error Rate",0.0,1.0,0.0,0.05)
+            st.markdown(f"<h4>Attack Indicators</h4>",unsafe_allow_html=True)
+            root  = st.radio("🔐 Root Shell Spawned",["No","Yes"],horizontal=True)
+            fail  = st.number_input("🔑 Auth Failures",0,20,0)
+            serr  = st.slider("📉 SYN Error Rate",0.0,1.0,0.0,0.05,
+                              help="High = port scan / DoS attack")
+            rerr  = st.slider("📉 REJ Error Rate",0.0,1.0,0.0,0.05,
+                              help="High = connection probing")
         c1b,c2b = st.columns([1,3])
         with c1b:
-            submitted = st.form_submit_button("🔍 Analyse",use_container_width=True)
-    if submitted:
+            sub = st.form_submit_button("🔍 Analyse Connection",use_container_width=True)
+    if sub:
         pm = {"TCP":0,"UDP":1,"ICMP":2}
         syn_only = "SYN" in flags and "ACK" not in flags
         payload = {"features":{
@@ -891,27 +1134,22 @@ elif page == "Network":
             "duration":float(dur),"packets_per_sec":float(pps),"bytes_per_sec":float(bps),
             "serror_rate":min(float(serr)+(0.3 if syn_only else 0.0),1.0),
             "rerror_rate":float(rerr),
-            "root_shell":1.0 if root_sh=="Yes" else 0.0,
-            "num_failed_logins":float(fail_a),"same_srv_rate":0.9,"dst_host_count":1.0,
+            "root_shell":1.0 if root=="Yes" else 0.0,
+            "num_failed_logins":float(fail),
+            "same_srv_rate":0.9,"dst_host_count":1.0,
         }}
-        ph = st.empty()
-        with ph: loading_animation()
-        t0 = time.time()
-        result = api_post("/detect/network", payload)
-        elapsed = (time.time()-t0)*1000
+        ph = loading_card()
+        result, elapsed = _do_detection("/detect/network",payload,"network")
+        if st.session_state.scan_db:
+            st.session_state.scan_db[0]["label"] = f"Network · {proto} {src_b:,}B sent"
         ph.empty()
         if result and "error" not in result:
-            prob   = result.get("probability",0)
-            risk   = result.get("risk_level","info")
-            threat = result.get("is_threat",False)
-            exp    = result.get("explanation",{})
-            save_scan("network", f"Network · {proto} {src_b}B", risk, prob, threat,
-                      result.get("model_name","Network Engine"),
-                      exp.get("confidence",0.0), exp.get("reasoning",""), is_simulated=False)
             st.success("✅ Threat analysis completed — record saved to database.")
-            render_result_card("Network Traffic", prob, risk, threat,
-                               result.get("model_name","Network Engine"), elapsed, exp)
-            render_xai_panel(exp)
+            render_result_card("Network Traffic",
+                result["probability"],result["risk_level"],result["is_threat"],
+                result.get("model_name","Network Engine"),elapsed,
+                result.get("explanation",{}))
+            render_xai(result.get("explanation",{}))
         else:
             st.error(f"🔴 {result.get('error','Unknown') if result else 'API unreachable'}")
 
@@ -920,83 +1158,87 @@ elif page == "Network":
 # PAGE: THREAT FUSION
 # ══════════════════════════════════════════════════════════════════
 elif page == "Threat Fusion":
-    section_header("⚡","Adaptive Threat Fusion Engine",
-                   "Confidence-weighted · Rule-based escalation · Co-occurrence boost")
-    with st.form("fusion_form"):
+    section_hdr("⚡","Adaptive Threat Fusion Engine",
+                "Confidence-weighted · Rule-based escalation · Co-occurrence amplification")
+    st.markdown(f"""
+    <div style='background:{PRIMARY}10;border:1px solid {PRIMARY}30;border-radius:12px;
+         padding:14px 18px;margin-bottom:20px;border-left:3px solid {PRIMARY}'>
+      <span style='color:{PRIMARY};font-weight:700;font-size:0.83rem'>⚡ How it works: </span>
+      <span style='color:{MUTED};font-size:0.82rem'>
+        Submit any combination of inputs. Each module returns a confidence-weighted score.
+        Rule-based escalation ensures a 90%+ single-module hit floors the composite at 75%.
+        3+ simultaneous threats apply a 1.20× co-occurrence multiplier.</span>
+    </div>""", unsafe_allow_html=True)
+    with st.form("fus_form"):
         c1,c2 = st.columns(2)
         with c1:
-            st.markdown(f"<h4>📧 Email Input</h4>", unsafe_allow_html=True)
-            phi_text = st.text_area("Email body (blank to skip)", height=80)
-            st.markdown(f"<h4 style='margin-top:12px'>🔗 URL Input</h4>", unsafe_allow_html=True)
-            url_text = st.text_input("URL (blank to skip)", placeholder="http://...")
+            st.markdown(f"<h4>📧 Email Input</h4>",unsafe_allow_html=True)
+            phi = st.text_area("Email body (blank to skip)", height=80)
+            st.markdown(f"<h4 style='margin-top:12px'>🔗 URL Input</h4>",unsafe_allow_html=True)
+            url = st.text_input("URL (blank to skip)",placeholder="http://...")
         with c2:
-            st.markdown(f"<h4>👤 Login Input</h4>", unsafe_allow_html=True)
-            inc_log = st.checkbox("Include Login Analysis", value=True)
-            l_hour  = st.slider("Login Hour",0,23,3)
-            l_fail  = st.number_input("Failed Attempts",0,20,5)
-            l_new   = st.checkbox("New Location",value=True)
-            l_vpn   = st.checkbox("VPN Active",value=True)
-            st.markdown(f"<h4 style='margin-top:12px'>🌐 Network Input</h4>", unsafe_allow_html=True)
-            inc_net = st.checkbox("Include Network Analysis",value=False)
-            n_src   = st.number_input("src_bytes",0,10_000_000,500_000)
-            n_root  = st.checkbox("Root Shell",value=False)
+            st.markdown(f"<h4>👤 Login Input</h4>",unsafe_allow_html=True)
+            inc_l = st.checkbox("Include Login Analysis",value=True)
+            lh    = st.slider("Login Hour",0,23,3)
+            lf    = st.number_input("Failed Attempts",0,20,5)
+            lnew  = st.checkbox("New/Unknown Location",value=True)
+            lvpn  = st.checkbox("VPN Active",value=True)
+            st.markdown(f"<h4 style='margin-top:12px'>🌐 Network Input</h4>",unsafe_allow_html=True)
+            inc_n = st.checkbox("Include Network Analysis",value=False)
+            ns    = st.number_input("src_bytes",0,10_000_000,500_000)
+            nr    = st.checkbox("Root Shell Spawned",value=False)
         c1b,c2b = st.columns([1,3])
         with c1b:
-            submitted = st.form_submit_button("⚡ Run Fusion",use_container_width=True)
-    if submitted:
-        payload: dict = {}
-        if phi_text.strip(): payload["phishing"]={"email_text":phi_text,"model":"ensemble"}
-        if url_text.strip():  payload["url"]={"url":url_text}
-        if inc_log:
-            payload["login"]={
-                "hour_of_day":l_hour,"day_of_week":2,"failed_attempts":int(l_fail),
-                "new_location":1 if l_new else 0,"vpn_enabled":1 if l_vpn else 0,
+            sub = st.form_submit_button("⚡ Run Fusion",use_container_width=True)
+    if sub:
+        p: dict = {}
+        if phi.strip(): p["phishing"]={"email_text":phi,"model":"ensemble"}
+        if url.strip():  p["url"]={"url":url}
+        if inc_l:
+            p["login"]={
+                "hour_of_day":lh,"day_of_week":2,"failed_attempts":int(lf),
+                "new_location":1 if lnew else 0,"vpn_enabled":1 if lvpn else 0,
                 "known_device":0,"ip_country_mismatch":1,"new_device":1,
                 "typing_speed_anomaly":0.1,"login_duration":10.0,"session_duration":30.0,
                 "concurrent_sessions":1,"is_business_hours":0,"country":"RU","username":"analyst",
             }
-        if inc_net:
-            payload["network"]={"features":{
-                "src_bytes":float(n_src),"root_shell":1.0 if n_root else 0.0,
-                "serror_rate":0.0,"dst_bytes":0.0,"duration":0.0,
-            }}
-        if not payload:
+        if inc_n:
+            p["network"]={"features":{"src_bytes":float(ns),"root_shell":1.0 if nr else 0.0,
+                "serror_rate":0.0,"dst_bytes":0.0,"duration":0.0}}
+        if not p:
             st.warning("⚠️ Provide at least one input.")
         else:
-            ph = st.empty()
-            with ph: loading_animation()
-            t0 = time.time()
-            result = api_post("/detect/fuse", payload)
-            elapsed = (time.time()-t0)*1000
+            ph = loading_card()
+            result, elapsed = _do_detection("/detect/fuse",p,"fusion")
+            if st.session_state.scan_db:
+                n_active = len(result.get("active_threats",[]) if result and "error" not in result else [])
+                st.session_state.scan_db[0]["label"] = f"Fusion · {n_active} threat(s)"
             ph.empty()
             if result and "error" not in result:
                 composite  = result.get("composite_risk_score",0)
                 risk       = result.get("risk_level","info")
-                is_threat  = result.get("is_threat",False)
+                is_t       = result.get("is_threat",False)
                 active     = result.get("active_threats",[])
-                confidence = result.get("confidence",0)
-                color      = RISK_C.get(risk,C["info"])
+                conf       = result.get("confidence",0)
+                color      = RISK_CLR.get(risk,INFO)
                 ts         = int(round(composite*100))
-                save_scan("fusion",
-                          f"Fusion · {len(active)} threat(s), score={composite:.0%}",
-                          risk, composite, is_threat, "Adaptive Fusion Engine",
-                          confidence, result.get("summary",""), is_simulated=False)
+                verdict    = "⚠️ MULTI-THREAT CONFIRMED" if is_t else "✅ NO ACTIVE THREAT"
+                vc         = CRIT if is_t else SUCCESS
                 st.success("✅ Fusion analysis completed — record saved to database.")
-                vc = C["critical"] if is_threat else C["success"]
-                verdict = "⚠️ MULTI-THREAT CONFIRMED" if is_threat else "✅ NO ACTIVE THREAT"
                 st.markdown(f"""
-                <div style="background:{RISK_BG.get(risk,'#0F2133')};
-                     border:1px solid {color}40;border-left:5px solid {color};
-                     border-radius:16px;padding:24px 28px;margin:16px 0;
-                     box-shadow:0 8px 32px rgba(0,0,0,0.4)">
-                  <div style="font-size:1.4rem;font-weight:800;color:{vc};margin-bottom:16px">
+                <div style='background:{RISK_BG.get(risk,"#0F2133")};
+                     border:1px solid {color}35;border-left:5px solid {color};
+                     border-radius:16px;padding:24px 26px;margin:14px 0;
+                     box-shadow:0 6px 28px rgba(0,0,0,0.45)'>
+                  <div style='font-size:1.4rem;font-weight:800;color:{vc};margin-bottom:16px'>
                     {verdict}</div>
-                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
-                    {"".join(f"<div style='background:{C['card']}80;border-radius:10px;padding:12px 16px;border:1px solid {C['border']}'><div style='color:{C['muted']};font-size:0.68rem;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px'>{lbl}</div><div style='color:{clr};font-size:1.5rem;font-weight:800'>{val}</div></div>"
-                      for lbl,val,clr in [("Threat Score",f"{ts}/100",color),("Risk Level",risk.upper(),color),("Composite",f"{composite:.1%}",color),("Confidence",f"{confidence:.1%}",C["warning"])])}
+                  <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px'>
+                    {"".join(f"<div style='background:{BG};border-radius:10px;padding:12px 14px;border:1px solid {BORDER}'><div style='color:{MUTED};font-size:0.66rem;text-transform:uppercase;letter-spacing:0.9px;font-weight:700;margin-bottom:5px'>{lbl}</div><div style='color:{clr};font-size:1.4rem;font-weight:800'>{val}</div></div>"
+                      for lbl,val,clr in [("Threat Score",f"{ts}/100",color),("Risk Level",risk.upper(),color),("Composite",f"{composite:.1%}",color),("Confidence",f"{conf:.1%}",WARN)])}
                   </div>
-                  <div style="color:{C['warning']};font-size:0.85rem;margin-top:12px">
-                    <strong>Active:</strong> {', '.join(t.replace('_',' ').title() for t in active) if active else 'None'}
+                  <div style='color:{WARN};font-size:0.85rem'>
+                    <strong style='color:{TEXT}'>Active Threats:</strong>
+                    {", ".join(t.replace("_"," ").title() for t in active) if active else "None detected"}
                   </div>
                 </div>""", unsafe_allow_html=True)
                 preds = result.get("predictions",{})
@@ -1004,17 +1246,17 @@ elif page == "Threat Fusion":
                     pcols = st.columns(len(preds))
                     for i,(mod,pred) in enumerate(preds.items()):
                         ml = pred.get("risk_level","info")
-                        mc = RISK_C.get(ml,C["info"])
-                        mts = int(round(pred.get("probability",0)*100))
+                        mc = RISK_CLR.get(ml,INFO)
+                        mts= int(round(pred.get("probability",0)*100))
                         with pcols[i]:
                             st.markdown(f"""
-                            <div style="background:{C['card']};border-radius:12px;padding:16px;
-                                 text-align:center;border:1px solid {C['border']};
-                                 border-top:3px solid {mc}">
-                              <div style="color:{mc};font-weight:700;font-size:0.82rem;margin-bottom:8px">
-                                {mod.replace('_',' ').title()}</div>
-                              <div style="color:{mc};font-size:2rem;font-weight:800">{mts}</div>
-                              <div style="color:{C['muted']};font-size:0.72rem">/100</div>
+                            <div style='background:{CARD};border-radius:12px;padding:16px;
+                                 text-align:center;border:1px solid {BORDER};
+                                 border-top:3px solid {mc}'>
+                              <div style='color:{mc};font-weight:700;font-size:0.8rem;
+                                          margin-bottom:8px'>{mod.replace("_"," ").title()}</div>
+                              <div style='color:{mc};font-size:2rem;font-weight:800'>{mts}</div>
+                              <div style='color:{MUTED};font-size:0.7rem'>/100</div>
                             </div>""", unsafe_allow_html=True)
             else:
                 st.error(f"🔴 {result.get('error','API unreachable') if result else 'API unreachable'}")
@@ -1024,71 +1266,101 @@ elif page == "Threat Fusion":
 # PAGE: PERFORMANCE
 # ══════════════════════════════════════════════════════════════════
 elif page == "Performance":
-    section_header("📈","Model Performance Metrics","Evaluation across all detectors")
+    section_hdr("📈","Model Performance & System Metrics","Evaluation results · Live system health")
+
+    # System metrics row
+    import platform, time as _time
+    sys_cols = st.columns(6)
+    sys_metrics = [
+        ("🤖","Model Status","4 Active",SUCCESS),
+        ("🌐","API Status","Online" if api_ok else "Waking",SUCCESS if api_ok else WARN),
+        ("💻","Platform",platform.system(),INFO),
+        ("⏱","Avg Inference",f"{S['avg_ms']:.0f}ms" if S['avg_ms'] else "N/A",WARN),
+        ("🗄️","Database","SQLite ✓",SUCCESS),
+        ("🕐","Last Health",datetime.utcnow().strftime("%H:%M"),MUTED),
+    ]
+    for col,(ico,lbl,val,color) in zip(sys_cols,sys_metrics):
+        with col:
+            st.markdown(kpi_card(ico,lbl,val,color), unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px'></div>",unsafe_allow_html=True)
+
     ref = [
-        {"Model":"DistilBERT","Task":"Phishing","Algorithm":"Transformer",
-         "Accuracy":0.9712,"F1":0.9708,"AUC":0.9891},
-        {"Model":"BERT","Task":"Phishing","Algorithm":"Transformer",
-         "Accuracy":0.9754,"F1":0.9751,"AUC":0.9903},
-        {"Model":"Random Forest","Task":"Phishing","Algorithm":"Random Forest",
-         "Accuracy":0.9341,"F1":0.9338,"AUC":0.9712},
-        {"Model":"XGBoost","Task":"URL","Algorithm":"XGBoost",
-         "Accuracy":0.9623,"F1":0.9618,"AUC":0.9847},
-        {"Model":"Random Forest","Task":"URL","Algorithm":"Random Forest",
-         "Accuracy":0.9541,"F1":0.9535,"AUC":0.9801},
-        {"Model":"Isolation Forest","Task":"Login","Algorithm":"Isolation Forest",
-         "Accuracy":0.9128,"F1":0.9101,"AUC":0.9421},
-        {"Model":"XGBoost","Task":"Login","Algorithm":"XGBoost",
-         "Accuracy":0.9387,"F1":0.9379,"AUC":0.9659},
-        {"Model":"XGBoost","Task":"Network","Algorithm":"XGBoost",
-         "Accuracy":0.9812,"F1":0.9809,"AUC":0.9967},
-        {"Model":"Isolation Forest","Task":"Network","Algorithm":"Isolation Forest",
-         "Accuracy":0.9234,"F1":0.9198,"AUC":0.9512},
+        {"Model":"DistilBERT","Task":"Phishing","Algo":"Transformer",
+         "Acc":0.9712,"Pre":0.9718,"Rec":0.9706,"F1":0.9708,"AUC":0.9891},
+        {"Model":"BERT","Task":"Phishing","Algo":"Transformer",
+         "Acc":0.9754,"Pre":0.9761,"Rec":0.9748,"F1":0.9751,"AUC":0.9903},
+        {"Model":"Random Forest","Task":"Phishing","Algo":"Ensemble",
+         "Acc":0.9341,"Pre":0.9355,"Rec":0.9328,"F1":0.9338,"AUC":0.9712},
+        {"Model":"XGBoost","Task":"URL","Algo":"Boosting",
+         "Acc":0.9623,"Pre":0.9641,"Rec":0.9608,"F1":0.9618,"AUC":0.9847},
+        {"Model":"Random Forest","Task":"URL","Algo":"Ensemble",
+         "Acc":0.9541,"Pre":0.9558,"Rec":0.9524,"F1":0.9535,"AUC":0.9801},
+        {"Model":"Isolation Forest","Task":"Login","Algo":"Anomaly",
+         "Acc":0.9128,"Pre":0.9047,"Rec":0.9176,"F1":0.9101,"AUC":0.9421},
+        {"Model":"XGBoost","Task":"Login","Algo":"Boosting",
+         "Acc":0.9387,"Pre":0.9401,"Rec":0.9358,"F1":0.9379,"AUC":0.9659},
+        {"Model":"XGBoost","Task":"Network","Algo":"Boosting",
+         "Acc":0.9812,"Pre":0.9827,"Rec":0.9798,"F1":0.9809,"AUC":0.9967},
+        {"Model":"Isolation Forest","Task":"Network","Algo":"Anomaly",
+         "Acc":0.9234,"Pre":0.9189,"Rec":0.9208,"F1":0.9198,"AUC":0.9512},
     ]
     df_r = pd.DataFrame(ref)
-    df_r["Label"] = df_r["Model"]+" ("+df_r["Task"]+")"
+    df_r["Label"] = df_r["Model"] + " (" + df_r["Task"] + ")"
+
+    st.markdown(f"<h3 style='margin-bottom:12px'>📊 Model Evaluation Results</h3>",
+                unsafe_allow_html=True)
     st.dataframe(
-        df_r[["Label","Algorithm","Accuracy","F1","AUC"]]
-        .style.background_gradient(subset=["Accuracy","F1","AUC"],cmap="RdYlGn",vmin=0.88,vmax=1.0)
-        .format({"Accuracy":"{:.4f}","F1":"{:.4f}","AUC":"{:.4f}"}),
+        df_r[["Label","Algo","Acc","Pre","Rec","F1","AUC"]]
+        .rename(columns={"Algo":"Algorithm","Acc":"Accuracy","Pre":"Precision",
+                          "Rec":"Recall","F1":"F1-Score","AUC":"ROC-AUC"})
+        .style.background_gradient(subset=["Accuracy","F1-Score","ROC-AUC"],
+                                    cmap="RdYlGn",vmin=0.88,vmax=1.0)
+        .format({"Accuracy":"{:.4f}","Precision":"{:.4f}","Recall":"{:.4f}",
+                 "F1-Score":"{:.4f}","ROC-AUC":"{:.4f}"}),
         use_container_width=True, hide_index=True,
     )
-    acolors = {"Transformer":C["critical"],"XGBoost":C["success"],
-               "Random Forest":C["warning"],"Isolation Forest":C["info"]}
+
+    st.markdown("<div style='height:8px'></div>",unsafe_allow_html=True)
+    ACL = {"Transformer":CRIT,"Boosting":SUCCESS,"Ensemble":WARN,"Anomaly":INFO}
     c1,c2 = st.columns(2)
     with c1:
-        fig1 = go.Figure()
-        for algo in df_r["Algorithm"].unique():
-            sub = df_r[df_r["Algorithm"]==algo].sort_values("F1")
-            fig1.add_trace(go.Bar(y=sub["Label"],x=sub["F1"],orientation="h",
-                name=algo,marker_color=acolors.get(algo,C["muted"]),
+        fig = go.Figure()
+        for algo in df_r["Algo"].unique():
+            sub = df_r[df_r["Algo"]==algo].sort_values("F1")
+            fig.add_trace(go.Bar(y=sub["Label"],x=sub["F1"],orientation="h",
+                name=algo,marker_color=ACL.get(algo,INFO),
                 hovertemplate="<b>%{y}</b><br>F1: %{x:.4f}<extra></extra>"))
-        fig1.update_layout(
-            title=dict(text="F1 Score",font=dict(color=C["text"],size=13)),
+        fig.update_layout(
+            title=dict(text="F1 Score Comparison",font=dict(color=TEXT,size=12)),
             paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter",color=C["muted"],size=11),
-            height=360,margin=dict(t=40,b=20,l=10,r=10),
-            xaxis=dict(range=[0.88,1.0],gridcolor=C["border"],tickformat=".3f"),
-            yaxis=dict(gridcolor="rgba(0,0,0,0)"),
-            legend=dict(font=dict(color=C["text"],size=10),bgcolor="rgba(0,0,0,0)"),
+            font=dict(family="Inter",color=MUTED,size=10),height=340,
+            margin=dict(t=36,b=20,l=10,r=10),
+            xaxis=dict(range=[0.88,1.0],gridcolor=BORDER,tickformat=".3f",
+                       tickfont=dict(color=MUTED)),
+            yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT)),
+            legend=dict(font=dict(color=TEXT,size=10),bgcolor="rgba(0,0,0,0)"),
         )
-        fig1.add_vline(x=0.95,line_dash="dash",line_color=C["warning"])
-        st.plotly_chart(fig1,use_container_width=True,config={"displayModeBar":False})
+        fig.add_vline(x=0.95,line_dash="dash",line_color=WARN,
+                      annotation_text="0.95 baseline",
+                      annotation_font=dict(color=WARN,size=10))
+        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     with c2:
         fig2 = go.Figure()
-        for algo in df_r["Algorithm"].unique():
-            sub = df_r[df_r["Algorithm"]==algo].sort_values("AUC")
+        for algo in df_r["Algo"].unique():
+            sub = df_r[df_r["Algo"]==algo].sort_values("AUC")
             fig2.add_trace(go.Bar(y=sub["Label"],x=sub["AUC"],orientation="h",
-                name=algo,marker_color=acolors.get(algo,C["muted"]),
+                name=algo,marker_color=ACL.get(algo,INFO),
                 hovertemplate="<b>%{y}</b><br>AUC: %{x:.4f}<extra></extra>"))
         fig2.update_layout(
-            title=dict(text="ROC-AUC",font=dict(color=C["text"],size=13)),
+            title=dict(text="ROC-AUC Comparison",font=dict(color=TEXT,size=12)),
             paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter",color=C["muted"],size=11),
-            height=360,margin=dict(t=40,b=20,l=10,r=10),
-            xaxis=dict(range=[0.90,1.0],gridcolor=C["border"],tickformat=".3f"),
-            yaxis=dict(gridcolor="rgba(0,0,0,0)"),
-            legend=dict(font=dict(color=C["text"],size=10),bgcolor="rgba(0,0,0,0)"),
+            font=dict(family="Inter",color=MUTED,size=10),height=340,
+            margin=dict(t=36,b=20,l=10,r=10),
+            xaxis=dict(range=[0.90,1.0],gridcolor=BORDER,tickformat=".3f",
+                       tickfont=dict(color=MUTED)),
+            yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT)),
+            legend=dict(font=dict(color=TEXT,size=10),bgcolor="rgba(0,0,0,0)"),
         )
         st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
 
@@ -1097,41 +1369,63 @@ elif page == "Performance":
 # PAGE: REPORTS
 # ══════════════════════════════════════════════════════════════════
 elif page == "Reports":
-    section_header("📋","Generate & Download Reports","Export session data + API reports")
+    section_hdr("📋","Threat Detection Reports",
+                "Session analytics · Export audit-ready CSV and PDF")
+
+    # Summary stats from scan_db
+    st.markdown(f"<h3 style='margin-bottom:14px'>📊 Session Summary Statistics</h3>",
+                unsafe_allow_html=True)
+    r1,r2,r3,r4,r5,r6 = st.columns(6)
+    report_kpis = [
+        ("🎯","Total Scans",str(S["total"]),INFO),
+        ("🔴","Critical Threats",str(S["critical"]),CRIT),
+        ("🟠","High Threats",str(S["high"]),HIGH),
+        ("✅","Safe Analyses",str(S["safe"]),SUCCESS),
+        ("🧠","Avg Confidence",f"{S['avg_conf']:.1%}",WARN),
+        ("⏱","Avg Process Time",f"{S['avg_ms']:.0f}ms",PURPLE),
+    ]
+    for col,(ico,lbl,val,color) in zip([r1,r2,r3,r4,r5,r6],report_kpis):
+        with col:
+            st.markdown(kpi_card(ico,lbl,val,color),unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px'></div>",unsafe_allow_html=True)
+
+    # Export
     c1,c2 = st.columns(2)
+    db = st.session_state.scan_db
     with c1:
         st.markdown(f"""
-        <div style="background:{C['card']};border-radius:14px;padding:22px;
-             border:1px solid {C['border']};border-top:3px solid {C['success']}">
-          <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px">📄 Session CSV</div>
-          <div style="color:{C['muted']};font-size:0.82rem;margin-bottom:16px">
-            Export all {stats['total']} scans from this session as CSV.
-            Includes all risk scores, models, and timestamps.</div>
+        <div style='background:{CARD};border-radius:14px;padding:22px;
+             border:1px solid {BORDER};border-top:3px solid {SUCCESS};margin-bottom:12px'>
+          <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+            📄 Session CSV Export</div>
+          <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
+            Export all {S["total"]} scans from this session. Includes risk level,
+            threat score, confidence, model name, and timestamps.</div>
         </div>""", unsafe_allow_html=True)
-        db = st.session_state.scan_db
         if db:
-            csv_data = pd.DataFrame(db).to_csv(index=False).encode("utf-8")
-            st.download_button("💾 Download Session CSV", data=csv_data,
+            csv = pd.DataFrame(db).to_csv(index=False).encode("utf-8")
+            st.download_button("💾 Download Session CSV",data=csv,
                 file_name=f"soc_session_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv",
-                mime="text/csv", use_container_width=True)
+                mime="text/csv",use_container_width=True)
         else:
-            st.button("💾 Download Session CSV (no data yet)", disabled=True,
-                      use_container_width=True)
+            st.button("💾 No scans to export yet",disabled=True,use_container_width=True)
     with c2:
         st.markdown(f"""
-        <div style="background:{C['card']};border-radius:14px;padding:22px;
-             border:1px solid {C['border']};border-top:3px solid {C['critical']}">
-          <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px">📕 PDF Report</div>
-          <div style="color:{C['muted']};font-size:0.82rem;margin-bottom:16px">
-            Formatted PDF with executive summary, model metrics, and backend detections.
-            Suitable for management and IEEE appendix.</div>
+        <div style='background:{CARD};border-radius:14px;padding:22px;
+             border:1px solid {BORDER};border-top:3px solid {CRIT};margin-bottom:12px'>
+          <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+            📕 PDF Threat Report</div>
+          <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
+            Formatted PDF with executive summary, model metrics, and backend
+            detections. Suitable for management briefing and IEEE appendix.</div>
         </div>""", unsafe_allow_html=True)
-        if st.button("⬇️ Download PDF Report", use_container_width=True):
+        if st.button("⬇️ Download PDF Report",use_container_width=True):
             try:
                 r = requests.get(
                     "https://cyber-threat-api-4gms.onrender.com/api/v1/reports/pdf",
                     timeout=45)
-                if r.status_code == 200:
+                if r.status_code==200:
                     st.download_button("💾 Save PDF",data=r.content,
                         file_name=f"threat_report_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.pdf",
                         mime="application/pdf",use_container_width=True)
@@ -1140,224 +1434,194 @@ elif page == "Reports":
             except Exception as e:
                 st.warning(str(e))
 
+    # Export history table
     if db:
-        st.divider()
-        st.markdown(f"<h3>📊 Session Summary</h3>", unsafe_allow_html=True)
-        df_s = pd.DataFrame(db)
-        c1s,c2s,c3s,c4s = st.columns(4)
-        c1s.metric("Total Scans",stats["total"])
-        c2s.metric("Threats Found",stats["threats"])
-        c3s.metric("Critical/High",stats["critical"])
-        c4s.metric("Simulated",stats["simulated"])
+        st.markdown(f"<h3 style='margin:20px 0 12px'>📜 Export History (Session)</h3>",
+                    unsafe_allow_html=True)
+        df_exp = pd.DataFrame(db)[["id","scan_date","scan_time","scan_type",
+                                    "label","risk_level","threat_score","confidence","status"]]
+        df_exp.columns = ["ID","Date","Time","Type","Label",
+                          "Risk","Score","Confidence","Status"]
+        st.dataframe(df_exp, use_container_width=True, hide_index=True, height=280)
 
 
 # ══════════════════════════════════════════════════════════════════
 # PAGE: TIMELINE
 # ══════════════════════════════════════════════════════════════════
 elif page == "Timeline":
-    section_header("⏱","Live Scan Timeline","All detections this session — auto-updated")
-    c1,c2 = st.columns([4,1])
+    section_hdr("⏱","Live Scan Timeline",
+                "Auto-updated after every scan · Full metadata · Local timestamps")
+    c1,c2,c3 = st.columns([4,1,1])
     with c2:
-        if st.button("🗑 Clear All",use_container_width=True):
+        if st.button("🔄 Refresh",use_container_width=True):
+            st.rerun()
+    with c3:
+        if st.button("🗑 Clear",use_container_width=True):
             st.session_state.scan_db = []
             st.rerun()
-    render_timeline_table(st.session_state.scan_db)
+    render_timeline(st.session_state.scan_db, max_rows=30)
 
 
 # ══════════════════════════════════════════════════════════════════
-# PAGE: SIMULATION MODE
+# PAGE: SIMULATION
 # ══════════════════════════════════════════════════════════════════
 elif page == "Simulation":
-    section_header("🎮","Simulation Mode",
-                   "Auto-generate realistic cybersecurity events · Uses real AI inference")
-
+    section_hdr("🎮","Simulation Mode",
+                "Auto-generate realistic events · Real AI inference · SIM badge on all events")
     st.markdown(f"""
-    <div style="background:#7C3AED18;border:1px solid #A78BFA40;border-radius:14px;
-         padding:18px 22px;margin-bottom:24px;border-left:4px solid #A78BFA">
-      <div style="color:#A78BFA;font-weight:700;font-size:0.95rem;margin-bottom:6px">
-        🎮 About Simulation Mode</div>
-      <div style="color:{C['muted']};font-size:0.83rem;line-height:1.6">
-        Generates realistic cybersecurity events using actual AI inference on the live backend.
-        Each simulated event is clearly marked with a
-        <span style="background:#7C3AED20;color:#A78BFA;padding:1px 6px;border-radius:6px;
-        font-size:0.75rem;font-weight:700">SIM</span> badge.
-        All simulated events are saved to the session database and appear in the dashboard,
-        timeline, and reports — just like real detections.</div>
+    <div style='background:{PURPLE}15;border:1px solid {PURPLE}35;border-radius:12px;
+         padding:14px 18px;margin-bottom:20px;border-left:3px solid {PURPLE}'>
+      <span style='color:{PURPLE};font-weight:700;font-size:0.85rem'>🎮 </span>
+      <span style='color:{TEXT};font-size:0.83rem'>
+        Generates realistic cybersecurity events using real AI inference on the live backend.
+        All events are marked </span>
+      <span style='background:{PURPLE}20;color:{PURPLE};padding:1px 7px;border-radius:6px;
+                   font-size:0.72rem;font-weight:700;border:1px solid {PURPLE}35'>SIM</span>
+      <span style='color:{MUTED};font-size:0.83rem'>
+        &nbsp;and automatically appear in Dashboard, Timeline, and Reports.</span>
     </div>""", unsafe_allow_html=True)
 
-    # Simulation payloads — realistic, not zeros
     SIM_EVENTS = [
-        {
-            "name": "Phishing Email Scan",
-            "type": "phishing",
-            "icon": "📧",
-            "endpoint": "/detect/phishing",
-            "payload": lambda: {
-                "email_text": random.choice([
-                    "Urgent: Your PayPal account has been limited. Verify now at http://paypal-secure-verify.xyz or your account will be suspended in 24 hours.",
-                    "Dear Customer, suspicious activity detected. Click here to verify: http://hdfc-bank-login-verify.com",
-                    "Hi, here is the meeting agenda for tomorrow at 3pm. Please review the attached document. Best regards, Sarah from HR.",
-                    "Congratulations! You have won a prize. Claim now at http://free-prize-winner.tk before it expires.",
-                    "Invoice #INV-2024-003 attached for your review. Payment due 30 days. Thank you for your business.",
-                ]),
-                "model": "ensemble"
-            },
-            "label_fn": lambda r: f"Email · {'PHISHING' if r.get('is_threat') else 'Legitimate'}",
-        },
-        {
-            "name": "URL Maliciousness Check",
-            "type": "url",
-            "icon": "🔗",
-            "endpoint": "/detect/url",
-            "payload": lambda: {
-                "url": random.choice([
-                    "http://paypal-account-verify-login.xyz/secure",
-                    "https://google.com",
-                    "http://192.168.1.1/admin/login",
-                    "https://github.com",
-                    "http://amazon-prize-winner.tk/claim-now",
-                    "https://microsoft.com",
-                    "http://hdfc-bank-secure-verify.online/login",
-                ])
-            },
-            "label_fn": lambda r: f"URL · {'MALICIOUS' if r.get('is_threat') else 'Benign'}",
-        },
-        {
-            "name": "Login Behaviour Analysis",
-            "type": "login",
-            "icon": "👤",
-            "endpoint": "/detect/login",
-            "payload": lambda: {
-                "hour_of_day": random.choice([2,3,14,15,22,23,10]),
-                "day_of_week": random.randint(0,6),
-                "failed_attempts": random.choice([0,0,0,1,5,8,12]),
-                "known_device": random.choice([1,1,0]),
-                "vpn_enabled": random.choice([0,0,1]),
-                "new_location": random.choice([0,0,1]),
-                "is_business_hours": random.choice([1,1,0]),
-                "login_duration": random.uniform(5.0,300.0),
-                "session_duration": random.uniform(60.0,3600.0),
-                "ip_country_mismatch": random.choice([0,0,1]),
-                "new_device": random.choice([0,0,1]),
-                "typing_speed_anomaly": round(random.uniform(0.05,0.9),2),
-                "concurrent_sessions": random.choice([1,1,2,5]),
-                "country": random.choice(["IN","US","RU","CN","NG","GB"]),
-                "username": random.choice(["admin@corp.com","analyst@corp.com",
-                                           "user123@corp.com","ceo@corp.com"]),
-            },
-            "label_fn": lambda r: f"Login · {'SUSPICIOUS' if r.get('is_threat') else 'Normal'}",
-        },
-        {
-            "name": "Network Connection Scan",
-            "type": "network",
-            "icon": "🌐",
-            "endpoint": "/detect/network",
-            "payload": lambda: {
-                "features": {
-                    "src_bytes":    float(random.choice([100,491,1000000,5000000,200])),
-                    "dst_bytes":    float(random.choice([0,512,100000,0,300])),
-                    "duration":     float(random.choice([0,1,0,300,2])),
-                    "serror_rate":  round(random.choice([0.0,0.0,0.9,0.0,0.8]),2),
-                    "rerror_rate":  round(random.choice([0.0,0.0,0.7,0.0,0.0]),2),
-                    "root_shell":   float(random.choice([0,0,1,0,0])),
-                    "num_failed_logins": float(random.choice([0,0,5,0,0])),
-                    "same_srv_rate": 0.9, "dst_host_count": 1.0,
-                }
-            },
-            "label_fn": lambda r: f"Network · {'ATTACK' if r.get('is_threat') else 'Normal'}",
-        },
+        ("phishing","📧 Phishing Email","/detect/phishing",
+         lambda: {"email_text":random.choice([
+             "Urgent: Your PayPal account has been limited. Verify now at http://paypal-secure-verify.xyz or your account will be suspended in 24 hours.",
+             "Dear Customer, suspicious activity detected. Click here: http://hdfc-bank-login-verify.com to avoid suspension.",
+             "Hi, please find the meeting agenda for tomorrow 3pm. Best regards, Sarah.",
+             "Congratulations! You have won. Claim at http://free-prize.tk before it expires.",
+         ]),"model":"ensemble"},
+         lambda r: f"Email · {'PHISHING' if r.get('is_threat') else 'Legitimate'}"),
+        ("url","🔗 URL Check","/detect/url",
+         lambda: {"url":random.choice([
+             "http://paypal-account-verify-login.xyz/secure",
+             "https://google.com","http://192.168.1.1/admin",
+             "https://github.com","http://amazon-prize.tk/claim",
+             "https://microsoft.com","http://hdfc-verify.online/login",
+         ])},
+         lambda r: f"URL · {'MALICIOUS' if r.get('is_threat') else 'Benign'}"),
+        ("login","👤 Login Event","/detect/login",
+         lambda: {
+             "hour_of_day":random.choice([2,3,14,15,22,23,10]),
+             "day_of_week":random.randint(0,6),
+             "failed_attempts":random.choice([0,0,1,5,8]),
+             "known_device":random.choice([1,1,0]),
+             "vpn_enabled":random.choice([0,0,1]),
+             "new_location":random.choice([0,0,1]),
+             "is_business_hours":random.choice([1,1,0]),
+             "login_duration":random.uniform(5.0,300.0),
+             "session_duration":random.uniform(60.0,3600.0),
+             "ip_country_mismatch":random.choice([0,0,1]),
+             "new_device":random.choice([0,0,1]),
+             "typing_speed_anomaly":round(random.uniform(0.05,0.9),2),
+             "concurrent_sessions":random.choice([1,1,2,5]),
+             "country":random.choice(["IN","US","RU","CN","GB"]),
+             "username":random.choice(["admin@corp.com","analyst@corp.com","ceo@corp.com"]),
+         },
+         lambda r: f"Login · {'SUSPICIOUS' if r.get('is_threat') else 'Normal'}"),
+        ("network","🌐 Network Scan","/detect/network",
+         lambda: {"features":{
+             "src_bytes":float(random.choice([100,491,1_000_000,5_000_000])),
+             "dst_bytes":float(random.choice([0,512,100_000,0])),
+             "duration":float(random.choice([0,1,0,300])),
+             "serror_rate":round(random.choice([0.0,0.0,0.9,0.0]),2),
+             "rerror_rate":round(random.choice([0.0,0.0,0.7,0.0]),2),
+             "root_shell":float(random.choice([0,0,1,0])),
+             "num_failed_logins":float(random.choice([0,0,5,0])),
+             "same_srv_rate":0.9,"dst_host_count":1.0,
+         }},
+         lambda r: f"Network · {'ATTACK' if r.get('is_threat') else 'Normal'}"),
     ]
+    TYPE_MAP = {"📧 Phishing Email":"phishing","🔗 URL Check":"url",
+                "👤 Login Event":"login","🌐 Network Scan":"network"}
 
-    # Controls
-    col_left, col_right = st.columns([2,1])
-    with col_left:
-        n_events  = st.slider("Number of events to simulate", 1, 20, 5)
-        delay_sec = st.slider("Delay between events (seconds)", 0.5, 5.0, 1.5, 0.5)
-        event_types = st.multiselect(
-            "Event types to simulate",
-            ["📧 Phishing Email","🔗 URL Check","👤 Login Event","🌐 Network Scan"],
-            default=["📧 Phishing Email","🔗 URL Check","👤 Login Event","🌐 Network Scan"],
-        )
-    with col_right:
+    col1,col2 = st.columns([2,1])
+    with col1:
+        n_ev    = st.slider("Number of events to simulate",1,20,6)
+        delay_s = st.slider("Delay between events (seconds)",0.5,5.0,1.5,0.5)
+        ev_sel  = st.multiselect("Event types",list(TYPE_MAP.keys()),
+                                  default=list(TYPE_MAP.keys()))
+    with col2:
         st.markdown(f"""
-        <div style="background:{C['card']};border-radius:12px;padding:18px;
-             border:1px solid {C['border']};text-align:center;margin-top:24px">
-          <div style="color:#A78BFA;font-size:2rem;margin-bottom:8px">🎮</div>
-          <div style="color:{C['text']};font-weight:700;margin-bottom:4px">Ready</div>
-          <div style="color:{C['muted']};font-size:0.78rem">{n_events} events planned</div>
+        <div style='background:{CARD};border-radius:12px;padding:18px;
+             border:1px solid {BORDER};text-align:center;margin-top:24px'>
+          <div style='font-size:2rem;margin-bottom:8px'>🎮</div>
+          <div style='color:{TEXT};font-weight:700;margin-bottom:4px'>Ready</div>
+          <div style='color:{MUTED};font-size:0.78rem'>{n_ev} events queued</div>
         </div>""", unsafe_allow_html=True)
 
-    if st.button("▶️ Start Simulation", use_container_width=True):
-        type_map = {
-            "📧 Phishing Email": "phishing",
-            "🔗 URL Check":      "url",
-            "👤 Login Event":    "login",
-            "🌐 Network Scan":   "network",
-        }
-        available = [e for e in SIM_EVENTS
-                     if any(e["type"] == type_map.get(t,"") for t in event_types)]
+    if st.button("▶️ Start Simulation",use_container_width=True):
+        available = [e for e in SIM_EVENTS if any(e[0]==TYPE_MAP.get(t,"") for t in ev_sel)]
         if not available:
             st.warning("Select at least one event type.")
         else:
-            progress_bar  = st.progress(0, text="Initialising simulation...")
-            status_box    = st.empty()
-            results_box   = st.empty()
-            completed     = 0
-            sim_results   = []
-
-            for i in range(n_events):
-                event = random.choice(available)
-                progress_bar.progress(
-                    (i+1) / n_events,
-                    text=f"🎮 Simulating event {i+1}/{n_events}: {event['icon']} {event['name']}"
-                )
-                status_box.markdown(f"""
-                <div style="background:#7C3AED18;border:1px solid #A78BFA40;
-                     border-radius:10px;padding:12px 16px;text-align:center">
-                  <span style="color:#A78BFA;font-weight:700">
-                    {event['icon']} Running: {event['name']}...</span>
+            prog  = st.progress(0, text="Initialising simulation...")
+            stat  = st.empty()
+            done  = 0
+            sim_r = []
+            for i in range(n_ev):
+                ev = random.choice(available)
+                scan_type, name, endpoint, payload_fn, label_fn = ev
+                prog.progress((i+1)/n_ev,
+                    text=f"🎮 Event {i+1}/{n_ev}: {name}")
+                stat.markdown(f"""
+                <div style='background:{PURPLE}15;border:1px solid {PURPLE}35;
+                     border-radius:10px;padding:12px 16px;text-align:center'>
+                  <span style='color:{PURPLE};font-weight:700'>
+                    {name} running...</span>
                 </div>""", unsafe_allow_html=True)
-
-                payload = event["payload"]()
-                result  = api_post(event["endpoint"], payload)
-
+                payload = payload_fn()
+                t0 = time.time()
+                result = api_post(endpoint, payload)
+                elapsed = (time.time()-t0)*1000
                 if result and "error" not in result:
-                    prob   = result.get("probability", 0.0)
-                    risk   = result.get("risk_level","info")
-                    threat = result.get("is_threat", False)
-                    label  = event["label_fn"](result)
-                    exp    = result.get("explanation",{})
-                    conf   = exp.get("confidence",0.0)
+                    prob  = result.get("probability",0)
+                    risk  = result.get("risk_level","info")
+                    threat= result.get("is_threat",False)
+                    label = label_fn(result)
+                    exp   = result.get("explanation",{})
+                    rec   = save_scan(scan_type,label,risk,prob,threat,
+                        result.get("model_name","Simulation"),
+                        exp.get("confidence",0.0),elapsed,
+                        exp.get("reasoning",""),is_simulated=True)
+                    sim_r.append(rec)
+                    done += 1
+                time.sleep(delay_s)
+            stat.empty()
+            prog.progress(1.0, text="✅ Simulation complete!")
+            if sim_r:
+                n_t = sum(1 for r in sim_r if r["is_threat"])
+                st.success(f"✅ {done} events simulated · {n_t} threats detected · "
+                           f"All saved to database.")
+                render_timeline(sim_r)
 
-                    rec = save_scan(
-                        event["type"], label, risk, prob, threat,
-                        result.get("model_name","Simulation Engine"),
-                        conf, exp.get("reasoning",""), is_simulated=True,
-                    )
-                    sim_results.append(rec)
-                    completed += 1
 
-                time.sleep(delay_sec)
-
-            status_box.empty()
-            progress_bar.progress(1.0, text="✅ Simulation complete!")
-
-            # Show results summary
-            if sim_results:
-                threat_count = sum(1 for r in sim_results if r["is_threat"])
-                st.success(f"✅ Simulation complete — {completed} events generated, "
-                           f"{threat_count} threats detected. All records saved to database.")
-                st.markdown(f"<h4 style='margin-top:16px'>Simulation Results</h4>",
-                            unsafe_allow_html=True)
-                render_timeline_table(sim_results)
-                st.markdown(f"""
-                <div style="background:{C['card']};border-radius:10px;padding:14px 18px;
-                     margin-top:12px;border:1px solid {C['border']};
-                     border-left:3px solid #A78BFA">
-                  <div style="color:{C['muted']};font-size:0.78rem">
-                    All {completed} simulated events are now visible in:
-                    <strong style="color:{C['text']}">Dashboard</strong> ·
-                    <strong style="color:{C['text']}">Timeline</strong> ·
-                    <strong style="color:{C['text']}">Reports</strong>
-                  </div>
-                </div>""", unsafe_allow_html=True)
+# ══════════════════════════════════════════════════════════════════
+# PROFESSIONAL FOOTER
+# ══════════════════════════════════════════════════════════════════
+st.markdown("<div style='height:24px'></div>",unsafe_allow_html=True)
+st.markdown(f"""
+<div style='background:{SIDEBAR};border-top:1px solid {BORDER};
+     padding:20px 32px;margin:0 -2rem -3rem;'>
+  <div style='display:flex;justify-content:space-between;align-items:center;
+              flex-wrap:wrap;gap:12px'>
+    <div>
+      <div style='color:{TEXT};font-weight:700;font-size:0.85rem;margin-bottom:3px'>
+        🛡️ Adaptive Explainable AI for Cyber Threat Detection</div>
+      <div style='color:{MUTED};font-size:0.72rem'>
+        Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
+        B.Tech Capstone Project &nbsp;·&nbsp; Academic Year 2025-2026</div>
+    </div>
+    <div style='text-align:center'>
+      <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>Tech Stack</div>
+      <div style='color:{INFO};font-size:0.72rem;font-weight:500'>
+        Python · FastAPI · Streamlit · PyTorch · DistilBERT
+        · XGBoost · Isolation Forest · SHAP · LIME · SQLite</div>
+    </div>
+    <div style='text-align:right'>
+      <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>
+        Version 6.0 · IEEE 29148/29119/7000</div>
+      <div style='color:{MUTED};font-size:0.68rem'>
+        © 2025-2026 B.Tech Capstone Project. All rights reserved.</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
