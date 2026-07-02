@@ -455,12 +455,16 @@ def render_result_card(threat_label, prob, risk_level, is_threat,
         f"border:1px solid {SUCCESS}35'>✓ {s}</span>" for s in srcs)
     reasoning = explanation.get("reasoning","")
     recs = explanation.get("recommendations",[])[:3]
-    recs_html = "".join(
-        f"<div style='display:flex;gap:8px;padding:4px 0;align-items:flex-start'>"
-        f"<span style='color:{CRIT if \"IMMEDIATE\" in r else PRIMARY};font-size:0.9rem;flex-shrink:0'>"
-        f"{'🚨' if 'IMMEDIATE' in r else '→'}</span>"
-        f"<span style='color:{TEXT};font-size:0.83rem;line-height:1.5'>{r}</span></div>"
-        for r in recs)
+    recs_parts = []
+    for r in recs:
+        rec_color = CRIT if "IMMEDIATE" in r else PRIMARY
+        rec_icon  = "🚨" if "IMMEDIATE" in r else "→"
+        recs_parts.append(
+            f"<div style='display:flex;gap:8px;padding:4px 0;align-items:flex-start'>"
+            f"<span style='color:{rec_color};font-size:0.9rem;flex-shrink:0'>{rec_icon}</span>"
+            f"<span style='color:{TEXT};font-size:0.83rem;line-height:1.5'>{r}</span></div>"
+        )
+    recs_html = "".join(recs_parts)
     stat_grid = "".join(
         f"<div style='background:{BG};border-radius:10px;padding:13px 15px;"
         f"border:1px solid {BORDER}'>"
@@ -715,6 +719,43 @@ with st.sidebar:
 page = st.session_state.page
 
 # ══════════════════════════════════════════════════════════════════
+# DETECTION PAGES — shared post-detection save helper
+# (must be defined before the if/elif page routing block)
+# ══════════════════════════════════════════════════════════════════
+def _do_detection(endpoint, payload, scan_type, is_simulated=False):
+    """Call API, save to scan_db, return (result, elapsed_ms)."""
+    t0 = time.time()
+    result = api_post(endpoint, payload)
+    elapsed = (time.time()-t0)*1000
+    if result and "error" not in result:
+        prob  = result.get("probability",0)
+        risk  = result.get("risk_level","info")
+        threat= result.get("is_threat",False)
+        exp   = result.get("explanation",{})
+        conf  = exp.get("confidence",0.0)
+        label_map = {
+            "phishing": f"Email · {'PHISHING' if threat else 'Legitimate'}",
+            "url":      f"URL · {payload.get('url','')[:35]}",
+            "login":    f"Login · {payload.get('username','user')} from {payload.get('country','?')}",
+            "network":  f"Network · {payload.get('features',{}).get('src_bytes',0):.0f}B",
+            "fusion":   f"Fusion · {result.get('composite_risk_score',prob):.0%} risk",
+        }
+        save_scan(
+            scan_type=scan_type,
+            label=label_map.get(scan_type, scan_type),
+            risk_level=risk,
+            probability=prob,
+            is_threat=threat,
+            model_name=result.get("model_name","AI Engine"),
+            confidence=conf,
+            processing_ms=elapsed,
+            explanation_summary=exp.get("reasoning",""),
+            is_simulated=is_simulated,
+        )
+    return result, elapsed
+
+
+# ══════════════════════════════════════════════════════════════════
 # PAGE: DASHBOARD
 # ══════════════════════════════════════════════════════════════════
 if page == "Dashboard":
@@ -895,42 +936,6 @@ if page == "Dashboard":
                            background:{sc}15;padding:2px 8px;border-radius:8px;
                            border:1px solid {sc}35'>{status}</span>
             </div>""", unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════════════════════════════════
-# DETECTION PAGES — shared post-detection save helper
-# ══════════════════════════════════════════════════════════════════
-def _do_detection(endpoint, payload, scan_type, is_simulated=False):
-    """Call API, save to scan_db, return (result, elapsed_ms)."""
-    t0 = time.time()
-    result = api_post(endpoint, payload)
-    elapsed = (time.time()-t0)*1000
-    if result and "error" not in result:
-        prob  = result.get("probability",0)
-        risk  = result.get("risk_level","info")
-        threat= result.get("is_threat",False)
-        exp   = result.get("explanation",{})
-        conf  = exp.get("confidence",0.0)
-        label_map = {
-            "phishing": f"Email · {'PHISHING' if threat else 'Legitimate'}",
-            "url":      f"URL · {payload.get('url','')[:35]}",
-            "login":    f"Login · {payload.get('username','user')} from {payload.get('country','?')}",
-            "network":  f"Network · {payload.get('features',{}).get('src_bytes',0):.0f}B",
-            "fusion":   f"Fusion · {result.get('composite_risk_score',prob):.0%} risk",
-        }
-        save_scan(
-            scan_type=scan_type,
-            label=label_map.get(scan_type, scan_type),
-            risk_level=risk,
-            probability=prob,
-            is_threat=threat,
-            model_name=result.get("model_name","AI Engine"),
-            confidence=conf,
-            processing_ms=elapsed,
-            explanation_summary=exp.get("reasoning",""),
-            is_simulated=is_simulated,
-        )
-    return result, elapsed
 
 
 # ══════════════════════════════════════════════════════════════════
