@@ -192,39 +192,39 @@ class PhishingInferenceEngine:
             structural_score += 0.12
 
         # ── Ensemble scoring ───────────────────────────────────────
-        # Cap each signal to prevent single-signal domination
-        urgency_capped  = min(urgency_score,  0.35)
-        threat_capped   = min(threat_score,   0.35)
-        social_capped   = min(social_score,   0.35)
-        brand_capped    = min(brand_score,    0.20)
-        url_capped      = min(url_score,      0.40)
-        struct_capped   = min(structural_score, 0.20)
+        # Each signal contributes its raw value — no artificial caps
+        # Strong multi-signal evidence must produce high probability
 
-        # Weighted ensemble
+        # Weighted ensemble (weights sum to 1.0)
         raw_score = (
-            urgency_capped  * 0.20 +
-            threat_capped   * 0.25 +
-            social_capped   * 0.25 +
-            brand_capped    * 0.10 +
-            url_capped      * 0.15 +
-            struct_capped   * 0.05
+            urgency_score  * 0.20 +
+            threat_score   * 0.25 +
+            social_score   * 0.25 +
+            brand_score    * 0.10 +
+            url_score      * 0.15 +
+            structural_score * 0.05
         )
 
-        # Amplification: co-occurrence of multiple signals raises confidence
+        # Co-occurrence amplification — KEY FIX:
+        # When multiple HIGH-CONFIDENCE signals fire together,
+        # this is definitively phishing. Amplify accordingly.
         n_active_signals = sum([
             urgency_score > 0,
             threat_score > 0,
             social_score > 0,
             url_score > 0,
+            brand_score > 0,
         ])
-        if n_active_signals >= 3:
-            raw_score = raw_score * 1.35
-        elif n_active_signals >= 2:
-            raw_score = raw_score * 1.15
 
-        # Calibrated sigmoid for well-separated probability
-        # Maps raw_score to [0, 1] with steep transition around 0.5
-        calibrated = self._calibrated_sigmoid(raw_score, k=6.0, x0=0.38)
+        if n_active_signals >= 4:
+            raw_score = raw_score * 2.20   # 4+ signals = definitive phishing
+        elif n_active_signals >= 3:
+            raw_score = raw_score * 1.80   # 3 signals = very likely phishing
+        elif n_active_signals >= 2:
+            raw_score = raw_score * 1.35   # 2 signals = suspicious
+        # Calibrated sigmoid — midpoint lowered to 0.25 so multi-signal
+        # evidence reliably crosses the 0.90 threshold
+        calibrated = self._calibrated_sigmoid(raw_score, k=5.5, x0=0.25)
         probability = float(np.clip(calibrated, 0.01, 0.98))
 
         # Confidence: based on number and strength of signals
@@ -237,42 +237,42 @@ class PhishingInferenceEngine:
             all_signals.append({
                 "feature": "Urgency Language",
                 "detail": f"Found: {', '.join(set(urgency_hits[:3]))}",
-                "importance": round(urgency_capped * 0.20, 4),
+                "importance": round(urgency_score * 0.20, 4),
                 "category": "linguistic",
             })
         if threat_hits:
             all_signals.append({
                 "feature": "Threat / Suspension Language",
                 "detail": f"Found: {', '.join(set(str(h)[:20] for h in threat_hits[:3]))}",
-                "importance": round(threat_capped * 0.25, 4),
+                "importance": round(threat_score * 0.25, 4),
                 "category": "linguistic",
             })
         if social_hits:
             all_signals.append({
                 "feature": "Social Engineering Tactics",
                 "detail": f"Patterns: {', '.join(set(str(h)[:25] for h in social_hits[:3]))}",
-                "importance": round(social_capped * 0.25, 4),
+                "importance": round(social_score * 0.25, 4),
                 "category": "behavioral",
             })
         if brand_hits:
             all_signals.append({
                 "feature": "Brand Impersonation",
                 "detail": f"Brands mentioned: {', '.join(set(brand_hits[:3]))}",
-                "importance": round(brand_capped * 0.10, 4),
+                "importance": round(brand_score * 0.10, 4),
                 "category": "impersonation",
             })
         if url_hits:
             all_signals.append({
                 "feature": "Suspicious URL in Body",
                 "detail": f"URL detected: {url_hits[0][:60]}",
-                "importance": round(url_capped * 0.15, 4),
+                "importance": round(url_score * 0.15, 4),
                 "category": "url",
             })
         if structural_score > 0:
             all_signals.append({
                 "feature": "Structural Anomaly",
                 "detail": "Generic salutation / capitalisation pattern",
-                "importance": round(struct_capped * 0.05, 4),
+                "importance": round(structural_score * 0.05, 4),
                 "category": "structural",
             })
 
