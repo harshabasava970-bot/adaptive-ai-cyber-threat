@@ -71,7 +71,7 @@ def create_app() -> FastAPI:
             "Production-grade REST API for AI-powered cybersecurity threat detection. "
             "Detects phishing emails, malicious URLs, suspicious logins, and network anomalies "
             "using Machine Learning, Deep Learning, and Explainable AI.\n\n"
-            "**IEEE 29148 / 29119 / 1012 / 7000 Compliant** | B.Tech Capstone Project 2025-2026"
+            "**IEEE 29148 / 29119 / 1012 / 7000 Compliant** | B.Tech Capstone Project 2026-2027"
         ),
         version=APP_VERSION,
         docs_url="/docs",

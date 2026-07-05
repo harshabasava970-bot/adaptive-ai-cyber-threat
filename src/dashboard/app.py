@@ -2,7 +2,7 @@
 app.py — Enterprise SOC Dashboard v6 (Final Production Polish)
 ================================================================
 Adaptive Explainable AI for Cyber Threat Detection
-Author: B.Tech Capstone Project 2025-2026
+Author: B.Tech Capstone Project 2026-2027
 """
 import sys, os, time, math, uuid, random, io
 from datetime import datetime, timedelta
@@ -624,7 +624,7 @@ st.markdown(f"""
                     line-height:1.2'>Adaptive Explainable AI for Cyber Threat Detection</div>
         <div style='font-size:0.73rem;color:#CBD5E1;font-weight:500;margin-top:2px'>
           Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
-          IEEE 29148 / 29119 / 7000 Compliant &nbsp;·&nbsp; B.Tech Capstone 2025-2026</div>
+          IEEE 29148 / 29119 / 7000 Compliant &nbsp;·&nbsp; B.Tech Capstone 2026-2027</div>
       </div>
     </div>
     <div style='display:flex;align-items:center;gap:16px'>
@@ -1636,7 +1636,7 @@ st.markdown(f"""
         🛡️ Adaptive Explainable AI for Cyber Threat Detection</div>
       <div style='color:{MUTED};font-size:0.72rem'>
         Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
-        B.Tech Capstone Project &nbsp;·&nbsp; Academic Year 2025-2026</div>
+        B.Tech Capstone Project &nbsp;·&nbsp; Academic Year 2026-2027</div>
     </div>
     <div style='text-align:center'>
       <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>Tech Stack</div>
@@ -1648,7 +1648,7 @@ st.markdown(f"""
       <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>
         Version 6.0 · IEEE 29148/29119/7000</div>
       <div style='color:{MUTED};font-size:0.68rem'>
-        © 2025-2026 B.Tech Capstone Project. All rights reserved.</div>
+        © 2026-2027 B.Tech Capstone Project. All rights reserved.</div>
     </div>
   </div>
 </div>
