@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0B1120" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>CyberShield AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/mobile.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ══ TOP HEADER ══ -->
+  <header class="app-header" role="banner">
+    <div class="header-left">
+      <span class="header-logo" aria-hidden="true">🛡️</span>
+      <div>
+        <div class="header-title">CyberShield AI</div>
+        <div class="header-sub">Enterprise SOC Platform</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="status-dot" id="apiDot" aria-hidden="true"></span>
+      <span class="status-label" id="apiLabel">Connecting…</span>
+    </div>
+  </header>
+
+  <!-- ══ MAIN CONTENT ══ -->
+  <main class="app-main" id="mainContent" role="main">
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <section id="page-dashboard" class="page active" aria-label="Dashboard">
+      <h2 class="page-title">📊 Overview</h2>
+
+      <!-- KPI grid -->
+      <div class="kpi-grid" id="kpiGrid" role="list">
+        <div class="kpi-card" role="listitem">
+          <div class="kpi-icon" style="background:#2563EB18">🎯</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Total Scans</div>
+            <div class="kpi-value info" id="kpi-total">N/A</div>
+          </div>
+        </div>
+        <div class="kpi-card" role="listitem">
+          <div class="kpi-icon" style="background:#EF444418">⚠️</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Active Threats</div>
+            <div class="kpi-value crit" id="kpi-threats">N/A</div>
+            <div class="kpi-sub" id="kpi-threats-sub">Waiting for first scan</div>
+          </div>
+        </div>
+        <div class="kpi-card" role="listitem">
+          <div class="kpi-icon" style="background:#22C55E18">📊</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Detection Accuracy</div>
+            <div class="kpi-value success" id="kpi-accuracy">N/A</div>
+            <div class="kpi-sub" id="kpi-accuracy-sub">Waiting for first scan</div>
+          </div>
+        </div>
+        <div class="kpi-card" role="listitem">
+          <div class="kpi-icon" style="background:#F59E0B18">🧠</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg Confidence</div>
+            <div class="kpi-value warn" id="kpi-conf">N/A</div>
+            <div class="kpi-sub" id="kpi-conf-sub">Waiting for first scan</div>
+          </div>
+        </div>
+        <div class="kpi-card" role="listitem">
+          <div class="kpi-icon" style="background:#EF444418">🔴</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Critical Alerts</div>
+            <div class="kpi-value crit" id="kpi-critical">N/A</div>
+          </div>
+        </div>
+        <div class="kpi-card" role="listitem">
+          <div class="kpi-icon" style="background:#22C55E18">💚</div>
+          <div class="kpi-body">
+            <div class="kpi-label">System Health</div>
+            <div class="kpi-value success">Operational</div>
+            <div class="kpi-sub">All models active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts — hidden until first scan -->
+      <div id="chartsSection" class="hidden">
+        <h3 class="section-title">📅 Threat Activity Timeline</h3>
+        <div class="chart-card">
+          <canvas id="timelineChart" height="180" aria-label="Threat activity timeline chart"></canvas>
+        </div>
+        <h3 class="section-title" style="margin-top:16px">🎯 Attack Distribution</h3>
+        <div class="chart-card">
+          <canvas id="distChart" height="200" aria-label="Attack distribution pie chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Empty state — shown until first scan -->
+      <div id="emptyState" class="empty-state" role="status" aria-live="polite">
+        <div class="empty-icon">📡</div>
+        <div class="empty-title">No scan data available</div>
+        <div class="empty-sub">Run your first analysis to populate analytics.</div>
+        <button class="btn-primary" onclick="switchPage('scan')">🔍 Start First Scan</button>
+      </div>
+
+      <!-- Recent alerts list -->
+      <div id="recentAlertsSection" class="hidden">
+        <h3 class="section-title">🚨 Recent Alerts</h3>
+        <div id="recentAlertsList" role="list" aria-label="Recent threat alerts"></div>
+      </div>
+    </section>
+
+    <!-- ── SCAN PAGE ── -->
+    <section id="page-scan" class="page" aria-label="Run a scan">
+      <h2 class="page-title">🔍 Run Analysis</h2>
+
+      <div class="scan-type-tabs" role="tablist" aria-label="Scan type">
+        <button class="scan-tab active" role="tab" aria-selected="true" data-tab="phishing" onclick="switchTab('phishing',this)">📧 Email</button>
+        <button class="scan-tab" role="tab" aria-selected="false" data-tab="url" onclick="switchTab('url',this)">🔗 URL</button>
+        <button class="scan-tab" role="tab" aria-selected="false" data-tab="login" onclick="switchTab('login',this)">👤 Login</button>
+        <button class="scan-tab" role="tab" aria-selected="false" data-tab="network" onclick="switchTab('network',this)">🌐 Network</button>
+      </div>
+
+      <!-- Phishing -->
+      <div id="tab-phishing" class="tab-content active" role="tabpanel">
+        <p class="tip-text">💡 Paste the email subject and body. The AI checks urgency, threats, brand impersonation, and suspicious URLs.</p>
+        <label class="field-label" for="emailInput">Email Content</label>
+        <textarea id="emailInput" class="field-textarea" rows="7" placeholder="Subject: Urgent: Verify your account&#10;&#10;Dear Customer, click here…"></textarea>
+        <button class="btn-primary btn-full" onclick="runScan('phishing')" id="btn-phishing">🔍 Analyse Email</button>
+      </div>
+
+      <!-- URL -->
+      <div id="tab-url" class="tab-content" role="tabpanel">
+        <p class="tip-text">💡 Enter any URL — the engine extracts 25 features including entropy, domain age, and TLD risk.</p>
+        <label class="field-label" for="urlInput">URL to Analyse</label>
+        <input id="urlInput" class="field-input" type="url" placeholder="https://example.com" />
+        <button class="btn-primary btn-full" style="margin-top:16px" onclick="runScan('url')" id="btn-url">🔍 Analyse URL</button>
+      </div>
+
+      <!-- Login -->
+      <div id="tab-login" class="tab-content" role="tabpanel">
+        <p class="tip-text">💡 Describe the login context. The anomaly engine scores behavioural risk.</p>
+        <label class="field-label" for="loginUser">Username</label>
+        <input id="loginUser" class="field-input" type="text" value="analyst@company.com" />
+        <label class="field-label" for="loginCountry" style="margin-top:12px">Country Code</label>
+        <input id="loginCountry" class="field-input" type="text" maxlength="2" value="IN" />
+        <label class="field-label" style="margin-top:12px">Login Hour (0–23)</label>
+        <input id="loginHour" class="field-input" type="number" min="0" max="23" value="14" />
+        <div class="toggle-row">
+          <label class="toggle-label" for="chkVpn">VPN Active</label>
+          <input type="checkbox" id="chkVpn" class="toggle-check" />
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label" for="chkNewLoc">New Location</label>
+          <input type="checkbox" id="chkNewLoc" class="toggle-check" />
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label" for="chkUnknownDev">Unknown Device</label>
+          <input type="checkbox" id="chkUnknownDev" class="toggle-check" />
+        </div>
+        <button class="btn-primary btn-full" style="margin-top:16px" onclick="runScan('login')" id="btn-login">🔍 Analyse Login</button>
+      </div>
+
+      <!-- Network -->
+      <div id="tab-network" class="tab-content" role="tabpanel">
+        <p class="tip-text">💡 Describe the network connection. NSL-KDD feature mapping detects attacks and anomalies.</p>
+        <label class="field-label" for="netSrcBytes">Bytes Sent</label>
+        <input id="netSrcBytes" class="field-input" type="number" value="500" />
+        <label class="field-label" style="margin-top:12px" for="netDstBytes">Bytes Received</label>
+        <input id="netDstBytes" class="field-input" type="number" value="200" />
+        <div class="toggle-row">
+          <label class="toggle-label" for="chkRootShell">Root Shell Spawned</label>
+          <input type="checkbox" id="chkRootShell" class="toggle-check" />
+        </div>
+        <label class="field-label" style="margin-top:12px">SYN Error Rate (0–1)</label>
+        <input id="netSynErr" class="field-input" type="number" min="0" max="1" step="0.05" value="0" />
+        <button class="btn-primary btn-full" style="margin-top:16px" onclick="runScan('network')" id="btn-network">🔍 Analyse Connection</button>
+      </div>
+
+      <!-- Result card (populated after scan) -->
+      <div id="resultCard" class="result-card hidden" role="alert" aria-live="assertive"></div>
+    </section>
+
+    <!-- ── TIMELINE PAGE ── -->
+    <section id="page-timeline" class="page" aria-label="Scan timeline">
+      <h2 class="page-title">⏱ Scan Timeline</h2>
+      <div id="timelineList" role="list" aria-label="All scan records"></div>
+      <div id="timelineEmpty" class="empty-state" role="status" aria-live="polite">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">No scans yet</div>
+        <div class="empty-sub">Run an analysis to start tracking.</div>
+        <button class="btn-primary" onclick="switchPage('scan')">🔍 Start Scanning</button>
+      </div>
+    </section>
+
+    <!-- ── PERFORMANCE PAGE ── -->
+    <section id="page-performance" class="page" aria-label="Model performance">
+      <h2 class="page-title">📈 Model Performance</h2>
+      <div class="perf-table-wrap">
+        <table class="perf-table" aria-label="Model evaluation results">
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Task</th>
+              <th scope="col">F1</th>
+              <th scope="col">AUC</th>
+            </tr>
+          </thead>
+          <tbody id="perfTableBody"></tbody>
+        </table>
+      </div>
+      <h3 class="section-title" style="margin-top:20px">F1 Score Overview</h3>
+      <div class="chart-card">
+        <canvas id="perfChart" height="220" aria-label="Model F1 score bar chart"></canvas>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══ BOTTOM NAV ══ -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <button class="nav-btn active" onclick="switchPage('dashboard')" aria-label="Dashboard" aria-current="page" id="navBtn-dashboard">
+      <span class="nav-icon" aria-hidden="true">🏠</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('scan')" aria-label="Run scan" id="navBtn-scan">
+      <span class="nav-icon" aria-hidden="true">🔍</span>
+      <span class="nav-label">Scan</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('timeline')" aria-label="Timeline" id="navBtn-timeline">
+      <span class="nav-icon" aria-hidden="true">⏱</span>
+      <span class="nav-label">Timeline</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('performance')" aria-label="Performance" id="navBtn-performance">
+      <span class="nav-icon" aria-hidden="true">📈</span>
+      <span class="nav-label">Metrics</span>
+    </button>
+  </nav>
+
+  <!-- ══ LOADING OVERLAY ══ -->
+  <div id="loadingOverlay" class="loading-overlay hidden" role="status" aria-live="polite" aria-label="Processing">
+    <div class="loading-card">
+      <div class="loading-icon">⚡</div>
+      <div class="loading-title">AI Engine Processing…</div>
+      <div class="loading-sub">Running multi-signal analysis</div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

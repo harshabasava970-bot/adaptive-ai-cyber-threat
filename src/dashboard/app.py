@@ -38,7 +38,7 @@ CRIT    = "#EF4444"
 INFO    = "#38BDF8"
 HIGH    = "#F97316"
 TEXT    = "#F8FAFC"
-MUTED   = "#94A3B8"
+MUTED   = "#CBD5E1"   # raised from #94A3B8 for WCAG AA contrast on dark bg
 PURPLE  = "#A78BFA"
 
 RISK_CLR = {"critical":CRIT,"high":HIGH,"medium":WARN,"low":SUCCESS,"info":INFO}
@@ -88,11 +88,11 @@ h2 {{ font-size: 1.25rem !important; font-weight: 700 !important;
 h3 {{ font-size: 1.05rem !important; font-weight: 600 !important;
      color: {INFO} !important; line-height: 1.3 !important; }}
 h4 {{ font-size: 0.78rem !important; font-weight: 700 !important;
-     color: {MUTED} !important; text-transform: uppercase !important;
+     color: #CBD5E1 !important; text-transform: uppercase !important;
      letter-spacing: 1px !important; }}
 p {{ color: {TEXT} !important; }}
 label {{ color: {TEXT} !important; font-weight: 500 !important; }}
-small, .caption {{ color: {MUTED} !important; }}
+small, .caption {{ color: #CBD5E1 !important; }}
 
 /* ── Metric cards ── */
 div[data-testid="metric-container"] {{
@@ -109,8 +109,8 @@ div[data-testid="metric-container"]:hover {{
   border-color: {PRIMARY}60 !important;
 }}
 div[data-testid="metric-container"] [data-testid="stMetricLabel"] > div {{
-  font-size: 0.7rem !important; font-weight: 700 !important;
-  color: {MUTED} !important; text-transform: uppercase !important;
+  font-size: 0.72rem !important; font-weight: 700 !important;
+  color: #CBD5E1 !important; text-transform: uppercase !important;
   letter-spacing: 1px !important;
 }}
 div[data-testid="metric-container"] [data-testid="stMetricValue"] > div {{
@@ -180,7 +180,7 @@ div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div {{
 }}
 .stTabs [data-baseweb="tab"] {{
   background: transparent !important; border-radius: 9px !important;
-  color: {MUTED} !important; font-weight: 500 !important;
+  color: #CBD5E1 !important; font-weight: 500 !important;
   padding: 8px 18px !important; font-size: 0.85rem !important; border: none !important;
 }}
 .stTabs [aria-selected="true"] {{
@@ -192,13 +192,13 @@ div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div {{
 [data-testid="stDataFrameResizable"] {{ border-radius: 12px !important; }}
 .stDataFrame thead tr th {{
   background: {SIDEBAR} !important; color: {TEXT} !important;
-  font-weight: 700 !important; font-size: 0.78rem !important;
+  font-weight: 700 !important; font-size: 0.8rem !important;
   text-transform: uppercase !important; letter-spacing: 0.8px !important;
   padding: 10px 14px !important;
 }}
 .stDataFrame tbody tr td {{
   background: {CARD} !important; color: {TEXT} !important;
-  font-size: 0.83rem !important; padding: 8px 14px !important;
+  font-size: 0.85rem !important; padding: 8px 14px !important;
   border-bottom: 1px solid {BORDER} !important;
 }}
 .stDataFrame tbody tr:hover td {{ background: {BORDER}80 !important; }}
@@ -387,7 +387,7 @@ def card_wrap(html: str, border_color: str = "", extra_style: str = "") -> str:
 
 
 def section_hdr(icon: str, title: str, sub: str = "") -> None:
-    s = f"<div style='color:{MUTED};font-size:0.82rem;margin-top:3px'>{sub}</div>" if sub else ""
+    s = f"<div style='color:#CBD5E1;font-size:0.84rem;margin-top:3px'>{sub}</div>" if sub else ""
     st.markdown(f"""
     <div style='margin:20px 0 18px;display:flex;align-items:center;gap:12px'>
       <span style='font-size:1.4rem;line-height:1'>{icon}</span>
@@ -397,7 +397,7 @@ def section_hdr(icon: str, title: str, sub: str = "") -> None:
 
 def kpi_card(icon: str, label: str, value: str, color: str = TEXT,
              sub: str = "") -> str:
-    sub_html = f"<div style='color:{MUTED};font-size:0.72rem;margin-top:4px'>{sub}</div>" if sub else ""
+    sub_html = f"<div style='color:#CBD5E1;font-size:0.74rem;margin-top:4px'>{sub}</div>" if sub else ""
     return f"""
     <div style='background:{CARD};border-radius:14px;border:1px solid {BORDER};
          padding:20px 18px;box-shadow:0 2px 12px rgba(0,0,0,0.35);
@@ -405,7 +405,7 @@ def kpi_card(icon: str, label: str, value: str, color: str = TEXT,
       <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px'>
         <span style='font-size:1.3rem;background:{color}18;border-radius:8px;
                      padding:6px;line-height:1'>{icon}</span>
-        <span style='color:{MUTED};font-size:0.7rem;font-weight:700;
+        <span style='color:#CBD5E1;font-size:0.72rem;font-weight:700;
                      text-transform:uppercase;letter-spacing:1px'>{label}</span>
       </div>
       <div style='color:{color};font-size:1.9rem;font-weight:800;line-height:1'>{value}</div>
@@ -531,7 +531,7 @@ def render_xai(explanation: dict) -> None:
             <span style='color:{WARN};font-family:"JetBrains Mono",monospace;
                          font-size:0.8rem;font-weight:600'>{imp:.3f}</span>
           </div>
-          <div style='color:{MUTED};font-size:0.77rem;margin-bottom:7px'>
+          <div style='color:#CBD5E1;font-size:0.79rem;margin-bottom:7px'>
             {str(s.get("detail", s.get("value","")))[:65]}</div>
           <div style='background:{BORDER};border-radius:3px;height:3px'>
             <div style='background:{c};height:3px;width:{bar}%;border-radius:3px'></div>
@@ -622,7 +622,7 @@ st.markdown(f"""
       <div>
         <div style='font-size:1.05rem;font-weight:900;color:{TEXT};letter-spacing:-0.3px;
                     line-height:1.2'>Adaptive Explainable AI for Cyber Threat Detection</div>
-        <div style='font-size:0.72rem;color:{MUTED};font-weight:500;margin-top:2px'>
+        <div style='font-size:0.73rem;color:#CBD5E1;font-weight:500;margin-top:2px'>
           Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
           IEEE 29148 / 29119 / 7000 Compliant &nbsp;·&nbsp; B.Tech Capstone 2025-2026</div>
       </div>
@@ -691,7 +691,7 @@ with st.sidebar:
     st.markdown(f"""
     <div style='margin:10px 12px 6px;padding:14px;background:{CARD};
          border-radius:12px;border:1px solid {BORDER}'>
-      <div style='color:{MUTED};font-size:0.65rem;text-transform:uppercase;
+      <div style='color:#CBD5E1;font-size:0.67rem;text-transform:uppercase;
                   letter-spacing:1px;font-weight:700;margin-bottom:10px'>
         Session Metrics</div>
       <div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>
@@ -705,12 +705,12 @@ with st.sidebar:
         </div>
         <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
           <div style='color:{WARN};font-size:1.35rem;font-weight:800'>
-            {S["avg_conf"]:.0%}</div>
+            {f"{S['avg_conf']:.0%}" if S["total"] > 0 else "N/A"}</div>
           <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG CONF</div>
         </div>
         <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
           <div style='color:{INFO};font-size:1.35rem;font-weight:800'>
-            {S["avg_ms"]:.0f}ms</div>
+            {f"{S['avg_ms']:.0f}ms" if S["total"] > 0 else "N/A"}</div>
           <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG SPEED</div>
         </div>
       </div>
@@ -763,13 +763,21 @@ if page == "Dashboard":
 
     # ── KPI Row (6 cards) ─────────────────────────────────────────
     k = st.columns(6)
+    has_scans = S["total"] > 0
     kpis = [
-        ("🎯","Total Scans",str(S["total"]),INFO,""),
-        ("⚠️","Active Threats",str(S["threats"]),CRIT if S["threats"] else SUCCESS,
-         f"{S['threats']/max(S['total'],1):.0%} of scans" if S["total"] else ""),
-        ("🔴","Critical Alerts",str(S["critical"]),CRIT,""),
-        ("📊","Detection Accuracy",f"{S['accuracy']:.1f}%",SUCCESS,""),
-        ("🧠","Avg Confidence",f"{S['avg_conf']:.0%}",WARN,""),
+        ("🎯","Total Scans",str(S["total"]) if has_scans else "N/A",
+         INFO,""),
+        ("⚠️","Active Threats",str(S["threats"]) if has_scans else "N/A",
+         CRIT if S["threats"] else SUCCESS,
+         f"{S['threats']/max(S['total'],1):.0%} of scans" if has_scans else "Waiting for first scan"),
+        ("🔴","Critical Alerts",str(S["critical"]) if has_scans else "N/A",
+         CRIT,""),
+        ("📊","Detection Accuracy",f"{S['accuracy']:.1f}%" if has_scans else "N/A",
+         SUCCESS,
+         "Waiting for first scan" if not has_scans else ""),
+        ("🧠","Avg Confidence",f"{S['avg_conf']:.0%}" if has_scans else "N/A",
+         WARN,
+         "Waiting for first scan" if not has_scans else ""),
         ("💚","System Health","Operational",SUCCESS,"All models active"),
     ]
     for col,(ico,lbl,val,color,sub) in zip(k,kpis):
@@ -781,13 +789,24 @@ if page == "Dashboard":
 
     # ── Charts row ────────────────────────────────────────────────
     c1, c2 = st.columns([3, 2])
+    df = get_df()
 
     with c1:
         st.markdown(f"<h3 style='margin-bottom:12px'>📅 Threat Activity Timeline</h3>",
                     unsafe_allow_html=True)
-        df = get_df()
-        fig = go.Figure()
-        if not df.empty and "timestamp_utc" in df.columns:
+        if df.empty:
+            st.markdown(f"""
+            <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+                 padding:44px;text-align:center;height:266px;
+                 display:flex;flex-direction:column;justify-content:center;align-items:center'>
+              <div style='font-size:2.2rem;margin-bottom:12px'>📈</div>
+              <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+                No scan data available</div>
+              <div style='color:#CBD5E1;font-size:0.87rem'>
+                Run your first analysis to populate analytics.</div>
+            </div>""", unsafe_allow_html=True)
+        else:
+            fig = go.Figure()
             df["ts"] = pd.to_datetime(df["timestamp_utc"], errors="coerce")
             df = df.dropna(subset=["ts"])
             df["hour"] = df["ts"].dt.floor("H")
@@ -802,60 +821,64 @@ if page == "Dashboard":
                     fill="tozeroy",fillcolor=f"rgba(239,68,68,0.10)",
                     line=dict(color=CRIT,width=2.5),mode="lines",name="Threats",
                     hovertemplate="<b>%{x|%H:%M}</b><br>Threats: %{y}<extra></extra>"))
-        else:
-            hrs = [datetime.utcnow()-timedelta(hours=h) for h in range(23,-1,-1)]
-            fig.add_trace(go.Scatter(x=hrs,y=[0]*24,fill="tozeroy",
-                fillcolor=f"rgba(37,99,235,0.05)",line=dict(color=BORDER,width=1.5),
-                mode="lines",name="No data"))
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter",color=MUTED,size=11),height=230,
-            margin=dict(t=8,b=30,l=40,r=16),
-            xaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color=MUTED,size=10)),
-            yaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color=MUTED,size=10)),
-            legend=dict(font=dict(color=TEXT,size=10),bgcolor="rgba(0,0,0,0)",
-                        orientation="h",y=-0.25),
-            hovermode="x unified",
-        )
-        st.markdown(f"<div style='background:{CARD};border-radius:14px;"
-                    f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-        st.markdown("</div>",unsafe_allow_html=True)
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter",color="#CBD5E1",size=11),height=230,
+                margin=dict(t=8,b=30,l=40,r=16),
+                xaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color="#CBD5E1",size=10)),
+                yaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color="#CBD5E1",size=10)),
+                legend=dict(font=dict(color=TEXT,size=11),bgcolor="rgba(0,0,0,0)",
+                            orientation="h",y=-0.25),
+                hovermode="x unified",
+            )
+            st.markdown(f"<div style='background:{CARD};border-radius:14px;"
+                        f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
+            st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+            st.markdown("</div>",unsafe_allow_html=True)
 
     with c2:
         st.markdown(f"<h3 style='margin-bottom:12px'>🎯 Attack Distribution</h3>",
                     unsafe_allow_html=True)
-        if not df.empty and "scan_type" in df.columns:
-            dist = df["scan_type"].value_counts().to_dict()
+        if df.empty:
+            st.markdown(f"""
+            <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+                 padding:44px;text-align:center;height:266px;
+                 display:flex;flex-direction:column;justify-content:center;align-items:center'>
+              <div style='font-size:2.2rem;margin-bottom:12px'>🎯</div>
+              <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+                No scan data available</div>
+              <div style='color:#CBD5E1;font-size:0.87rem'>
+                Run your first analysis to populate analytics.</div>
+            </div>""", unsafe_allow_html=True)
         else:
-            dist = {"phishing":0,"url":0,"login":0,"network":0}
-        labels = [k.replace("_"," ").title() for k in dist]
-        values = list(dist.values())
-        cols_pie = [CRIT,HIGH,WARN,SUCCESS,INFO,PURPLE]
-        fig2 = go.Figure(data=[go.Pie(
-            labels=labels,
-            values=values if any(v>0 for v in values) else [1,1,1,1],
-            hole=0.60,
-            marker=dict(colors=cols_pie[:len(labels)],line=dict(color=BG,width=2)),
-            hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>",
-            textfont=dict(size=11,family="Inter",color=TEXT),
-        )])
-        total_scans = S["total"]
-        fig2.add_annotation(text=f"<b>{total_scans}</b>",x=0.5,y=0.55,
-            showarrow=False,font=dict(size=22,color=TEXT,family="Inter"))
-        fig2.add_annotation(text="total",x=0.5,y=0.42,
-            showarrow=False,font=dict(size=10,color=MUTED,family="Inter"))
-        fig2.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",font=dict(family="Inter",color=TEXT),
-            height=230,margin=dict(t=8,b=8,l=8,r=8),
-            legend=dict(font=dict(size=10,color=TEXT),bgcolor="rgba(0,0,0,0)",
-                        orientation="v",x=1.02,y=0.5),
-            showlegend=True,
-        )
-        st.markdown(f"<div style='background:{CARD};border-radius:14px;"
-                    f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
-        st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
-        st.markdown("</div>",unsafe_allow_html=True)
+            dist = df["scan_type"].value_counts().to_dict() if "scan_type" in df.columns else {}
+            labels = [k.replace("_"," ").title() for k in dist]
+            values = list(dist.values())
+            cols_pie = [CRIT,HIGH,WARN,SUCCESS,INFO,PURPLE]
+            fig2 = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values if any(v>0 for v in values) else [1,1,1,1],
+                hole=0.60,
+                marker=dict(colors=cols_pie[:len(labels)],line=dict(color=BG,width=2)),
+                hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>",
+                textfont=dict(size=11,family="Inter",color=TEXT),
+            )])
+            total_scans = S["total"]
+            fig2.add_annotation(text=f"<b>{total_scans}</b>",x=0.5,y=0.55,
+                showarrow=False,font=dict(size=22,color=TEXT,family="Inter"))
+            fig2.add_annotation(text="total",x=0.5,y=0.42,
+                showarrow=False,font=dict(size=10,color="#CBD5E1",family="Inter"))
+            fig2.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",font=dict(family="Inter",color=TEXT),
+                height=230,margin=dict(t=8,b=8,l=8,r=8),
+                legend=dict(font=dict(size=11,color=TEXT),bgcolor="rgba(0,0,0,0)",
+                            orientation="v",x=1.02,y=0.5),
+                showlegend=True,
+            )
+            st.markdown(f"<div style='background:{CARD};border-radius:14px;"
+                        f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
+            st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
+            st.markdown("</div>",unsafe_allow_html=True)
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
@@ -897,10 +920,10 @@ if page == "Dashboard":
             ))
             fig3.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Inter",color=MUTED,size=10),height=215,
+                font=dict(family="Inter",color="#CBD5E1",size=11),height=215,
                 margin=dict(t=8,b=20,l=30,r=8),
                 xaxis=dict(gridcolor="rgba(0,0,0,0)",showticklabels=False),
-                yaxis=dict(gridcolor=BORDER,range=[0,100],tickfont=dict(color=MUTED)),
+                yaxis=dict(gridcolor=BORDER,range=[0,100],tickfont=dict(color="#CBD5E1",size=11)),
                 showlegend=False,
             )
             st.markdown(f"<div style='background:{CARD};border-radius:14px;"
@@ -1280,7 +1303,7 @@ elif page == "Performance":
         ("🤖","Model Status","4 Active",SUCCESS),
         ("🌐","API Status","Online" if api_ok else "Waking",SUCCESS if api_ok else WARN),
         ("💻","Platform",platform.system(),INFO),
-        ("⏱","Avg Inference",f"{S['avg_ms']:.0f}ms" if S['avg_ms'] else "N/A",WARN),
+        ("⏱","Avg Inference",f"{S['avg_ms']:.0f}ms" if S["total"] > 0 else "No data available",WARN),
         ("🗄️","Database","SQLite ✓",SUCCESS),
         ("🕐","Last Health",datetime.utcnow().strftime("%H:%M"),MUTED),
     ]
@@ -1337,18 +1360,18 @@ elif page == "Performance":
                 name=algo,marker_color=ACL.get(algo,INFO),
                 hovertemplate="<b>%{y}</b><br>F1: %{x:.4f}<extra></extra>"))
         fig.update_layout(
-            title=dict(text="F1 Score Comparison",font=dict(color=TEXT,size=12)),
+            title=dict(text="F1 Score Comparison",font=dict(color=TEXT,size=13,family="Inter")),
             paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter",color=MUTED,size=10),height=340,
+            font=dict(family="Inter",color="#CBD5E1",size=11),height=340,
             margin=dict(t=36,b=20,l=10,r=10),
             xaxis=dict(range=[0.88,1.0],gridcolor=BORDER,tickformat=".3f",
-                       tickfont=dict(color=MUTED)),
-            yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT)),
-            legend=dict(font=dict(color=TEXT,size=10),bgcolor="rgba(0,0,0,0)"),
+                       tickfont=dict(color="#CBD5E1",size=11)),
+            yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT,size=11)),
+            legend=dict(font=dict(color=TEXT,size=11),bgcolor="rgba(0,0,0,0)"),
         )
         fig.add_vline(x=0.95,line_dash="dash",line_color=WARN,
                       annotation_text="0.95 baseline",
-                      annotation_font=dict(color=WARN,size=10))
+                      annotation_font=dict(color=WARN,size=11))
         st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     with c2:
         fig2 = go.Figure()
@@ -1358,14 +1381,14 @@ elif page == "Performance":
                 name=algo,marker_color=ACL.get(algo,INFO),
                 hovertemplate="<b>%{y}</b><br>AUC: %{x:.4f}<extra></extra>"))
         fig2.update_layout(
-            title=dict(text="ROC-AUC Comparison",font=dict(color=TEXT,size=12)),
+            title=dict(text="ROC-AUC Comparison",font=dict(color=TEXT,size=13,family="Inter")),
             paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter",color=MUTED,size=10),height=340,
+            font=dict(family="Inter",color="#CBD5E1",size=11),height=340,
             margin=dict(t=36,b=20,l=10,r=10),
             xaxis=dict(range=[0.90,1.0],gridcolor=BORDER,tickformat=".3f",
-                       tickfont=dict(color=MUTED)),
-            yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT)),
-            legend=dict(font=dict(color=TEXT,size=10),bgcolor="rgba(0,0,0,0)"),
+                       tickfont=dict(color="#CBD5E1",size=11)),
+            yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT,size=11)),
+            legend=dict(font=dict(color=TEXT,size=11),bgcolor="rgba(0,0,0,0)"),
         )
         st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
 
@@ -1382,12 +1405,12 @@ elif page == "Reports":
                 unsafe_allow_html=True)
     r1,r2,r3,r4,r5,r6 = st.columns(6)
     report_kpis = [
-        ("🎯","Total Scans",str(S["total"]),INFO),
-        ("🔴","Critical Threats",str(S["critical"]),CRIT),
-        ("🟠","High Threats",str(S["high"]),HIGH),
-        ("✅","Safe Analyses",str(S["safe"]),SUCCESS),
-        ("🧠","Avg Confidence",f"{S['avg_conf']:.1%}",WARN),
-        ("⏱","Avg Process Time",f"{S['avg_ms']:.0f}ms",PURPLE),
+        ("🎯","Total Scans",str(S["total"]) if S["total"] > 0 else "N/A",INFO),
+        ("🔴","Critical Threats",str(S["critical"]) if S["total"] > 0 else "N/A",CRIT),
+        ("🟠","High Threats",str(S["high"]) if S["total"] > 0 else "N/A",HIGH),
+        ("✅","Safe Analyses",str(S["safe"]) if S["total"] > 0 else "N/A",SUCCESS),
+        ("🧠","Avg Confidence",f"{S['avg_conf']:.1%}" if S["total"] > 0 else "No data available",WARN),
+        ("⏱","Avg Process Time",f"{S['avg_ms']:.0f}ms" if S["total"] > 0 else "No data available",PURPLE),
     ]
     for col,(ico,lbl,val,color) in zip([r1,r2,r3,r4,r5,r6],report_kpis):
         with col:
