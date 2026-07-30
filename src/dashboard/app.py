@@ -1827,7 +1827,7 @@ elif page == "Model Performance":
                 z=z, x=["Predicted Threat","Predicted Benign"],
                 y=["Actual Threat","Actual Benign"],
                 text=text, texttemplate="%{text}",
-                colorscale=[[0,f"{CARD}"],[0.5,f"{color}40"],[1.0,color]],
+                colorscale=[[0,"#1a1f2e"],[0.5,"#1e3a5f"],[1.0,color]],
                 showscale=False,
                 hovertemplate="<b>%{y} / %{x}</b><br>%{text}<extra></extra>",
                 textfont=dict(size=12, color=TEXT, family="JetBrains Mono"),
