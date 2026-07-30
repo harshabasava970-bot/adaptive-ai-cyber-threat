@@ -327,16 +327,25 @@ def api_get(ep: str):
 
 
 def api_post(ep: str, payload: dict):
+    """POST to backend. Returns JSON dict or {"error": "..."} — never raises."""
     try:
-        r = requests.post(f"{API_BASE}{ep}", json=payload, timeout=18)
-        return r.json() if r.status_code == 200 else {"error": f"HTTP {r.status_code}"}
+        r = requests.post(f"{API_BASE}{ep}", json=payload, timeout=20)
+        if r.status_code == 200:
+            return r.json()
+        return {"error": f"HTTP {r.status_code}: {r.text[:120]}"}
+    except requests.exceptions.Timeout:
+        return {"error": "Request timed out. The API may be waking up — please retry in 30 seconds."}
+    except requests.exceptions.ConnectionError:
+        return {"error": "Cannot connect to API. Check your internet connection."}
     except Exception as e:
         return {"error": str(e)}
 
 
+@st.cache_data(ttl=60)
 def api_health() -> bool:
+    """Non-blocking health check — 3s timeout, cached 60s so it never slows the UI."""
     try:
-        r = requests.get("https://cyber-threat-api-4gms.onrender.com/health", timeout=5)
+        r = requests.get("https://cyber-threat-api-4gms.onrender.com/health", timeout=3)
         return r.status_code == 200
     except Exception:
         return False
@@ -725,33 +734,62 @@ page = st.session_state.page
 # (must be defined before the if/elif page routing block)
 # ══════════════════════════════════════════════════════════════════
 def _do_detection(endpoint, payload, scan_type, is_simulated=False):
-    """Call API, save to scan_db, return (result, elapsed_ms)."""
+    """Call API, save to scan_db, return (result, elapsed_ms).
+
+    Handles both flat payloads (phishing/url/login/network)
+    and nested fusion payloads safely — no KeyError or TypeError.
+    """
     t0 = time.time()
     result = api_post(endpoint, payload)
-    elapsed = (time.time()-t0)*1000
+    elapsed = (time.time() - t0) * 1000
+
     if result and "error" not in result:
-        prob  = result.get("probability",0)
-        risk  = result.get("risk_level","info")
-        threat= result.get("is_threat",False)
-        exp   = result.get("explanation",{})
-        conf  = exp.get("confidence",0.0)
-        label_map = {
-            "phishing": f"Email · {'PHISHING' if threat else 'Legitimate'}",
-            "url":      f"URL · {payload.get('url','')[:35]}",
-            "login":    f"Login · {payload.get('username','user')} from {payload.get('country','?')}",
-            "network":  f"Network · {payload.get('features',{}).get('src_bytes',0):.0f}B",
-            "fusion":   f"Fusion · {result.get('composite_risk_score',prob):.0%} risk",
-        }
+        # Fusion returns composite_risk_score; single detectors return probability
+        prob   = float(result.get("composite_risk_score",
+                       result.get("probability", 0)) or 0)
+        risk   = result.get("risk_level", "info")
+        threat = bool(result.get("is_threat", False))
+        exp    = result.get("explanation") or {}
+        conf   = float(exp.get("confidence", 0.0) or 0.0)
+
+        # Build label safely — never slice None or call [:n] on non-strings
+        try:
+            if scan_type == "phishing":
+                label = "Email · PHISHING" if threat else "Email · Legitimate"
+            elif scan_type == "url":
+                url_val = payload.get("url") or ""
+                label = f"URL · {str(url_val)[:35]}"
+            elif scan_type == "login":
+                uname = payload.get("username") or "user"
+                ctry  = payload.get("country") or "?"
+                label = f"Login · {str(uname)[:20]} from {ctry}"
+            elif scan_type == "network":
+                feats    = payload.get("features") or {}
+                src_b    = feats.get("src_bytes", 0) or 0
+                label    = f"Network · {float(src_b):,.0f}B"
+            elif scan_type == "fusion":
+                score = float(result.get("composite_risk_score", 0) or 0)
+                n_thr = len(result.get("active_threats") or [])
+                label = f"Fusion · {score:.0%} risk · {n_thr} threat(s)"
+            else:
+                label = scan_type
+        except Exception:
+            label = scan_type
+
+        # Summary from explanation or fusion summary
+        summary = (exp.get("reasoning") or
+                   result.get("summary") or "")
+
         save_scan(
             scan_type=scan_type,
-            label=label_map.get(scan_type, scan_type),
+            label=label,
             risk_level=risk,
             probability=prob,
             is_threat=threat,
-            model_name=result.get("model_name","AI Engine"),
+            model_name=result.get("model_name", "AI Engine"),
             confidence=conf,
             processing_ms=elapsed,
-            explanation_summary=exp.get("reasoning",""),
+            explanation_summary=str(summary)[:140],
             is_simulated=is_simulated,
         )
     return result, elapsed
