@@ -822,6 +822,9 @@ def _api_status_banner() -> bool:
                 st.warning("API is still starting. Wait 20 more seconds, then try again.")
         return False
     return True
+
+
+def _do_detection(endpoint, payload, scan_type, is_simulated=False):
     """Call API, save to scan_db, return (result, elapsed_ms).
 
     Handles both flat payloads (phishing/url/login/network)
@@ -865,8 +868,7 @@ def _api_status_banner() -> bool:
             label = scan_type
 
         # Summary from explanation or fusion summary
-        summary = (exp.get("reasoning") or
-                   result.get("summary") or "")
+        summary = (exp.get("reasoning") or result.get("summary") or "")
 
         save_scan(
             scan_type=scan_type,
