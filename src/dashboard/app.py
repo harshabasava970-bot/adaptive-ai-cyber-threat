@@ -1012,8 +1012,8 @@ if page == "Dashboard":
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # ── Bottom row: alerts + risk trend + status ──────────────────
-    b1, b2, b3 = st.columns([3, 2, 2])
+    # ── Bottom row: alerts on left, risk trend + status stacked on right ──
+    b1, b2 = st.columns([3, 2])
 
     with b1:
         st.markdown(f"<h3 style='margin-bottom:12px'>🚨 Recent Alerts</h3>",
@@ -1035,7 +1035,8 @@ if page == "Dashboard":
                 st.rerun()
 
     with b2:
-        st.markdown(f"<h3 style='margin-bottom:12px'>📊 Risk Trend</h3>",
+        # ── Risk Trend ────────────────────────────────────────────
+        st.markdown(f"<h3 style='margin-bottom:10px'>📊 Risk Trend</h3>",
                     unsafe_allow_html=True)
         db = st.session_state.scan_db
         if db and len(db) >= 2:
@@ -1045,48 +1046,52 @@ if page == "Dashboard":
             fig3.add_trace(go.Bar(
                 x=df_risk["idx"],
                 y=df_risk["threat_score"],
-                marker_color=[RISK_CLR.get(r,INFO) for r in df_risk["risk_level"]],
+                marker_color=[RISK_CLR.get(r, INFO) for r in df_risk["risk_level"]],
                 hovertemplate="Scan %{x}<br>Score: %{y}/100<extra></extra>",
             ))
             fig3.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Inter",color="#CBD5E1",size=11),height=215,
-                margin=dict(t=8,b=20,l=30,r=8),
-                xaxis=dict(gridcolor="rgba(0,0,0,0)",showticklabels=False),
-                yaxis=dict(gridcolor=BORDER,range=[0,100],tickfont=dict(color="#CBD5E1",size=11)),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter", color="#CBD5E1", size=10),
+                height=180,
+                margin=dict(t=4, b=16, l=28, r=4),
+                xaxis=dict(gridcolor="rgba(0,0,0,0)", showticklabels=False,
+                           fixedrange=True),
+                yaxis=dict(gridcolor=BORDER, range=[0, 105],
+                           tickfont=dict(color="#CBD5E1", size=10),
+                           fixedrange=True),
                 showlegend=False,
             )
-            st.markdown(f"<div style='background:{CARD};border-radius:14px;"
-                        f"border:1px solid {BORDER};padding:14px'>", unsafe_allow_html=True)
-            st.plotly_chart(fig3,use_container_width=True,config={"displayModeBar":False})
-            st.markdown("</div>",unsafe_allow_html=True)
+            st.plotly_chart(fig3, use_container_width=True,
+                            config={"displayModeBar": False, "staticPlot": True})
         else:
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:14px;border:1px solid {BORDER};
-                 padding:36px;text-align:center;height:215px;
+            <div style='background:{CARD};border-radius:12px;border:1px solid {BORDER};
+                 padding:20px;text-align:center;height:180px;
                  display:flex;flex-direction:column;justify-content:center'>
-              <div style='color:{MUTED};font-size:0.85rem'>
-                Risk trend appears after 2+ scans</div>
+              <div style='color:{MUTED};font-size:0.83rem'>
+                📈 Risk trend appears after 2+ scans</div>
             </div>""", unsafe_allow_html=True)
 
-    with b3:
-        st.markdown(f"<h3 style='margin-bottom:12px'>🖥️ System Status</h3>",
+        # ── System Status (below Risk Trend) ──────────────────────
+        st.markdown(f"<h3 style='margin:14px 0 10px'>🖥️ System Status</h3>",
                     unsafe_allow_html=True)
-        items = [("AI Detection Engine","Online",True),
-                 ("API Gateway","Operational",api_ok),
-                 ("Database","Operational",True),
-                 ("SHAP Explainer","Active",True),
-                 ("LIME Explainer","Active",True),
-                 ("Simulation Engine","Ready",True)]
-        for name,status,ok in items:
+        for name, status, ok in [
+            ("AI Detection Engine", "Online",       True),
+            ("API Gateway",         "Operational",  api_ok),
+            ("Database",            "Operational",  True),
+            ("SHAP Explainer",      "Active",        True),
+            ("LIME Explainer",      "Active",        True),
+            ("Simulation Engine",   "Ready",         True),
+        ]:
             sc = SUCCESS if ok else WARN
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:9px;padding:9px 13px;
+            <div style='background:{CARD};border-radius:9px;padding:8px 12px;
                         margin-bottom:5px;border:1px solid {BORDER};
                         display:flex;justify-content:space-between;align-items:center'>
-              <span style='color:{TEXT};font-size:0.82rem'>{name}</span>
-              <span style='color:{sc};font-size:0.7rem;font-weight:700;
-                           background:{sc}15;padding:2px 8px;border-radius:8px;
+              <span style='color:{TEXT};font-size:0.81rem'>{name}</span>
+              <span style='color:{sc};font-size:0.68rem;font-weight:700;
+                           background:{sc}15;padding:2px 7px;border-radius:8px;
                            border:1px solid {sc}35'>{status}</span>
             </div>""", unsafe_allow_html=True)
 
