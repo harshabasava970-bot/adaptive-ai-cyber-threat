@@ -317,38 +317,75 @@ def stats() -> dict:
 # ══════════════════════════════════════════════════════════════════
 # API HELPERS
 # ══════════════════════════════════════════════════════════════════
-@st.cache_data(ttl=30)
+# API HELPERS — all non-blocking, all safe, never crash the app
+# ══════════════════════════════════════════════════════════════════
+
+RENDER_API = "https://cyber-threat-api-4gms.onrender.com"
+
+@st.cache_data(ttl=60)
 def api_get(ep: str):
+    """GET request — cached 60s, 8s timeout, returns None on failure."""
     try:
-        r = requests.get(f"{API_BASE}{ep}", timeout=12)
+        r = requests.get(f"{API_BASE}{ep}", timeout=8)
         return r.json() if r.status_code == 200 else None
     except Exception:
         return None
 
 
 def api_post(ep: str, payload: dict):
-    """POST to backend. Returns JSON dict or {"error": "..."} — never raises."""
+    """POST request — 25s timeout, always returns a dict, never raises."""
     try:
-        r = requests.post(f"{API_BASE}{ep}", json=payload, timeout=20)
+        r = requests.post(f"{API_BASE}{ep}", json=payload, timeout=25)
         if r.status_code == 200:
             return r.json()
-        return {"error": f"HTTP {r.status_code}: {r.text[:120]}"}
+        return {"error": f"HTTP {r.status_code}"}
     except requests.exceptions.Timeout:
-        return {"error": "Request timed out. The API may be waking up — please retry in 30 seconds."}
+        return {
+            "error": (
+                "⏳ API is waking up (Render free tier cold start takes ~30s). "
+                "Please wait a moment and click the button again."
+            )
+        }
     except requests.exceptions.ConnectionError:
-        return {"error": "Cannot connect to API. Check your internet connection."}
+        return {"error": "🔌 Cannot reach API. Check your internet connection."}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": f"Unexpected error: {type(e).__name__}"}
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=90)
 def api_health() -> bool:
-    """Non-blocking health check — 3s timeout, cached 60s so it never slows the UI."""
+    """Health check — 4s timeout, cached 90s, never blocks the UI."""
     try:
-        r = requests.get("https://cyber-threat-api-4gms.onrender.com/health", timeout=3)
+        r = requests.get(f"{RENDER_API}/health", timeout=4)
         return r.status_code == 200
     except Exception:
         return False
+
+
+def wake_api() -> bool:
+    """
+    Attempt to wake the Render free-tier API by pinging /health.
+    Shows a progress bar and returns True if the API responded.
+    Call this once before the first real detection.
+    """
+    bar = st.progress(0, text="🔄 Waking up API server...")
+    try:
+        for pct in [20, 50, 80]:
+            bar.progress(pct, text="🔄 Connecting to AI engine...")
+            time.sleep(0.4)
+        r = requests.get(f"{RENDER_API}/health", timeout=15)
+        if r.status_code == 200:
+            bar.progress(100, text="✅ API is online!")
+            time.sleep(0.5)
+            bar.empty()
+            api_health.clear()   # clear cache so sidebar shows Online
+            return True
+    except Exception:
+        pass
+    bar.progress(100, text="⚠️ API still waking — you can proceed, first request may be slow.")
+    time.sleep(1)
+    bar.empty()
+    return False
 
 # ══════════════════════════════════════════════════════════════════
 # UI COMPONENT LIBRARY
@@ -727,13 +764,64 @@ with st.sidebar:
       </div>
     </div>""", unsafe_allow_html=True)
 
+    # ── API Status + Wake button ──────────────────────────────────
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+    status_color = SUCCESS if api_ok else WARN
+    status_text  = "Online" if api_ok else "Sleeping"
+    st.markdown(f"""
+    <div style='margin:0 12px 6px;padding:10px 14px;background:{CARD};
+         border-radius:10px;border:1px solid {BORDER}'>
+      <div style='display:flex;align-items:center;gap:8px;margin-bottom:3px'>
+        <div style='width:7px;height:7px;border-radius:50%;
+                    background:{status_color};
+                    box-shadow:0 0 5px {status_color}'></div>
+        <span style='color:{TEXT};font-size:0.78rem;font-weight:600'>
+          API {status_text}</span>
+      </div>
+      <div style='color:{MUTED};font-size:0.68rem'>
+        {datetime.utcnow().strftime("%H:%M:%S")} UTC</div>
+    </div>""", unsafe_allow_html=True)
+    if not api_ok:
+        if st.button("⚡ Wake API", key="wake_btn", use_container_width=True):
+            wake_api()
+            st.rerun()
+
 page = st.session_state.page
 
 # ══════════════════════════════════════════════════════════════════
 # DETECTION PAGES — shared post-detection save helper
 # (must be defined before the if/elif page routing block)
 # ══════════════════════════════════════════════════════════════════
-def _do_detection(endpoint, payload, scan_type, is_simulated=False):
+def _api_status_banner() -> bool:
+    """Show API status banner. Returns True if API is ready, False if sleeping.
+
+    When API is sleeping, shows a Wake Up button and returns False so
+    the detection form is disabled until the API is ready. This prevents
+    the user from submitting and waiting 30+ seconds with no feedback.
+    """
+    ok = api_health()
+    if not ok:
+        st.markdown(f"""
+        <div style='background:{WARN}15;border:1px solid {WARN}40;
+             border-radius:12px;padding:14px 18px;margin-bottom:16px;
+             border-left:4px solid {WARN}'>
+          <div style='color:{WARN};font-weight:700;font-size:0.88rem;margin-bottom:5px'>
+            ⏳ API Server is Sleeping (Render Free Tier)</div>
+          <div style='color:{TEXT};font-size:0.83rem;line-height:1.6'>
+            The backend API went to sleep due to inactivity (normal on free hosting).
+            Click <strong>Wake API</strong> below to start it up — takes ~30 seconds.
+            Once online, your analysis will run instantly.</div>
+        </div>""", unsafe_allow_html=True)
+        if st.button("⚡ Wake Up API Server", key=f"wake_{page}", use_container_width=False):
+            woke = wake_api()
+            if woke:
+                st.success("✅ API is online! You can now run the analysis.")
+                api_health.clear()
+                st.rerun()
+            else:
+                st.warning("API is still starting. Wait 20 more seconds, then try again.")
+        return False
+    return True
     """Call API, save to scan_db, return (result, elapsed_ms).
 
     Handles both flat payloads (phishing/url/login/network)
@@ -1005,6 +1093,7 @@ if page == "Dashboard":
 # PAGE: PHISHING
 # ══════════════════════════════════════════════════════════════════
 elif page == "Phishing":
+    if not _api_status_banner(): st.stop()
     section_hdr("📧","Phishing Email Detector",
                 "6-signal NLP ensemble · Urgency · Threat language · Brand impersonation")
     st.markdown(f"""
@@ -1052,6 +1141,7 @@ elif page == "Phishing":
 # PAGE: URL ANALYSER
 # ══════════════════════════════════════════════════════════════════
 elif page == "URL Analyser":
+    if not _api_status_banner(): st.stop()
     section_hdr("🔗","Malicious URL Analyser",
                 "25-feature extraction · Trusted domain whitelist · Shannon entropy analysis")
     st.markdown(f"""
@@ -1107,6 +1197,7 @@ elif page == "URL Analyser":
 # PAGE: LOGIN MONITOR
 # ══════════════════════════════════════════════════════════════════
 elif page == "Login Monitor":
+    if not _api_status_banner(): st.stop()
     section_hdr("👤","Suspicious Login Monitor",
                 "Context-aware anomaly scoring · Human-readable inputs")
     with st.form("login_form"):
@@ -1166,6 +1257,7 @@ elif page == "Login Monitor":
 # PAGE: NETWORK
 # ══════════════════════════════════════════════════════════════════
 elif page == "Network":
+    if not _api_status_banner(): st.stop()
     section_hdr("🌐","Network Anomaly Sentinel",
                 "Protocol-aware · NSL-KDD feature mapping · Real-time detection")
     with st.form("net_form"):
@@ -1226,6 +1318,7 @@ elif page == "Network":
 # PAGE: THREAT FUSION
 # ══════════════════════════════════════════════════════════════════
 elif page == "Threat Fusion":
+    if not _api_status_banner(): st.stop()
     section_hdr("⚡","Adaptive Threat Fusion Engine",
                 "Confidence-weighted · Rule-based escalation · Co-occurrence amplification")
     st.markdown(f"""
