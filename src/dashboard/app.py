@@ -938,33 +938,54 @@ if page == "Dashboard":
         else:
             fig = go.Figure()
             df["ts"] = pd.to_datetime(df["timestamp_utc"], errors="coerce")
-            df = df.dropna(subset=["ts"])
-            df["hour"] = df["ts"].dt.floor("H")
-            all_t = df.groupby("hour").size().reset_index(name="scans")
-            thr_t = df[df["is_threat"]==True].groupby("hour").size().reset_index(name="threats")
-            fig.add_trace(go.Scatter(x=all_t["hour"],y=all_t["scans"],
-                fill="tozeroy",fillcolor=f"rgba(37,99,235,0.10)",
-                line=dict(color=PRIMARY,width=2.5),mode="lines",name="All Scans",
-                hovertemplate="<b>%{x|%H:%M}</b><br>Scans: %{y}<extra></extra>"))
+            df_plot = df.dropna(subset=["ts"]).copy()
+            # Group by minute so recent scans within the same hour are visible
+            df_plot["bucket"] = df_plot["ts"].dt.floor("min")
+            all_t = df_plot.groupby("bucket").size().reset_index(name="scans")
+            thr_t = df_plot[df_plot["is_threat"]==True].groupby("bucket").size().reset_index(name="threats")
+            # If only 1 unique minute, add a zero point before it so line renders
+            if len(all_t) == 1:
+                prev = pd.DataFrame({"bucket":[all_t["bucket"].iloc[0] - pd.Timedelta(minutes=1)],
+                                     "scans":[0]})
+                all_t = pd.concat([prev, all_t], ignore_index=True)
+                if not thr_t.empty:
+                    prev_t = pd.DataFrame({"bucket":[thr_t["bucket"].iloc[0] - pd.Timedelta(minutes=1)],
+                                           "threats":[0]})
+                    thr_t = pd.concat([prev_t, thr_t], ignore_index=True)
+            fig.add_trace(go.Scatter(
+                x=all_t["bucket"], y=all_t["scans"],
+                fill="tozeroy", fillcolor="rgba(37,99,235,0.25)",
+                line=dict(color="#60A5FA", width=3),
+                mode="lines+markers",
+                marker=dict(size=6, color="#60A5FA"),
+                name="All Scans",
+                hovertemplate="<b>%{x|%H:%M}</b><br>Scans: %{y}<extra></extra>",
+            ))
             if not thr_t.empty:
-                fig.add_trace(go.Scatter(x=thr_t["hour"],y=thr_t["threats"],
-                    fill="tozeroy",fillcolor=f"rgba(239,68,68,0.10)",
-                    line=dict(color=CRIT,width=2.5),mode="lines",name="Threats",
-                    hovertemplate="<b>%{x|%H:%M}</b><br>Threats: %{y}<extra></extra>"))
+                fig.add_trace(go.Scatter(
+                    x=thr_t["bucket"], y=thr_t["threats"],
+                    fill="tozeroy", fillcolor="rgba(239,68,68,0.22)",
+                    line=dict(color=CRIT, width=3),
+                    mode="lines+markers",
+                    marker=dict(size=6, color=CRIT),
+                    name="Threats",
+                    hovertemplate="<b>%{x|%H:%M}</b><br>Threats: %{y}<extra></extra>",
+                ))
             fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Inter",color="#CBD5E1",size=11),height=230,
-                margin=dict(t=8,b=30,l=40,r=16),
-                xaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color="#CBD5E1",size=10)),
-                yaxis=dict(gridcolor=BORDER,zeroline=False,tickfont=dict(color="#CBD5E1",size=10)),
-                legend=dict(font=dict(color=TEXT,size=11),bgcolor="rgba(0,0,0,0)",
-                            orientation="h",y=-0.25),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter", color="#CBD5E1", size=11), height=230,
+                margin=dict(t=8, b=30, l=40, r=16),
+                xaxis=dict(gridcolor=BORDER, zeroline=False,
+                           tickfont=dict(color="#CBD5E1", size=10),
+                           tickformat="%H:%M"),
+                yaxis=dict(gridcolor=BORDER, zeroline=False,
+                           tickfont=dict(color="#CBD5E1", size=10),
+                           rangemode="tozero"),
+                legend=dict(font=dict(color=TEXT, size=11), bgcolor="rgba(0,0,0,0)",
+                            orientation="h", y=-0.28),
                 hovermode="x unified",
             )
-            st.markdown(f"<div style='background:{CARD};border-radius:14px;"
-                        f"border:1px solid {BORDER};padding:16px'>", unsafe_allow_html=True)
-            st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-            st.markdown("</div>",unsafe_allow_html=True)
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with c2:
         st.markdown(f"<h3 style='margin-bottom:12px'>🎯 Attack Distribution</h3>",
