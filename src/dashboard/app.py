@@ -1012,30 +1012,31 @@ if page == "Dashboard":
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # ── Bottom row: alerts on left, risk trend + status stacked on right ──
-    b1, b2 = st.columns([3, 2])
+    # ── Recent Alerts — full width ─────────────────────────────────
+    st.markdown(f"<h3 style='margin-bottom:12px'>🚨 Recent Alerts</h3>",
+                unsafe_allow_html=True)
+    db = st.session_state.scan_db
+    if db:
+        render_timeline(db[:6], max_rows=6)
+    else:
+        st.markdown(f"""
+        <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+             padding:36px;text-align:center'>
+          <div style='font-size:1.6rem;margin-bottom:10px'>📭</div>
+          <div style='color:{TEXT};font-weight:600;margin-bottom:6px'>No alerts yet</div>
+          <div style='color:{MUTED};font-size:0.83rem;margin-bottom:18px'>
+            Start scanning to see real-time threat alerts</div>
+        </div>""", unsafe_allow_html=True)
+        if st.button("🚀 Start First Scan →", key="dash_start"):
+            st.session_state.page = "Phishing"
+            st.rerun()
 
-    with b1:
-        st.markdown(f"<h3 style='margin-bottom:12px'>🚨 Recent Alerts</h3>",
-                    unsafe_allow_html=True)
-        db = st.session_state.scan_db
-        if db:
-            render_timeline(db[:6], max_rows=6)
-        else:
-            st.markdown(f"""
-            <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
-                 padding:36px;text-align:center'>
-              <div style='font-size:1.6rem;margin-bottom:10px'>📭</div>
-              <div style='color:{TEXT};font-weight:600;margin-bottom:6px'>No alerts yet</div>
-              <div style='color:{MUTED};font-size:0.83rem;margin-bottom:18px'>
-                Start scanning to see real-time threat alerts</div>
-            </div>""", unsafe_allow_html=True)
-            if st.button("🚀 Start First Scan →", key="dash_start"):
-                st.session_state.page = "Phishing"
-                st.rerun()
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
-    with b2:
-        # ── Risk Trend ────────────────────────────────────────────
+    # ── Risk Trend + System Status side by side below alerts ───────
+    rt_col, ss_col = st.columns([3, 2])
+
+    with rt_col:
         st.markdown(f"<h3 style='margin-bottom:10px'>📊 Risk Trend</h3>",
                     unsafe_allow_html=True)
         db = st.session_state.scan_db
@@ -1050,16 +1051,12 @@ if page == "Dashboard":
                 hovertemplate="Scan %{x}<br>Score: %{y}/100<extra></extra>",
             ))
             fig3.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter", color="#CBD5E1", size=10),
-                height=180,
-                margin=dict(t=4, b=16, l=28, r=4),
-                xaxis=dict(gridcolor="rgba(0,0,0,0)", showticklabels=False,
-                           fixedrange=True),
+                height=200, margin=dict(t=4, b=16, l=30, r=4),
+                xaxis=dict(gridcolor="rgba(0,0,0,0)", showticklabels=False, fixedrange=True),
                 yaxis=dict(gridcolor=BORDER, range=[0, 105],
-                           tickfont=dict(color="#CBD5E1", size=10),
-                           fixedrange=True),
+                           tickfont=dict(color="#CBD5E1", size=10), fixedrange=True),
                 showlegend=False,
             )
             st.plotly_chart(fig3, use_container_width=True,
@@ -1067,14 +1064,14 @@ if page == "Dashboard":
         else:
             st.markdown(f"""
             <div style='background:{CARD};border-radius:12px;border:1px solid {BORDER};
-                 padding:20px;text-align:center;height:180px;
+                 padding:20px;text-align:center;height:200px;
                  display:flex;flex-direction:column;justify-content:center'>
               <div style='color:{MUTED};font-size:0.83rem'>
                 📈 Risk trend appears after 2+ scans</div>
             </div>""", unsafe_allow_html=True)
 
-        # ── System Status (below Risk Trend) ──────────────────────
-        st.markdown(f"<h3 style='margin:14px 0 10px'>🖥️ System Status</h3>",
+    with ss_col:
+        st.markdown(f"<h3 style='margin-bottom:10px'>🖥️ System Status</h3>",
                     unsafe_allow_html=True)
         for name, status, ok in [
             ("AI Detection Engine", "Online",       True),
@@ -1086,12 +1083,12 @@ if page == "Dashboard":
         ]:
             sc = SUCCESS if ok else WARN
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:9px;padding:8px 12px;
+            <div style='background:{CARD};border-radius:9px;padding:9px 13px;
                         margin-bottom:5px;border:1px solid {BORDER};
                         display:flex;justify-content:space-between;align-items:center'>
-              <span style='color:{TEXT};font-size:0.81rem'>{name}</span>
-              <span style='color:{sc};font-size:0.68rem;font-weight:700;
-                           background:{sc}15;padding:2px 7px;border-radius:8px;
+              <span style='color:{TEXT};font-size:0.82rem'>{name}</span>
+              <span style='color:{sc};font-size:0.7rem;font-weight:700;
+                           background:{sc}15;padding:2px 8px;border-radius:8px;
                            border:1px solid {sc}35'>{status}</span>
             </div>""", unsafe_allow_html=True)
 
