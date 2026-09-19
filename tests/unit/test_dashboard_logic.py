@@ -31,17 +31,23 @@ def utc_to_ist(utc_dt: datetime) -> datetime:
 
 
 def compute_stats(scan_db: list) -> dict:
-    """Mirrors the stats() function in the dashboard."""
+    """Mirrors the fixed stats() function in the dashboard.
+
+    avg_conf now uses risk_utils.avg_confidence() which excludes None/0.0
+    values so fusion scans without confidence don't drag down the average.
+    Returns None for avg_conf when no valid confidence values are present.
+    """
+    from src.core.risk_utils import avg_confidence as _avg_conf
     if not scan_db:
         return {"total": 0, "threats": 0, "critical": 0, "high": 0,
-                "safe": 0, "simulated": 0, "avg_conf": 0.0, "avg_ms": 0.0}
+                "safe": 0, "simulated": 0, "avg_conf": None, "avg_ms": 0.0}
     total    = len(scan_db)
     threats  = sum(1 for r in scan_db if r["risk_level"] in ("critical", "high"))
     critical = sum(1 for r in scan_db if r["risk_level"] == "critical")
     high     = sum(1 for r in scan_db if r["risk_level"] == "high")
     safe     = sum(1 for r in scan_db if r["status"] == "SAFE")
     sim      = sum(1 for r in scan_db if r.get("is_simulated"))
-    avg_conf = sum(r["confidence"] for r in scan_db) / total
+    avg_conf = _avg_conf([r.get("confidence") for r in scan_db])  # None if all unavailable
     avg_ms   = sum(r.get("processing_ms", 0) for r in scan_db) / total
     return {"total": total, "threats": threats, "critical": critical,
             "high": high, "safe": safe, "simulated": sim,
@@ -126,7 +132,7 @@ class TestStatsFunction:
         s = compute_stats([])
         assert s["total"] == 0
         assert s["threats"] == 0
-        assert s["avg_conf"] == 0.0
+        assert s["avg_conf"] is None  # None when no scans, not 0.0
 
     def test_total_count(self):
         db = [self._make_scan("low","SAFE")] * 5
@@ -164,11 +170,31 @@ class TestStatsFunction:
 
     def test_avg_confidence_correct(self):
         db = [
-            self._make_scan("low","SAFE",confidence=0.6),
-            self._make_scan("high","THREAT",confidence=0.9),
+            self._make_scan("low",  "SAFE",   confidence=0.6),
+            self._make_scan("high", "THREAT", confidence=0.9),
         ]
         s = compute_stats(db)
+        # Both values are valid (> 0.0), so average = 0.75
+        assert s["avg_conf"] is not None
         assert abs(s["avg_conf"] - 0.75) < 0.001
+
+    def test_avg_confidence_excludes_none(self):
+        """Fusion scans with confidence=None must not drag down the average."""
+        db = [
+            self._make_scan("high", "THREAT", confidence=0.9),
+            self._make_scan("low",  "SAFE",   confidence=None),  # fusion/missing
+        ]
+        s = compute_stats(db)
+        assert s["avg_conf"] is not None
+        assert abs(s["avg_conf"] - 0.9) < 0.001
+
+    def test_avg_confidence_all_none_returns_none(self):
+        db = [
+            self._make_scan("low", "SAFE", confidence=None),
+            self._make_scan("low", "SAFE", confidence=None),
+        ]
+        s = compute_stats(db)
+        assert s["avg_conf"] is None
 
     def test_simulated_count(self):
         db = [
@@ -259,7 +285,6 @@ class TestAccuracyDisplay:
         assert set(s.keys()) == expected_keys, (
             f"Unexpected keys in stats(): {set(s.keys()) - expected_keys}"
         )
-
 
 # ── Fix 9: Model Performance page routing ──────────────────────────
 

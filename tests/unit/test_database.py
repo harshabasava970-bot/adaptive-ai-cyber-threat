@@ -11,6 +11,7 @@ Author: B.Tech Capstone Project
 """
 
 import pytest
+from datetime import datetime
 from src.core.base_model import PredictionResult
 from src.core.constants import ModelAlgorithm, RiskLevel, ThreatType
 from src.database.models import init_db, get_engine
@@ -80,3 +81,79 @@ class TestThreatRepository:
         in_memory_repo.save_detection(r)
         counts = in_memory_repo.get_threat_counts()
         assert counts.get("phishing_email", 0) >= 1
+
+
+# ─────────────────────────────────────────────────────────────────
+# Fix #1 — get_report_summary() (added alongside original TC-DB tests)
+# ─────────────────────────────────────────────────────────────────
+
+def _rpt(risk_level: RiskLevel, score: float, threats: list[str],
+         is_threat_raw: bool | None = None) -> FusedThreatReport:
+    resolved = (
+        is_threat_raw if is_threat_raw is not None
+        else risk_level in (RiskLevel.CRITICAL, RiskLevel.HIGH)
+    )
+    import uuid as _uuid
+    return FusedThreatReport(
+        report_id=str(_uuid.uuid4()),
+        timestamp=datetime(2026, 9, 19, 12, 0, 0).isoformat() + "Z",
+        composite_risk_score=score,
+        risk_level=risk_level,
+        is_threat=resolved,
+        active_threats=threats,
+        predictions={},
+        summary="test",
+        recommendations=[],
+    )
+
+
+class TestGetReportSummaryDB:
+    """TC-DB-005 through TC-DB-010: get_report_summary() consistency."""
+
+    def test_empty_db(self, in_memory_repo):
+        s = in_memory_repo.get_report_summary()
+        assert s == {
+            "total_scans": 0,
+            "confirmed_threats": 0,
+            "phishing_emails": 0,
+            "malicious_urls": 0,
+            "suspicious_logins": 0,
+            "network_anomalies": 0,
+        }
+
+    def test_total_scans_includes_all_risk_levels(self, in_memory_repo):
+        for lvl, sc in [(RiskLevel.CRITICAL, 0.91), (RiskLevel.LOW, 0.25),
+                        (RiskLevel.INFO, 0.05)]:
+            in_memory_repo.save_detection(_rpt(lvl, sc, []))
+        s = in_memory_repo.get_report_summary()
+        assert s["total_scans"] == 3
+
+    def test_confirmed_threats_excludes_low_and_medium(self, in_memory_repo):
+        in_memory_repo.save_detection(_rpt(RiskLevel.CRITICAL, 0.91, ["phishing_email"]))
+        in_memory_repo.save_detection(_rpt(RiskLevel.LOW, 0.28, ["suspicious_login"], True))
+        in_memory_repo.save_detection(_rpt(RiskLevel.MEDIUM, 0.50, []))
+        s = in_memory_repo.get_report_summary()
+        assert s["total_scans"] == 3
+        assert s["confirmed_threats"] == 1  # CRITICAL only
+
+    def test_category_counts_not_inflated_by_low_risk(self, in_memory_repo):
+        # LOW login: raw is_threat=True but NOT a confirmed threat
+        in_memory_repo.save_detection(_rpt(RiskLevel.LOW, 0.28, ["suspicious_login"], True))
+        s = in_memory_repo.get_report_summary()
+        assert s["suspicious_logins"] == 0
+
+    def test_fusion_multi_type_counts_categories_correctly(self, in_memory_repo):
+        in_memory_repo.save_detection(
+            _rpt(RiskLevel.CRITICAL, 0.92, ["phishing_email", "malicious_url"])
+        )
+        s = in_memory_repo.get_report_summary()
+        assert s["total_scans"] == 1
+        assert s["confirmed_threats"] == 1
+        assert s["phishing_emails"] == 1
+        assert s["malicious_urls"] == 1
+
+    def test_invariant_total_ge_confirmed(self, in_memory_repo):
+        in_memory_repo.save_detection(_rpt(RiskLevel.HIGH, 0.75, ["phishing_email"]))
+        in_memory_repo.save_detection(_rpt(RiskLevel.LOW,  0.26, [], True))
+        s = in_memory_repo.get_report_summary()
+        assert s["total_scans"] >= s["confirmed_threats"]

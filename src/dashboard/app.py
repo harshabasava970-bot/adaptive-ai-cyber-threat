@@ -264,30 +264,42 @@ _init()
 # SCAN DATABASE
 # ══════════════════════════════════════════════════════════════════
 def save_scan(scan_type, label, risk_level, probability, is_threat,
-              model_name="", confidence=0.0, processing_ms=0.0,
+              model_name="", confidence=None, processing_ms=0.0,
               explanation_summary="", is_simulated=False) -> dict:
     """Persist a scan record to session database.
 
-    Status mapping (Fix 2 — consistent with risk level):
+    Status mapping — single source of truth (mirrors risk_utils.risk_to_status):
       critical/high  -> THREAT  (confirmed high-risk)
       medium         -> REVIEW  (warrants investigation)
       low/info       -> SAFE    (no immediate action)
-    The is_threat flag from the API may differ from risk_level at
-    borderline thresholds. We derive status from risk_level as the
-    single source of truth.
+    The is_threat flag from the API may differ from risk_level at borderline
+    thresholds; status is always derived from risk_level.
+
+    Confidence:
+      Pass None (or omit) when the API did not return a meaningful confidence
+      value.  A raw 0.0 is treated as unavailable and stored as None so that
+      the session avg-confidence excludes it rather than being dragged down.
+
+    Processing time:
+      elapsed_ms is the full round-trip time including potential API cold-start
+      on Render free-tier (~30 s).  High values (>5 000 ms) are documented as
+      expected cold-start behaviour and are preserved, not hidden.
     """
+    from src.core.risk_utils import risk_to_status as _risk_to_status
     now = datetime.utcnow()
-    # IST = UTC + 5:30
     ist_offset = timedelta(hours=5, minutes=30)
     now_ist = now + ist_offset
 
-    # Derive status from risk_level — not from is_threat boolean (Fix 2)
-    if risk_level in ("critical", "high"):
-        status = "THREAT"
-    elif risk_level == "medium":
-        status = "REVIEW"
-    else:
-        status = "SAFE"
+    status = _risk_to_status(risk_level)
+
+    # Normalise confidence: treat 0.0 as unavailable (store None)
+    _conf = None
+    if confidence is not None:
+        try:
+            _conf_f = float(confidence)
+            _conf = round(_conf_f, 4) if _conf_f > 0.0 else None
+        except (TypeError, ValueError):
+            _conf = None
 
     rec = {
         "id":           str(uuid.uuid4())[:8].upper(),
@@ -300,7 +312,7 @@ def save_scan(scan_type, label, risk_level, probability, is_threat,
         "probability":  round(probability, 4),
         "threat_score": int(round(probability * 100)),
         "is_threat":    is_threat,
-        "confidence":   round(confidence, 4),
+        "confidence":   _conf,          # None when not available
         "processing_ms":round(processing_ms, 1),
         "model_name":   model_name,
         "explanation_summary": explanation_summary[:140],
@@ -319,26 +331,32 @@ def get_df() -> pd.DataFrame:
 def stats() -> dict:
     """Compute session scan statistics.
 
-    NOTE: 'accuracy' here is NOT model evaluation accuracy.
-    Model evaluation accuracy comes from the research evaluation (see
-    Model Performance page). This function only counts scan outcomes.
-    Detection Accuracy on the dashboard is therefore shown as N/A
-    unless real evaluation metrics are loaded.
+    NOTE: 'accuracy' is NOT computed here — it is not model evaluation accuracy.
+    Model evaluation accuracy comes from research experiments (see Model
+    Performance page). This function counts scan outcomes only.
+
+    Confidence average excludes records where confidence is None (unavailable),
+    so that fusion scans without confidence data don't drag down the average.
+    When no valid confidence values exist, avg_conf is None.
+
+    Processing time average uses all records. Cold-start outliers
+    (>5 000 ms) are preserved and documented, not hidden.
     """
+    from src.core.risk_utils import avg_confidence as _avg_conf
     db = st.session_state.scan_db
     if not db:
-        return {"total":0,"threats":0,"critical":0,"high":0,"safe":0,
-                "simulated":0,"avg_conf":0.0,"avg_ms":0.0}
+        return {"total": 0, "threats": 0, "critical": 0, "high": 0, "safe": 0,
+                "simulated": 0, "avg_conf": None, "avg_ms": 0.0}
     total    = len(db)
-    threats  = sum(1 for r in db if r["risk_level"] in ("critical","high"))
+    threats  = sum(1 for r in db if r["risk_level"] in ("critical", "high"))
     critical = sum(1 for r in db if r["risk_level"] == "critical")
     high     = sum(1 for r in db if r["risk_level"] == "high")
     safe     = sum(1 for r in db if r["status"] == "SAFE")
     sim      = sum(1 for r in db if r.get("is_simulated"))
-    avg_conf = sum(r["confidence"] for r in db) / total
-    avg_ms   = sum(r.get("processing_ms",0) for r in db) / total
-    return {"total":total,"threats":threats,"critical":critical,"high":high,
-            "safe":safe,"simulated":sim,"avg_conf":avg_conf,"avg_ms":avg_ms}
+    avg_conf = _avg_conf([r.get("confidence") for r in db])   # None if all unavailable
+    avg_ms   = sum(r.get("processing_ms", 0) for r in db) / total
+    return {"total": total, "threats": threats, "critical": critical, "high": high,
+            "safe": safe, "simulated": sim, "avg_conf": avg_conf, "avg_ms": avg_ms}
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -505,7 +523,9 @@ def render_result_card(threat_label, prob, risk_level, is_threat,
     color   = RISK_CLR.get(risk_level, INFO)
     bg      = RISK_BG.get(risk_level, "#0F2133")
     ts      = int(round(prob * 100))
-    conf    = explanation.get("confidence", 0.0)
+    conf    = explanation.get("confidence")
+    conf_ok = conf is not None and float(conf) > 0.0
+    conf_disp_str = f"{float(conf):.1%}" if conf_ok else "N/A"
     n_sig   = len(explanation.get("top_features", []))
     verdict = f"⚠️ {threat_label.upper()} DETECTED" if is_threat else f"✅ {threat_label.upper()} SAFE"
     vc      = CRIT if is_threat else SUCCESS
@@ -547,7 +567,7 @@ def render_result_card(threat_label, prob, risk_level, is_threat,
         f"</div>"
         for lbl,val,clr in [
             ("Probability", f"{prob:.1%}", color),
-            ("Confidence",  f"{conf:.1%}", WARN),
+            ("Confidence",  conf_disp_str, WARN),
             ("Signals",     str(n_sig),    INFO),
         ])
     st.markdown(f"""
@@ -669,8 +689,9 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
           <div style='color:{color};font-weight:700;font-size:0.85rem;
                       font-family:"JetBrains Mono",monospace'>
             {rec.get("threat_score",0)}/100</div>
-          <div style='color:{MUTED};font-size:0.73rem;font-family:"JetBrains Mono",monospace'>
-            {rec.get("processing_ms",0):.0f}ms</div>
+          <div style='color:{MUTED};font-size:0.73rem;font-family:"JetBrains Mono",monospace'
+               title='High values may indicate API cold-start (normal on Render free-tier)'>
+            {rec.get("processing_ms",0):.0f}ms{"⚠" if rec.get("processing_ms",0) > 5000 else ""}</div>
           <div style='background:{s_color}18;color:{s_color};padding:3px 8px;
                       border-radius:8px;font-size:0.68rem;font-weight:700;
                       border:1px solid {s_color}35;text-align:center'>
@@ -780,7 +801,7 @@ with st.sidebar:
         </div>
         <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
           <div style='color:{WARN};font-size:1.35rem;font-weight:800'>
-            {f"{S['avg_conf']:.0%}" if S["total"] > 0 else "N/A"}</div>
+            {f"{S['avg_conf']:.0%}" if S["avg_conf"] is not None else "N/A"}</div>
           <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG CONF</div>
         </div>
         <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
@@ -868,7 +889,10 @@ def _do_detection(endpoint, payload, scan_type, is_simulated=False):
         risk   = result.get("risk_level", "info")
         threat = bool(result.get("is_threat", False))
         exp    = result.get("explanation") or {}
-        conf   = float(exp.get("confidence", 0.0) or 0.0)
+        # Confidence: use None when absent so avg_confidence() can exclude it.
+        # A raw 0.0 from the API means "not provided", not genuine zero confidence.
+        _raw_conf = exp.get("confidence") or result.get("confidence")
+        conf = float(_raw_conf) if _raw_conf and float(_raw_conf) > 0.0 else None
 
         # Build label safely — never slice None or call [:n] on non-strings
         try:
@@ -940,9 +964,9 @@ if page == "Dashboard":
          MUTED,
          "Research evaluation metrics"),
         ("🧠","Avg Confidence",
-         f"{S['avg_conf']:.0%}" if has_scans else "N/A",
+         f"{S['avg_conf']:.0%}" if S["avg_conf"] is not None else "N/A",
          WARN,
-         "Waiting for first scan" if not has_scans else ""),
+         "Waiting for first scan" if not has_scans else ("No confidence data" if S["avg_conf"] is None else "")),
         ("💚","System Health","Operational",SUCCESS,"All models active"),
     ]
     for col,(ico,lbl,val,color,sub) in zip(k,kpis):
@@ -1482,7 +1506,8 @@ elif page == "Threat Fusion":
                 risk       = result.get("risk_level","info")
                 is_t       = result.get("is_threat",False)
                 active     = result.get("active_threats",[])
-                conf       = result.get("confidence",0)
+                conf       = result.get("confidence") or None
+                conf_disp  = f"{float(conf):.1%}" if conf and float(conf) > 0 else "N/A"
                 color      = RISK_CLR.get(risk,INFO)
                 ts         = int(round(composite*100))
                 verdict    = "⚠️ MULTI-THREAT CONFIRMED" if is_t else "✅ NO ACTIVE THREAT"
@@ -1497,7 +1522,7 @@ elif page == "Threat Fusion":
                     {verdict}</div>
                   <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px'>
                     {"".join(f"<div style='background:{BG};border-radius:10px;padding:12px 14px;border:1px solid {BORDER}'><div style='color:{MUTED};font-size:0.66rem;text-transform:uppercase;letter-spacing:0.9px;font-weight:700;margin-bottom:5px'>{lbl}</div><div style='color:{clr};font-size:1.4rem;font-weight:800'>{val}</div></div>"
-                      for lbl,val,clr in [("Threat Score",f"{ts}/100",color),("Risk Level",risk.upper(),color),("Composite",f"{composite:.1%}",color),("Confidence",f"{conf:.1%}",WARN)])}
+                      for lbl,val,clr in [("Threat Score",f"{ts}/100",color),("Risk Level",risk.upper(),color),("Composite",f"{composite:.1%}",color),("Confidence",conf_disp,WARN)])}
                   </div>
                   <div style='color:{WARN};font-size:0.85rem'>
                     <strong style='color:{TEXT}'>Active Threats:</strong>
@@ -1803,7 +1828,7 @@ elif page == "Reports":
         ("🔴","Critical Threats",str(S["critical"]) if S["total"] > 0 else "N/A",CRIT),
         ("🟠","High Threats",str(S["high"]) if S["total"] > 0 else "N/A",HIGH),
         ("✅","Safe Analyses",str(S["safe"]) if S["total"] > 0 else "N/A",SUCCESS),
-        ("🧠","Avg Confidence",f"{S['avg_conf']:.1%}" if S["total"] > 0 else "No data available",WARN),
+        ("🧠","Avg Confidence",f"{S['avg_conf']:.1%}" if S["avg_conf"] is not None else "N/A",WARN),
         ("⏱","Avg Process Time",f"{S['avg_ms']:.0f}ms" if S["total"] > 0 else "No data available",PURPLE),
     ]
     for col,(ico,lbl,val,color) in zip([r1,r2,r3,r4,r5,r6],report_kpis):
@@ -2029,7 +2054,7 @@ elif page == "Analytics":
     r1,r2,r3,r4 = st.columns(4)
     r1.metric("Total Scans", S2["total"])
     r2.metric("Threats Found", S2["threats"])
-    r3.metric("Avg Confidence", f"{S2['avg_conf']:.1%}")
+    r3.metric("Avg Confidence", f"{S2['avg_conf']:.1%}" if S2["avg_conf"] is not None else "N/A")
     r4.metric("Avg Speed", f"{S2['avg_ms']:.0f}ms")
 
     if not df_a.empty and "scan_type" in df_a.columns:

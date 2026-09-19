@@ -168,13 +168,81 @@ class ThreatRepository:
         finally:
             session.close()
 
+    def get_report_summary(self) -> dict:
+        """Return a self-consistent summary of detection counts for reports.
+
+        Counting methodology (single source of truth):
+        ─────────────────────────────────────────────
+        • total_scans         — every row in threat_detections (all risk levels).
+        • confirmed_threats   — rows where risk_level is CRITICAL or HIGH only.
+                                Matches the dashboard/timeline THREAT status.
+        • category_counts     — per threat-type counts drawn from the
+                                active_threats JSON column of CONFIRMED THREAT rows
+                                only (critical / high). A single fusion scan that
+                                contains both phishing_email and malicious_url
+                                contributes 1 to total_scans and 1 to
+                                confirmed_threats, but 1 to each of the two
+                                category keys it contains.
+
+        The label hierarchy in reports is therefore:
+            Total Scans ≥ Confirmed Threats
+            Confirmed Threats ≥ sum(category_counts.values())
+              (because a threat row with active_threats=[] contributes 0
+               to category counts but 1 to confirmed_threats)
+
+        Do NOT compare Total Scans directly with category sums — they measure
+        different things and are intentionally displayed with separate labels.
+
+        Returns:
+            dict with keys: total_scans, confirmed_threats, phishing_emails,
+            malicious_urls, suspicious_logins, network_anomalies.
+        """
+        _confirmed = {"critical", "high"}
+        session: Session = self._SessionFactory()
+        try:
+            all_records = session.query(ThreatDetection).all()
+            total_scans = len(all_records)
+            confirmed_threats = 0
+            category_counts: dict = {
+                "phishing_email": 0,
+                "malicious_url": 0,
+                "suspicious_login": 0,
+                "network_anomaly": 0,
+            }
+            for r in all_records:
+                if (r.risk_level or "").lower() in _confirmed:
+                    confirmed_threats += 1
+                    for threat in (r.active_threats or []):
+                        if threat in category_counts:
+                            category_counts[threat] += 1
+                        else:
+                            category_counts[threat] = 1
+            return {
+                "total_scans": total_scans,
+                "confirmed_threats": confirmed_threats,
+                "phishing_emails": category_counts.get("phishing_email", 0),
+                "malicious_urls": category_counts.get("malicious_url", 0),
+                "suspicious_logins": category_counts.get("suspicious_login", 0),
+                "network_anomalies": category_counts.get("network_anomaly", 0),
+            }
+        except Exception as exc:
+            raise DatabaseError("SELECT report_summary", str(exc)) from exc
+        finally:
+            session.close()
+
     def get_model_metrics(self) -> list[dict]:
-        """Retrieve all stored model metrics for dashboard display."""
+        """Retrieve all stored model evaluation metrics for dashboard display.
+
+        Returns:
+            List of metric dicts ordered by evaluation date descending.
+        """
         session: Session = self._SessionFactory()
         try:
             records = session.query(ModelMetricRecord).order_by(
                 ModelMetricRecord.evaluated_at.desc()
             ).all()
             return [r.to_dict() for r in records]
+        except Exception as exc:
+            raise DatabaseError("SELECT model_metrics", str(exc)) from exc
         finally:
             session.close()

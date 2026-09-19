@@ -46,13 +46,37 @@ class ThreatDetection(Base):
     active_threats = Column(JSON, nullable=True)
     recommendations= Column(JSON, nullable=True)
 
+    # Risk levels that represent a confirmed actionable threat.
+    # LOW and INFO are recorded as detections but are NOT confirmed threats.
+    # This mirrors the dashboard status logic:
+    #   critical/high  → THREAT (is_confirmed_threat = True)
+    #   medium         → REVIEW (is_confirmed_threat = False)
+    #   low/info       → SAFE   (is_confirmed_threat = False)
+    _CONFIRMED_THREAT_LEVELS = frozenset({"critical", "high"})
+
+    @property
+    def is_confirmed_threat(self) -> bool:
+        """Derive threat confirmation from risk_level — single source of truth.
+
+        Returns True only for CRITICAL and HIGH risk detections.
+        This is the authoritative flag used in all reports and exports.
+        The stored boolean ``is_threat`` column preserves the raw fusion-engine
+        output for audit purposes and must not be reinterpreted.
+        """
+        return (self.risk_level or "").lower() in self._CONFIRMED_THREAT_LEVELS
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
             "report_id": self.report_id,
+            # Stored as UTC-naive ISO string; timezone label added by callers.
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
             "threat_type": self.threat_type,
+            # is_threat: raw boolean stored by the fusion engine (probability-based).
+            # Use is_confirmed_threat for display and reporting.
             "is_threat": self.is_threat,
+            # is_confirmed_threat: derived from risk_level — consistent with dashboard.
+            "is_confirmed_threat": self.is_confirmed_threat,
             "probability": self.probability,
             "risk_score": self.risk_score,
             "risk_level": self.risk_level,
@@ -60,7 +84,7 @@ class ThreatDetection(Base):
             "model_name": self.model_name,
             "algorithm": self.algorithm,
             "input_preview": self.input_preview,
-            "active_threats": self.active_threats,
+            "active_threats": self.active_threats or [],
         }
 
 
