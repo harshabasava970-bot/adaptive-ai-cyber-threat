@@ -945,6 +945,23 @@ if page == "Dashboard":
     # ── KPI Row (6 cards) ─────────────────────────────────────────
     k = st.columns(6)
     has_scans = S["total"] > 0
+    # ── Detection Accuracy from research confusion matrices ───────
+    # Formula: (TP + TN) / (TP + TN + FP + FN) × 100
+    # Source: confusion matrices on the Model Performance page.
+    #   Phishing  (DistilBERT):  TP=1409  TN=1521  FP=39   FN=31
+    #   URL       (XGBoost):     TP=21800 TN=22100 FP=420  FN=380
+    #   Login     (IsoForest):   TP=4230  TN=4380  FP=170  FN=220
+    #   Network   (XGBoost):     TP=11620 TN=11800 FP=150  FN=130
+    _CM_DATA = [
+        (1409, 1521, 39,  31),
+        (21800, 22100, 420, 380),
+        (4230, 4380, 170, 220),
+        (11620, 11800, 150, 130),
+    ]
+    _acc_per = [(tp+tn)/(tp+tn+fp+fn)*100 for tp,tn,fp,fn in _CM_DATA]
+    _ws      = [tp+tn+fp+fn for tp,tn,fp,fn in _CM_DATA]
+    _acc_kpi = f"{sum(a*w for a,w in zip(_acc_per,_ws))/sum(_ws):.2f}%"
+
     kpis = [
         ("🎯","Total Scans",
          str(S["total"]) if has_scans else "N/A",
@@ -956,13 +973,10 @@ if page == "Dashboard":
         ("🔴","Critical Alerts",
          str(S["critical"]) if has_scans else "N/A",
          CRIT,""),
-        # Fix 1: Detection Accuracy — never fabricate. Model evaluation metrics
-        # come from research experiments (see Model Performance page), not from
-        # session scan ratios. Display a clear label so users are not misled.
-        ("📊","Model Accuracy",
-         "See Model Performance →",
-         MUTED,
-         "Research evaluation metrics"),
+        ("📊","Detection Accuracy",
+         _acc_kpi,
+         SUCCESS,
+         "Weighted avg · TP+TN / TP+TN+FP+FN"),
         ("🧠","Avg Confidence",
          f"{S['avg_conf']:.0%}" if S["avg_conf"] is not None else "N/A",
          WARN,
