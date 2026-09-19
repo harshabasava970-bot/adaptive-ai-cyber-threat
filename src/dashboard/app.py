@@ -642,7 +642,7 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
     <div style='display:grid;grid-template-columns:90px 80px 1fr 90px 90px 80px 80px 70px;
          gap:8px;padding:8px 14px;background:{SIDEBAR};border-radius:8px;margin-bottom:4px'>
       {"".join(f"<div style='color:{MUTED};font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px'>{h}</div>"
-        for h in ["Date","Time","Label","Type","Risk","Score","Process","Status"])}
+        for h in ["Date","Time (IST)","Label","Type","Risk","Score","Process","Status"])}
     </div>""", unsafe_allow_html=True)
 
     for rec in records[:max_rows]:
@@ -806,7 +806,7 @@ with st.sidebar:
           API {status_text}</span>
       </div>
       <div style='color:{MUTED};font-size:0.68rem'>
-        {datetime.utcnow().strftime("%H:%M:%S")} UTC</div>
+        {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%H:%M:%S")} IST</div>
     </div>""", unsafe_allow_html=True)
     if not api_ok:
         if st.button("⚡ Wake API", key="wake_btn", use_container_width=True):
@@ -932,11 +932,13 @@ if page == "Dashboard":
         ("🔴","Critical Alerts",
          str(S["critical"]) if has_scans else "N/A",
          CRIT,""),
-        # Fix 1: Detection Accuracy — show model evaluation value, not scan ratio
+        # Fix 1: Detection Accuracy — never fabricate. Model evaluation metrics
+        # come from research experiments (see Model Performance page), not from
+        # session scan ratios. Display a clear label so users are not misled.
         ("📊","Model Accuracy",
-         "97.5%",
-         SUCCESS,
-         "From research evaluation"),
+         "See Model Performance →",
+         MUTED,
+         "Research evaluation metrics"),
         ("🧠","Avg Confidence",
          f"{S['avg_conf']:.0%}" if has_scans else "N/A",
          WARN,
@@ -972,8 +974,11 @@ if page == "Dashboard":
             fig = go.Figure()
             df["ts"] = pd.to_datetime(df["timestamp_utc"], errors="coerce")
             df_plot = df.dropna(subset=["ts"]).copy()
+            # Convert UTC → IST (+05:30) for display
+            _ist_offset = pd.Timedelta(hours=5, minutes=30)
+            df_plot["ts_ist"] = df_plot["ts"] + _ist_offset
             # Group by minute so recent scans within the same hour are visible
-            df_plot["bucket"] = df_plot["ts"].dt.floor("min")
+            df_plot["bucket"] = df_plot["ts_ist"].dt.floor("min")
             all_t = df_plot.groupby("bucket").size().reset_index(name="scans")
             thr_t = df_plot[df_plot["is_threat"]==True].groupby("bucket").size().reset_index(name="threats")
             # If only 1 unique minute, add a zero point before it so line renders
@@ -1010,9 +1015,11 @@ if page == "Dashboard":
                 margin=dict(t=8, b=30, l=40, r=16),
                 xaxis=dict(gridcolor=BORDER, zeroline=False,
                            tickfont=dict(color="#CBD5E1", size=10),
-                           tickformat="%H:%M"),
+                           tickformat="%H:%M",
+                           title=dict(text="Time (IST)", font=dict(color="#CBD5E1", size=10))),
                 yaxis=dict(gridcolor=BORDER, zeroline=False,
                            tickfont=dict(color="#CBD5E1", size=10),
+                           title=dict(text="Scan Count", font=dict(color="#CBD5E1", size=10)),
                            rangemode="tozero"),
                 legend=dict(font=dict(color=TEXT, size=11), bgcolor="rgba(0,0,0,0)",
                             orientation="h", y=-0.28),
@@ -1091,17 +1098,23 @@ if page == "Dashboard":
     rt_col, ss_col = st.columns([3, 2])
 
     with rt_col:
-        st.markdown(f"<h3 style='margin-bottom:10px'>📊 Risk Score Trend</h3>",
+        st.markdown(f"<h3 style='margin-bottom:4px'>📊 Risk Score Trend</h3>",
+                    unsafe_allow_html=True)
+        st.markdown(f"<div style='color:{MUTED};font-size:0.75rem;margin-bottom:10px'>"
+                    f"Risk score (0–100) per scan, colour-coded by risk level. "
+                    f"Showing last 20 scans (oldest → newest).</div>",
                     unsafe_allow_html=True)
         db = st.session_state.scan_db
         if db and len(db) >= 2:
             df_risk = pd.DataFrame(db[:20][::-1]).reset_index(drop=True)
             df_risk["seq"] = range(1, len(df_risk)+1)
             hover_text = [
-                f"Scan {row['seq']} | {row.get('scan_type','').title()}"
-                f" | Risk: {row.get('risk_level','').upper()}"
-                f" | Score: {row.get('threat_score',0)}/100"
-                f" | {row.get('scan_time','')}"
+                (f"<b>Scan {row['seq']}</b><br>"
+                 f"Type: {row.get('scan_type','').title()}<br>"
+                 f"Risk Level: {row.get('risk_level','').upper()}<br>"
+                 f"Score: {row.get('threat_score',0)}/100<br>"
+                 f"Status: {row.get('status','')}<br>"
+                 f"Time: {row.get('scan_time','')}")
                 for _, row in df_risk.iterrows()
             ]
             fig3 = go.Figure()
@@ -1114,19 +1127,32 @@ if page == "Dashboard":
                 textfont=dict(color="#CBD5E1", size=9),
                 hovertext=hover_text,
                 hoverinfo="text",
+                name="Risk Score",
             ))
+            # Reference lines for risk thresholds
+            fig3.add_hline(y=85, line_dash="dot", line_color=CRIT,
+                           annotation_text="CRITICAL", annotation_position="right",
+                           annotation_font=dict(color=CRIT, size=9))
+            fig3.add_hline(y=65, line_dash="dot", line_color=HIGH,
+                           annotation_text="HIGH", annotation_position="right",
+                           annotation_font=dict(color=HIGH, size=9))
+            fig3.add_hline(y=45, line_dash="dot", line_color=WARN,
+                           annotation_text="MEDIUM", annotation_position="right",
+                           annotation_font=dict(color=WARN, size=9))
             fig3.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter", color="#CBD5E1", size=10),
-                height=200, margin=dict(t=4, b=36, l=40, r=4),
+                height=210, margin=dict(t=8, b=36, l=50, r=60),
                 xaxis=dict(
-                    title=dict(text="Scan #", font=dict(color="#CBD5E1", size=10)),
+                    title=dict(text="Scan # (oldest → newest)",
+                               font=dict(color="#CBD5E1", size=10)),
                     gridcolor="rgba(0,0,0,0)", fixedrange=True,
                     tickfont=dict(color="#CBD5E1"),
                 ),
                 yaxis=dict(
-                    title=dict(text="Score /100", font=dict(color="#CBD5E1", size=10)),
-                    gridcolor=BORDER, range=[0, 115], fixedrange=True,
+                    title=dict(text="Risk Score /100",
+                               font=dict(color="#CBD5E1", size=10)),
+                    gridcolor=BORDER, range=[0, 120], fixedrange=True,
                     tickfont=dict(color="#CBD5E1", size=10),
                 ),
                 showlegend=False,
@@ -1502,7 +1528,7 @@ elif page == "Threat Fusion":
 # ══════════════════════════════════════════════════════════════════
 # PAGE: PERFORMANCE
 # ══════════════════════════════════════════════════════════════════
-elif page == "Performance":
+elif page == "Model Performance":
     section_hdr("📈","Model Performance & System Metrics","Evaluation results · Live system health")
 
     # System metrics row
@@ -1601,6 +1627,165 @@ elif page == "Performance":
         )
         st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
 
+    # ── Section 3: Summary Comparison Table ──────────────────────
+    st.markdown(f"<h3 style='margin:24px 0 14px'>Overall Model Comparison</h3>",
+                unsafe_allow_html=True)
+    perf_data = {
+        "Module":    ["Phishing Email","URL Detection","Login Detection","Network Detection"],
+        "Model":     ["DistilBERT","XGBoost","Isolation Forest","XGBoost"],
+        "Accuracy":  [97.5, 98.2, 94.6, 98.7],
+        "Precision": [97.2, 98.0, 94.1, 98.5],
+        "Recall":    [97.6, 98.3, 94.8, 98.8],
+        "F1-Score":  [97.4, 98.1, 94.4, 98.6],
+    }
+    df_perf = pd.DataFrame(perf_data)
+    styled = df_perf.style\
+        .background_gradient(subset=["Accuracy","Precision","Recall","F1-Score"],
+                             cmap="RdYlGn", vmin=92, vmax=100)\
+        .format({"Accuracy":"{:.1f}%","Precision":"{:.1f}%",
+                 "Recall":"{:.1f}%","F1-Score":"{:.1f}%"})
+    st.dataframe(styled, use_container_width=True, hide_index=True)
+
+    # ── Section 4: Performance Metrics Bar Chart ──────────────────
+    st.markdown(f"<h3 style='margin:24px 0 14px'>Performance Metrics Comparison</h3>",
+                unsafe_allow_html=True)
+    mp_metrics = ["Accuracy","Precision","Recall","F1-Score"]
+    mp_colors  = [PRIMARY, SUCCESS, WARN, CRIT]
+    fig_bar = go.Figure()
+    for mp_m, mp_c in zip(mp_metrics, mp_colors):
+        fig_bar.add_trace(go.Bar(
+            name=mp_m,
+            x=df_perf["Module"],
+            y=df_perf[mp_m],
+            marker_color=mp_c,
+            hovertemplate=f"<b>%{{x}}</b><br>{mp_m}: %{{y:.1f}}%<extra></extra>",
+            text=[f"{v:.1f}%" for v in df_perf[mp_m]],
+            textposition="outside",
+            textfont=dict(color=TEXT, size=10),
+        ))
+    fig_bar.update_layout(
+        barmode="group",
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Inter", color=MUTED, size=11),
+        height=380, margin=dict(t=30, b=60, l=50, r=20),
+        xaxis=dict(gridcolor=BORDER, tickfont=dict(color=TEXT, size=11)),
+        yaxis=dict(gridcolor=BORDER, range=[90,101], tickfont=dict(color=MUTED),
+                   ticksuffix="%"),
+        legend=dict(font=dict(color=TEXT, size=11), bgcolor="rgba(0,0,0,0)",
+                    orientation="h", y=-0.18),
+    )
+    st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
+
+    # ── Section 5: ROC-AUC ───────────────────────────────────────
+    st.markdown(f"<h3 style='margin:24px 0 14px'>ROC-AUC Scores</h3>",
+                unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style='background:{INFO}10;border:1px solid {INFO}30;border-radius:10px;
+         padding:12px 16px;margin-bottom:16px;border-left:3px solid {INFO}'>
+      <span style='color:{MUTED};font-size:0.83rem'>
+        <strong style='color:{INFO}'>ℹ AUC Explanation:</strong>
+        Higher ROC-AUC indicates better discrimination between malicious and benign samples.
+        1.0 = perfect classifier; 0.5 = random guessing.</span>
+    </div>""", unsafe_allow_html=True)
+    auc_data2 = {"Module":["Phishing Email","URL Detection","Login Detection","Network Detection"],
+                 "ROC-AUC":[0.99,0.99,0.95,0.99]}
+    df_auc2 = pd.DataFrame(auc_data2)
+    fig_auc2 = go.Figure(go.Bar(
+        x=df_auc2["ROC-AUC"], y=df_auc2["Module"], orientation="h",
+        marker_color=[SUCCESS if v>=0.99 else WARN for v in df_auc2["ROC-AUC"]],
+        text=[f"{v:.2f}" for v in df_auc2["ROC-AUC"]],
+        textposition="outside",
+        textfont=dict(color=TEXT, size=12, family="JetBrains Mono"),
+        hovertemplate="<b>%{y}</b><br>AUC: %{x:.2f}<extra></extra>",
+    ))
+    fig_auc2.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Inter", color=MUTED, size=11),
+        height=260, margin=dict(t=10, b=30, l=10, r=60),
+        xaxis=dict(range=[0.90, 1.01], gridcolor=BORDER, tickfont=dict(color=MUTED)),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(color=TEXT, size=11)),
+        showlegend=False,
+    )
+    fig_auc2.add_vline(x=0.95, line_dash="dash", line_color=WARN,
+                       annotation_text="0.95 threshold",
+                       annotation_font=dict(color=WARN, size=10))
+    st.plotly_chart(fig_auc2, use_container_width=True, config={"displayModeBar":False})
+
+    # ── Section 6: Confusion Matrices ────────────────────────────
+    st.markdown(f"<h3 style='margin:24px 0 14px'>Confusion Matrices</h3>",
+                unsafe_allow_html=True)
+    cms = [
+        ("Phishing Email (DistilBERT)", [[1521,39],[31,1409]], PRIMARY),
+        ("URL Detection (XGBoost)",     [[22100,420],[380,21800]], SUCCESS),
+        ("Login Detection (IsoForest)", [[4380,170],[220,4230]], WARN),
+        ("Network Detection (XGBoost)", [[11800,150],[130,11620]], CRIT),
+    ]
+    cm_cols = st.columns(2)
+    for idx,(cm_title,cm,cm_color) in enumerate(cms):
+        with cm_cols[idx % 2]:
+            z    = [[cm[1][1], cm[1][0]],[cm[0][1], cm[0][0]]]
+            text = [[f"TP: {cm[1][1]:,}",f"FN: {cm[1][0]:,}"],
+                    [f"FP: {cm[0][1]:,}",f"TN: {cm[0][0]:,}"]]
+            fig_cm = go.Figure(go.Heatmap(
+                z=z, x=["Predicted Threat","Predicted Benign"],
+                y=["Actual Threat","Actual Benign"],
+                text=text, texttemplate="%{text}",
+                colorscale=[[0,"#1a1f2e"],[0.5,"#1e3a5f"],[1.0,cm_color]],
+                showscale=False,
+                hovertemplate="<b>%{y} / %{x}</b><br>%{text}<extra></extra>",
+                textfont=dict(size=12, color=TEXT, family="JetBrains Mono"),
+            ))
+            fig_cm.update_layout(
+                title=dict(text=cm_title, font=dict(color=TEXT, size=12), x=0.5),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Inter", color=TEXT, size=11),
+                height=260, margin=dict(t=40, b=40, l=100, r=20),
+                xaxis=dict(tickfont=dict(color=TEXT)),
+                yaxis=dict(tickfont=dict(color=TEXT)),
+            )
+            st.plotly_chart(fig_cm, use_container_width=True,
+                            config={"displayModeBar":False})
+
+    # ── Section 7: Performance Summary Cards ─────────────────────
+    st.markdown(f"<h3 style='margin:24px 0 14px'>Performance Summary</h3>",
+                unsafe_allow_html=True)
+    avg_acc = sum([97.5, 98.2, 94.6, 98.7]) / 4
+    ps1, ps2, ps3 = st.columns(3)
+    with ps1:
+        st.markdown(f"""
+        <div style='background:{CARD};border-radius:14px;padding:22px;
+             border:1px solid {BORDER};border-top:4px solid {SUCCESS};text-align:center'>
+          <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
+                      letter-spacing:1px;font-weight:700;margin-bottom:8px'>
+            Overall Average Accuracy</div>
+          <div style='color:{SUCCESS};font-size:2.2rem;font-weight:900'>{avg_acc:.2f}%</div>
+          <div style='color:{MUTED};font-size:0.78rem;margin-top:4px'>Across all 4 models</div>
+        </div>""", unsafe_allow_html=True)
+    with ps2:
+        st.markdown(f"""
+        <div style='background:{CARD};border-radius:14px;padding:22px;
+             border:1px solid {BORDER};border-top:4px solid {INFO};text-align:center'>
+          <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
+                      letter-spacing:1px;font-weight:700;margin-bottom:8px'>
+            Best Performing Model</div>
+          <div style='color:{INFO};font-size:1.15rem;font-weight:800;line-height:1.3'>
+            Network Detection</div>
+          <div style='color:{MUTED};font-size:0.82rem;margin-top:4px'>
+            XGBoost · 98.7% Accuracy</div>
+        </div>""", unsafe_allow_html=True)
+    with ps3:
+        st.markdown(f"""
+        <div style='background:{CARD};border-radius:14px;padding:22px;
+             border:1px solid {BORDER};border-top:4px solid {WARN};text-align:center'>
+          <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
+                      letter-spacing:1px;font-weight:700;margin-bottom:8px'>
+            Lowest False Positive Rate</div>
+          <div style='color:{WARN};font-size:1.15rem;font-weight:800;line-height:1.3'>
+            URL Detection</div>
+          <div style='color:{MUTED};font-size:0.82rem;margin-top:4px'>
+            XGBoost · FPR ≈ 1.8%</div>
+        </div>""", unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════
 # PAGE: REPORTS
@@ -1638,12 +1823,13 @@ elif page == "Reports":
             📄 Session CSV Export</div>
           <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
             Export all {S["total"]} scans from this session. Includes risk level,
-            threat score, confidence, model name, and timestamps.</div>
+            threat score, confidence, model name, and timestamps (scan_time column = IST).</div>
         </div>""", unsafe_allow_html=True)
         if db:
+            _ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
             csv = pd.DataFrame(db).to_csv(index=False).encode("utf-8")
             st.download_button("💾 Download Session CSV",data=csv,
-                file_name=f"soc_session_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv",
+                file_name=f"soc_session_{_ist_now.strftime('%Y%m%d_%H%M')}_IST.csv",
                 mime="text/csv",use_container_width=True)
         else:
             st.button("💾 No scans to export yet",disabled=True,use_container_width=True)
@@ -1655,7 +1841,7 @@ elif page == "Reports":
             📕 PDF Threat Report</div>
           <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
             Formatted PDF with executive summary, model metrics, and backend
-            detections. Suitable for management briefing and IEEE appendix.</div>
+            detections. Timestamps shown in UTC (backend database). Suitable for management briefing and project documentation.</div>
         </div>""", unsafe_allow_html=True)
         if st.button("⬇️ Download PDF Report",use_container_width=True):
             try:
@@ -1687,7 +1873,7 @@ elif page == "Reports":
 # ══════════════════════════════════════════════════════════════════
 elif page == "Timeline":
     section_hdr("⏱","Live Scan Timeline",
-                "Auto-updated after every scan · Full metadata · Local timestamps")
+                "Auto-updated after every scan · Full metadata · IST timestamps (Asia/Kolkata)")
     c1,c2,c3 = st.columns([4,1,1])
     with c2:
         if st.button("🔄 Refresh",use_container_width=True):
@@ -1885,175 +2071,6 @@ elif page == "Analytics":
 
 
 # ══════════════════════════════════════════════════════════════════
-# PAGE: MODEL PERFORMANCE
-# ══════════════════════════════════════════════════════════════════
-elif page == "Model Performance":
-    section_hdr("🏆","Model Performance","Publication-quality evaluation metrics for all detectors")
-
-    # ── Section 1: Comparison Table ──────────────────────────────
-    st.markdown(f"<h3 style='margin-bottom:14px'>Overall Model Comparison</h3>",
-                unsafe_allow_html=True)
-    perf_data = {
-        "Module":    ["Phishing Email","URL Detection","Login Detection","Network Detection"],
-        "Model":     ["DistilBERT","XGBoost","Isolation Forest","XGBoost"],
-        "Accuracy":  [97.5, 98.2, 94.6, 98.7],
-        "Precision": [97.2, 98.0, 94.1, 98.5],
-        "Recall":    [97.6, 98.3, 94.8, 98.8],
-        "F1-Score":  [97.4, 98.1, 94.4, 98.6],
-    }
-    df_perf = pd.DataFrame(perf_data)
-    styled = df_perf.style\
-        .background_gradient(subset=["Accuracy","Precision","Recall","F1-Score"],
-                             cmap="RdYlGn", vmin=92, vmax=100)\
-        .format({"Accuracy":"{:.1f}%","Precision":"{:.1f}%",
-                 "Recall":"{:.1f}%","F1-Score":"{:.1f}%"})
-    st.dataframe(styled, use_container_width=True, hide_index=True)
-
-    # ── Section 2: Grouped Bar Chart ─────────────────────────────
-    st.markdown(f"<h3 style='margin:24px 0 14px'>Performance Metrics Comparison</h3>",
-                unsafe_allow_html=True)
-    metrics = ["Accuracy","Precision","Recall","F1-Score"]
-    bar_colors = [PRIMARY, SUCCESS, WARN, CRIT]
-    fig_bar = go.Figure()
-    for i,(metric,color) in enumerate(zip(metrics, bar_colors)):
-        fig_bar.add_trace(go.Bar(
-            name=metric,
-            x=df_perf["Module"],
-            y=df_perf[metric],
-            marker_color=color,
-            hovertemplate=f"<b>%{{x}}</b><br>{metric}: %{{y:.1f}}%<extra></extra>",
-            text=[f"{v:.1f}%" for v in df_perf[metric]],
-            textposition="outside",
-            textfont=dict(color=TEXT, size=10),
-        ))
-    fig_bar.update_layout(
-        barmode="group",
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter", color=MUTED, size=11),
-        height=380, margin=dict(t=30, b=60, l=50, r=20),
-        xaxis=dict(gridcolor=BORDER, tickfont=dict(color=TEXT, size=11)),
-        yaxis=dict(gridcolor=BORDER, range=[90,101], tickfont=dict(color=MUTED),
-                   ticksuffix="%"),
-        legend=dict(font=dict(color=TEXT, size=11), bgcolor="rgba(0,0,0,0)",
-                    orientation="h", y=-0.18),
-    )
-    st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
-
-    # ── Section 3: ROC-AUC ───────────────────────────────────────
-    st.markdown(f"<h3 style='margin:24px 0 14px'>ROC-AUC Scores</h3>",
-                unsafe_allow_html=True)
-    st.markdown(f"""
-    <div style='background:{INFO}10;border:1px solid {INFO}30;border-radius:10px;
-         padding:12px 16px;margin-bottom:16px;border-left:3px solid {INFO}'>
-      <span style='color:{MUTED};font-size:0.83rem'>
-        <strong style='color:{INFO}'>ℹ AUC Explanation:</strong>
-        Higher ROC-AUC indicates better discrimination between malicious and benign samples.
-        A score of 1.0 represents a perfect classifier; 0.5 is equivalent to random guessing.</span>
-    </div>""", unsafe_allow_html=True)
-
-    auc_data = {"Module":["Phishing Email","URL Detection","Login Detection","Network Detection"],
-                "ROC-AUC":[0.99,0.99,0.95,0.99]}
-    df_auc = pd.DataFrame(auc_data)
-    fig_auc = go.Figure(go.Bar(
-        x=df_auc["ROC-AUC"], y=df_auc["Module"],
-        orientation="h",
-        marker_color=[SUCCESS if v>=0.99 else WARN for v in df_auc["ROC-AUC"]],
-        text=[f"{v:.2f}" for v in df_auc["ROC-AUC"]],
-        textposition="outside",
-        textfont=dict(color=TEXT, size=12, family="JetBrains Mono"),
-        hovertemplate="<b>%{y}</b><br>AUC: %{x:.2f}<extra></extra>",
-    ))
-    fig_auc.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter", color=MUTED, size=11),
-        height=260, margin=dict(t=10, b=30, l=10, r=60),
-        xaxis=dict(range=[0.90, 1.01], gridcolor=BORDER, tickfont=dict(color=MUTED)),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(color=TEXT, size=11)),
-        showlegend=False,
-    )
-    fig_auc.add_vline(x=0.95, line_dash="dash", line_color=WARN,
-                      annotation_text="0.95 threshold",
-                      annotation_font=dict(color=WARN, size=10))
-    st.plotly_chart(fig_auc, use_container_width=True, config={"displayModeBar":False})
-
-    # ── Section 4: Confusion Matrices ────────────────────────────
-    st.markdown(f"<h3 style='margin:24px 0 14px'>Confusion Matrices</h3>",
-                unsafe_allow_html=True)
-    cms = [
-        ("Phishing Email (DistilBERT)", [[1521,39],[31,1409]], PRIMARY),
-        ("URL Detection (XGBoost)",     [[22100,420],[380,21800]], SUCCESS),
-        ("Login Detection (IsoForest)", [[4380,170],[220,4230]], WARN),
-        ("Network Detection (XGBoost)", [[11800,150],[130,11620]], CRIT),
-    ]
-    cm_cols = st.columns(2)
-    for idx,(title,cm,color) in enumerate(cms):
-        with cm_cols[idx % 2]:
-            labels = ["Benign","Threat"]
-            z      = [[cm[1][1], cm[1][0]],[cm[0][1], cm[0][0]]]
-            text   = [[f"TP: {cm[1][1]:,}",f"FN: {cm[1][0]:,}"],
-                      [f"FP: {cm[0][1]:,}",f"TN: {cm[0][0]:,}"]]
-            fig_cm = go.Figure(go.Heatmap(
-                z=z, x=["Predicted Threat","Predicted Benign"],
-                y=["Actual Threat","Actual Benign"],
-                text=text, texttemplate="%{text}",
-                colorscale=[[0,"#1a1f2e"],[0.5,"#1e3a5f"],[1.0,color]],
-                showscale=False,
-                hovertemplate="<b>%{y} / %{x}</b><br>%{text}<extra></extra>",
-                textfont=dict(size=12, color=TEXT, family="JetBrains Mono"),
-            ))
-            fig_cm.update_layout(
-                title=dict(text=title, font=dict(color=TEXT, size=12), x=0.5),
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Inter", color=TEXT, size=11),
-                height=260, margin=dict(t=40, b=40, l=100, r=20),
-                xaxis=dict(tickfont=dict(color=TEXT)),
-                yaxis=dict(tickfont=dict(color=TEXT)),
-            )
-            st.plotly_chart(fig_cm, use_container_width=True,
-                            config={"displayModeBar":False})
-
-    # ── Section 5: Performance Summary Cards ─────────────────────
-    st.markdown(f"<h3 style='margin:24px 0 14px'>Performance Summary</h3>",
-                unsafe_allow_html=True)
-    avg_acc = sum([97.5,98.2,94.6,98.7])/4
-    ps1,ps2,ps3 = st.columns(3)
-    with ps1:
-        st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:4px solid {SUCCESS};text-align:center'>
-          <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
-                      letter-spacing:1px;font-weight:700;margin-bottom:8px'>
-            Overall Average Accuracy</div>
-          <div style='color:{SUCCESS};font-size:2.2rem;font-weight:900'>{avg_acc:.2f}%</div>
-          <div style='color:{MUTED};font-size:0.78rem;margin-top:4px'>Across all 4 models</div>
-        </div>""", unsafe_allow_html=True)
-    with ps2:
-        st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:4px solid {INFO};text-align:center'>
-          <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
-                      letter-spacing:1px;font-weight:700;margin-bottom:8px'>
-            Best Performing Model</div>
-          <div style='color:{INFO};font-size:1.15rem;font-weight:800;line-height:1.3'>
-            Network Detection</div>
-          <div style='color:{MUTED};font-size:0.82rem;margin-top:4px'>
-            XGBoost · 98.7% Accuracy</div>
-        </div>""", unsafe_allow_html=True)
-    with ps3:
-        st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:4px solid {WARN};text-align:center'>
-          <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
-                      letter-spacing:1px;font-weight:700;margin-bottom:8px'>
-            Lowest False Positive Rate</div>
-          <div style='color:{WARN};font-size:1.15rem;font-weight:800;line-height:1.3'>
-            URL Detection</div>
-          <div style='color:{MUTED};font-size:0.82rem;margin-top:4px'>
-            XGBoost · FPR ≈ 1.8%</div>
-        </div>""", unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════════════════════════════════
 # PAGE: DATASET INFORMATION
 # ══════════════════════════════════════════════════════════════════
 elif page == "Dataset Info":
@@ -2243,8 +2260,8 @@ elif page == "System Workflow":
           <strong style='color:{TEXT}'>SOLID Architecture</strong><br>
           Every component is independently testable and replaceable via abstract base classes.</div>
         <div style='color:{MUTED};font-size:0.82rem'>
-          <strong style='color:{TEXT}'>IEEE 7000 Compliant</strong><br>
-          Every prediction includes SHAP + LIME explanations satisfying AI transparency requirements.</div>
+          <strong style='color:{TEXT}'>Explainability-Focused</strong><br>
+          Every prediction includes SHAP + LIME explanations, providing human-readable reasoning and feature attribution.</div>
         <div style='color:{MUTED};font-size:0.82rem'>
           <strong style='color:{TEXT}'>Production-Ready</strong><br>
           FastAPI backend · SQLite persistence · Docker support · GitHub Actions CI/CD.</div>
@@ -2272,7 +2289,7 @@ elif page == "About":
         An intelligent, production-grade cybersecurity platform that leverages
         Machine Learning, Deep Learning (Transformer-based NLP), and Explainable AI (XAI)
         to detect, classify, and explain multiple categories of cyber threats in real time.
-        Built to IEEE 29148, IEEE 29119, IEEE 1012, and IEEE 7000 standards.
+        Designed with requirements engineering, software testing, and AI explainability principles.
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -2384,7 +2401,7 @@ elif page == "About":
         SQLAlchemy · ReportLab · Docker · GitHub Actions
       </div>
       <div style='color:{MUTED};font-size:0.72rem;margin-top:8px'>
-        IEEE 29148 (Requirements) · IEEE 29119 (Testing) · IEEE 1012 (V&V) · IEEE 7000 (AI Ethics)
+        Designed with requirements engineering, software testing, and explainability principles (SHAP · LIME · XAI)
       </div>
     </div>""", unsafe_allow_html=True)
 
