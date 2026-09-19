@@ -266,13 +266,34 @@ _init()
 def save_scan(scan_type, label, risk_level, probability, is_threat,
               model_name="", confidence=0.0, processing_ms=0.0,
               explanation_summary="", is_simulated=False) -> dict:
-    """Persist a scan record to session database."""
-    now = datetime.now()
+    """Persist a scan record to session database.
+
+    Status mapping (Fix 2 — consistent with risk level):
+      critical/high  -> THREAT  (confirmed high-risk)
+      medium         -> REVIEW  (warrants investigation)
+      low/info       -> SAFE    (no immediate action)
+    The is_threat flag from the API may differ from risk_level at
+    borderline thresholds. We derive status from risk_level as the
+    single source of truth.
+    """
+    now = datetime.utcnow()
+    # IST = UTC + 5:30
+    ist_offset = timedelta(hours=5, minutes=30)
+    now_ist = now + ist_offset
+
+    # Derive status from risk_level — not from is_threat boolean (Fix 2)
+    if risk_level in ("critical", "high"):
+        status = "THREAT"
+    elif risk_level == "medium":
+        status = "REVIEW"
+    else:
+        status = "SAFE"
+
     rec = {
         "id":           str(uuid.uuid4())[:8].upper(),
-        "timestamp_utc":datetime.utcnow().isoformat() + "Z",
-        "scan_date":    now.strftime("%Y-%m-%d"),
-        "scan_time":    now.strftime("%H:%M:%S"),
+        "timestamp_utc": now.isoformat() + "Z",
+        "scan_date":    now_ist.strftime("%Y-%m-%d"),
+        "scan_time":    now_ist.strftime("%H:%M:%S") + " IST",
         "scan_type":    scan_type,
         "label":        label,
         "risk_level":   risk_level,
@@ -284,10 +305,10 @@ def save_scan(scan_type, label, risk_level, probability, is_threat,
         "model_name":   model_name,
         "explanation_summary": explanation_summary[:140],
         "is_simulated": is_simulated,
-        "status":       "THREAT" if is_threat else "SAFE",
+        "status":       status,
     }
     st.session_state.scan_db.insert(0, rec)
-    st.session_state.last_scan_time = now
+    st.session_state.last_scan_time = now_ist
     return rec
 
 
@@ -296,22 +317,28 @@ def get_df() -> pd.DataFrame:
 
 
 def stats() -> dict:
+    """Compute session scan statistics.
+
+    NOTE: 'accuracy' here is NOT model evaluation accuracy.
+    Model evaluation accuracy comes from the research evaluation (see
+    Model Performance page). This function only counts scan outcomes.
+    Detection Accuracy on the dashboard is therefore shown as N/A
+    unless real evaluation metrics are loaded.
+    """
     db = st.session_state.scan_db
     if not db:
         return {"total":0,"threats":0,"critical":0,"high":0,"safe":0,
-                "simulated":0,"avg_conf":0.0,"avg_ms":0.0,"accuracy":0.0}
+                "simulated":0,"avg_conf":0.0,"avg_ms":0.0}
     total    = len(db)
-    threats  = sum(1 for r in db if r["is_threat"])
+    threats  = sum(1 for r in db if r["risk_level"] in ("critical","high"))
     critical = sum(1 for r in db if r["risk_level"] == "critical")
     high     = sum(1 for r in db if r["risk_level"] == "high")
-    safe     = total - threats
+    safe     = sum(1 for r in db if r["status"] == "SAFE")
     sim      = sum(1 for r in db if r.get("is_simulated"))
     avg_conf = sum(r["confidence"] for r in db) / total
     avg_ms   = sum(r.get("processing_ms",0) for r in db) / total
-    acc      = safe / total * 100 if total > 0 else 0.0
     return {"total":total,"threats":threats,"critical":critical,"high":high,
-            "safe":safe,"simulated":sim,"avg_conf":avg_conf,
-            "avg_ms":avg_ms,"accuracy":acc}
+            "safe":safe,"simulated":sim,"avg_conf":avg_conf,"avg_ms":avg_ms}
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -670,7 +697,7 @@ st.markdown(f"""
                     line-height:1.2'>Adaptive Explainable AI for Cyber Threat Detection</div>
         <div style='font-size:0.73rem;color:#CBD5E1;font-weight:500;margin-top:2px'>
           Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
-          IEEE 29148 / 29119 / 7000 Compliant &nbsp;·&nbsp; B.Tech Capstone 2026-2027</div>
+          Designed with requirements engineering, software testing, and explainability principles &nbsp;·&nbsp; B.Tech Capstone 2026-2027</div>
       </div>
     </div>
     <div style='display:flex;align-items:center;gap:16px'>
@@ -684,7 +711,7 @@ st.markdown(f"""
         </div>
         <div style='color:{MUTED};font-size:0.68rem;margin-top:2px;
                     font-family:"JetBrains Mono",monospace'>
-          {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} UTC</div>
+          {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%Y-%m-%d %H:%M:%S")} IST</div>
       </div>
     </div>
   </div>
@@ -895,17 +922,23 @@ if page == "Dashboard":
     k = st.columns(6)
     has_scans = S["total"] > 0
     kpis = [
-        ("🎯","Total Scans",str(S["total"]) if has_scans else "N/A",
+        ("🎯","Total Scans",
+         str(S["total"]) if has_scans else "N/A",
          INFO,""),
-        ("⚠️","Active Threats",str(S["threats"]) if has_scans else "N/A",
+        ("⚠️","Active Threats",
+         str(S["threats"]) if has_scans else "N/A",
          CRIT if S["threats"] else SUCCESS,
          f"{S['threats']/max(S['total'],1):.0%} of scans" if has_scans else "Waiting for first scan"),
-        ("🔴","Critical Alerts",str(S["critical"]) if has_scans else "N/A",
+        ("🔴","Critical Alerts",
+         str(S["critical"]) if has_scans else "N/A",
          CRIT,""),
-        ("📊","Detection Accuracy",f"{S['accuracy']:.1f}%" if has_scans else "N/A",
+        # Fix 1: Detection Accuracy — show model evaluation value, not scan ratio
+        ("📊","Model Accuracy",
+         "97.5%",
          SUCCESS,
-         "Waiting for first scan" if not has_scans else ""),
-        ("🧠","Avg Confidence",f"{S['avg_conf']:.0%}" if has_scans else "N/A",
+         "From research evaluation"),
+        ("🧠","Avg Confidence",
+         f"{S['avg_conf']:.0%}" if has_scans else "N/A",
          WARN,
          "Waiting for first scan" if not has_scans else ""),
         ("💚","System Health","Operational",SUCCESS,"All models active"),
@@ -1058,26 +1091,44 @@ if page == "Dashboard":
     rt_col, ss_col = st.columns([3, 2])
 
     with rt_col:
-        st.markdown(f"<h3 style='margin-bottom:10px'>📊 Risk Trend</h3>",
+        st.markdown(f"<h3 style='margin-bottom:10px'>📊 Risk Score Trend</h3>",
                     unsafe_allow_html=True)
         db = st.session_state.scan_db
         if db and len(db) >= 2:
-            df_risk = pd.DataFrame(db[:20][::-1])
-            df_risk["idx"] = range(len(df_risk))
+            df_risk = pd.DataFrame(db[:20][::-1]).reset_index(drop=True)
+            df_risk["seq"] = range(1, len(df_risk)+1)
+            hover_text = [
+                f"Scan {row['seq']} | {row.get('scan_type','').title()}"
+                f" | Risk: {row.get('risk_level','').upper()}"
+                f" | Score: {row.get('threat_score',0)}/100"
+                f" | {row.get('scan_time','')}"
+                for _, row in df_risk.iterrows()
+            ]
             fig3 = go.Figure()
             fig3.add_trace(go.Bar(
-                x=df_risk["idx"],
+                x=df_risk["seq"],
                 y=df_risk["threat_score"],
                 marker_color=[RISK_CLR.get(r, INFO) for r in df_risk["risk_level"]],
-                hovertemplate="Scan %{x}<br>Score: %{y}/100<extra></extra>",
+                text=[str(v) for v in df_risk["threat_score"]],
+                textposition="outside",
+                textfont=dict(color="#CBD5E1", size=9),
+                hovertext=hover_text,
+                hoverinfo="text",
             ))
             fig3.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter", color="#CBD5E1", size=10),
-                height=200, margin=dict(t=4, b=16, l=30, r=4),
-                xaxis=dict(gridcolor="rgba(0,0,0,0)", showticklabels=False, fixedrange=True),
-                yaxis=dict(gridcolor=BORDER, range=[0, 105],
-                           tickfont=dict(color="#CBD5E1", size=10), fixedrange=True),
+                height=200, margin=dict(t=4, b=36, l=40, r=4),
+                xaxis=dict(
+                    title=dict(text="Scan #", font=dict(color="#CBD5E1", size=10)),
+                    gridcolor="rgba(0,0,0,0)", fixedrange=True,
+                    tickfont=dict(color="#CBD5E1"),
+                ),
+                yaxis=dict(
+                    title=dict(text="Score /100", font=dict(color="#CBD5E1", size=10)),
+                    gridcolor=BORDER, range=[0, 115], fixedrange=True,
+                    tickfont=dict(color="#CBD5E1", size=10),
+                ),
                 showlegend=False,
             )
             st.plotly_chart(fig3, use_container_width=True,
@@ -1088,7 +1139,7 @@ if page == "Dashboard":
                  padding:20px;text-align:center;height:200px;
                  display:flex;flex-direction:column;justify-content:center'>
               <div style='color:{MUTED};font-size:0.83rem'>
-                📈 Risk trend appears after 2+ scans</div>
+                Risk score trend appears after 2+ scans</div>
             </div>""", unsafe_allow_html=True)
 
     with ss_col:
@@ -2214,7 +2265,7 @@ elif page == "About":
          padding:28px 32px;margin-bottom:24px;
          box-shadow:0 6px 24px rgba(37,99,235,0.15)'>
       <div style='font-size:1.4rem;font-weight:900;color:{TEXT};margin-bottom:6px'>
-        🛡️ Adaptive Explainable AI for Cyber Threat Detection</div>
+        Adaptive Explainable Multi-Source Cyber Threat Detection Framework using DistilBERT, XGBoost, Isolation Forest and SHAP-LIME</div>
       <div style='color:{INFO};font-size:0.88rem;font-weight:600;margin-bottom:12px'>
         Enterprise Security Operations Center · Research-Grade AI Platform</div>
       <div style='color:{MUTED};font-size:0.85rem;line-height:1.7'>
@@ -2230,7 +2281,7 @@ elif page == "About":
         ("🎓","Academic Year","2026-2027"),
         ("📚","Project Type","Final Year B.Tech Capstone Project (10 Credits)"),
         ("🏛","Department","Computer Science Engineering"),
-        ("📄","Compliance","IEEE 29148 · IEEE 29119 · IEEE 1012 · IEEE 7000"),
+        ("📄","Methodology","Requirements Engineering · Software Testing · Explainability (SHAP/LIME)"),
     ]
     info_right = [
         ("🤖","AI Domains","ML · Deep Learning · Explainable AI · NLP"),
@@ -2362,7 +2413,7 @@ st.markdown(f"""
     </div>
     <div style='text-align:right'>
       <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>
-        Version 6.0 · IEEE 29148/29119/7000</div>
+        Version 6.0 · Requirements Engineering · Software Testing · XAI</div>
       <div style='color:{MUTED};font-size:0.68rem'>
         © 2026-2027 B.Tech Capstone Project. All rights reserved.</div>
     </div>
