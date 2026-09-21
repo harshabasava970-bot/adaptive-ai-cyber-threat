@@ -526,3 +526,237 @@ class TestAttackDistribution:
         import pandas as pd
         df = pd.DataFrame([])
         assert df.empty
+
+
+# ── Fix 1 (render_timeline): Status badge colour uses status not is_threat ──
+
+class TestTimelineStatusColour:
+    """
+    render_timeline s_color must derive from rec['status'], NOT rec['is_threat'].
+
+    Root cause: the fusion engine sets is_threat=True for any event with
+    probability >= 0.25 (the LOW threshold). A LOW-risk scan therefore has
+    is_threat=True but status='SAFE'. The old code coloured the badge red
+    using is_threat, giving a red 'SAFE' badge. The fix uses status.
+    """
+
+    SUCCESS = "#22C55E"
+    WARN    = "#F59E0B"
+    CRIT    = "#EF4444"
+
+    def _s_color(self, status: str) -> str:
+        """Mirrors the fixed s_color logic in render_timeline."""
+        return (
+            self.CRIT if status == "THREAT"
+            else (self.WARN if status == "REVIEW" else self.SUCCESS)
+        )
+
+    def test_safe_status_gives_green(self):
+        assert self._s_color("SAFE") == self.SUCCESS
+
+    def test_review_status_gives_amber(self):
+        assert self._s_color("REVIEW") == self.WARN
+
+    def test_threat_status_gives_red(self):
+        assert self._s_color("THREAT") == self.CRIT
+
+    def test_low_risk_with_raw_is_threat_true_shows_green(self):
+        """
+        Core regression: LOW-risk fusion scan with is_threat=True from the API.
+        Old: s_color = SUCCESS if not rec['is_threat'] else CRIT → gives CRIT (red).
+        New: s_color from rec['status'] = 'SAFE' → gives SUCCESS (green).
+        """
+        rec = {"risk_level": "low", "is_threat": True, "status": "SAFE"}
+        s_color = self._s_color(rec["status"])  # fixed logic
+        assert s_color == self.SUCCESS, (
+            "LOW-risk scan with raw is_threat=True must produce green badge, not red. "
+            "Colour must be derived from status, not is_threat."
+        )
+
+    def test_medium_risk_not_green_not_red(self):
+        rec = {"risk_level": "medium", "is_threat": True, "status": "REVIEW"}
+        s_color = self._s_color(rec["status"])
+        assert s_color == self.WARN
+        assert s_color != self.CRIT
+        assert s_color != self.SUCCESS
+
+    def test_high_risk_gives_red(self):
+        rec = {"risk_level": "high", "is_threat": True, "status": "THREAT"}
+        s_color = self._s_color(rec["status"])
+        assert s_color == self.CRIT
+
+    def test_critical_risk_gives_red(self):
+        rec = {"risk_level": "critical", "is_threat": True, "status": "THREAT"}
+        s_color = self._s_color(rec["status"])
+        assert s_color == self.CRIT
+
+    def test_info_risk_gives_green(self):
+        rec = {"risk_level": "info", "is_threat": False, "status": "SAFE"}
+        s_color = self._s_color(rec["status"])
+        assert s_color == self.SUCCESS
+
+
+# ── Fix 2 (Threat Activity Timeline): filter by status not is_threat ────────
+
+class TestThreatChartFilter:
+    """
+    The Threat Activity Timeline chart must count 'Threats' using
+    status == 'THREAT', not is_threat == True.
+
+    Fixes the same root cause as s_color: LOW-risk scans with is_threat=True
+    were incorrectly counted in the threat line of the chart.
+    """
+
+    def _count_threats_old(self, scan_db: list) -> int:
+        """Mimics the OLD (broken) filter: is_threat == True."""
+        return sum(1 for r in scan_db if r.get("is_threat") is True)
+
+    def _count_threats_new(self, scan_db: list) -> int:
+        """Mimics the FIXED filter: status == 'THREAT'."""
+        return sum(1 for r in scan_db if r.get("status") == "THREAT")
+
+    def _make_scan(self, risk_level: str, is_threat_raw: bool) -> dict:
+        from src.core.risk_utils import risk_to_status
+        return {
+            "risk_level": risk_level,
+            "is_threat": is_threat_raw,
+            "status": risk_to_status(risk_level),
+        }
+
+    def test_low_risk_is_threat_true_not_counted(self):
+        """LOW scan with raw is_threat=True must NOT appear in threat count."""
+        db = [self._make_scan("low", is_threat_raw=True)]
+        assert self._count_threats_old(db) == 1, "Old logic counts it (bug)"
+        assert self._count_threats_new(db) == 0, "New logic must not count it"
+
+    def test_medium_risk_not_counted_as_threat(self):
+        db = [self._make_scan("medium", is_threat_raw=True)]
+        assert self._count_threats_new(db) == 0
+
+    def test_high_risk_is_counted(self):
+        db = [self._make_scan("high", is_threat_raw=True)]
+        assert self._count_threats_new(db) == 1
+
+    def test_critical_risk_is_counted(self):
+        db = [self._make_scan("critical", is_threat_raw=True)]
+        assert self._count_threats_new(db) == 1
+
+    def test_mixed_scan_db(self):
+        """Only CRITICAL/HIGH scans count as threats in the chart."""
+        db = [
+            self._make_scan("critical", True),
+            self._make_scan("high",     True),
+            self._make_scan("medium",   True),   # REVIEW — not a threat
+            self._make_scan("low",      True),   # SAFE   — not a threat
+            self._make_scan("info",     False),  # SAFE   — not a threat
+        ]
+        assert self._count_threats_new(db) == 2
+        # Old logic would incorrectly count 4 (all where is_threat=True)
+        assert self._count_threats_old(db) == 4
+
+
+# ── Fix 5 (get_threat_counts): uses risk_level not is_threat ─────────────────
+
+class TestGetThreatCountsLogic:
+    """
+    get_threat_counts() must count by risk_level in {critical, high},
+    not by the raw is_threat DB column.
+    """
+
+    def test_low_risk_record_not_counted(self):
+        """A LOW-risk record with is_threat=True must not appear in counts."""
+        import uuid
+        from src.database.models import get_engine, init_db, get_session, ThreatDetection
+        from src.database.repository import ThreatRepository
+        from src.core.constants import RiskLevel
+        from src.fusion.threat_fusion import FusedThreatReport
+
+        engine = get_engine("sqlite:///:memory:")
+        init_db(engine)
+        Session = get_session(engine)
+        repo = ThreatRepository.__new__(ThreatRepository)
+        repo._SessionFactory = Session
+
+        # Manually insert a LOW-risk record with is_threat=True (fusion engine artifact)
+        sess = Session()
+        sess.add(ThreatDetection(
+            report_id=str(uuid.uuid4()),
+            threat_type="suspicious_login",
+            is_threat=True,          # raw fusion bool — True but LOW risk
+            probability=0.28,
+            risk_score=0.28,
+            risk_level="low",        # ← this is what matters
+            model_name="test",
+            algorithm="test",
+            active_threats=["suspicious_login"],
+        ))
+        sess.commit()
+        sess.close()
+
+        counts = repo.get_threat_counts()
+        assert counts.get("suspicious_login", 0) == 0, (
+            "LOW-risk record must NOT appear in get_threat_counts(), "
+            "even if is_threat=True in the DB."
+        )
+
+    def test_high_risk_record_is_counted(self):
+        """A HIGH-risk record must appear in get_threat_counts()."""
+        import uuid
+        from src.database.models import get_engine, init_db, get_session, ThreatDetection
+        from src.database.repository import ThreatRepository
+
+        engine = get_engine("sqlite:///:memory:")
+        init_db(engine)
+        Session = get_session(engine)
+        repo = ThreatRepository.__new__(ThreatRepository)
+        repo._SessionFactory = Session
+
+        sess = Session()
+        sess.add(ThreatDetection(
+            report_id=str(uuid.uuid4()),
+            threat_type="phishing_email",
+            is_threat=True,
+            probability=0.82,
+            risk_score=0.82,
+            risk_level="high",
+            model_name="test",
+            algorithm="test",
+            active_threats=["phishing_email"],
+        ))
+        sess.commit()
+        sess.close()
+
+        counts = repo.get_threat_counts()
+        assert counts.get("phishing_email", 0) == 1
+
+    def test_medium_risk_not_in_counts(self):
+        """MEDIUM-risk (REVIEW) must not appear in get_threat_counts()."""
+        import uuid
+        from src.database.models import get_engine, init_db, get_session, ThreatDetection
+        from src.database.repository import ThreatRepository
+
+        engine = get_engine("sqlite:///:memory:")
+        init_db(engine)
+        Session = get_session(engine)
+        repo = ThreatRepository.__new__(ThreatRepository)
+        repo._SessionFactory = Session
+
+        sess = Session()
+        sess.add(ThreatDetection(
+            report_id=str(uuid.uuid4()),
+            threat_type="malicious_url",
+            is_threat=True,
+            probability=0.55,
+            risk_score=0.55,
+            risk_level="medium",
+            model_name="test",
+            algorithm="test",
+            active_threats=["malicious_url"],
+        ))
+        sess.commit()
+        sess.close()
+
+        counts = repo.get_threat_counts()
+        assert counts.get("malicious_url", 0) == 0, (
+            "MEDIUM-risk record (REVIEW status) must NOT appear in threat counts."
+        )

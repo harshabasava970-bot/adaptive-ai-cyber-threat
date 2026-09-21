@@ -326,14 +326,22 @@ class ReportGenerator:
             story.append(Spacer(1, 0.4 * cm))
 
             # ── Executive Summary ──────────────────────────────────
-            # Fix #1: clearly distinguish Total Scans from Confirmed Threats
-            # and explain what each category count means.
             story.append(Paragraph("Executive Summary", heading_style))
             story.append(Paragraph(
-                "Note: 'Total Scans' counts every detection event at all risk levels. "
-                "'Confirmed Threats' counts only CRITICAL and HIGH risk events. "
-                "Category counts (phishing, URL, etc.) reflect the threat types present "
-                "within those confirmed-threat events only.",
+                "Report Scope: This report covers all detection events stored in the "
+                "persistent database, which may include detections from multiple sessions "
+                "and automated API calls. It does not represent only the current browser "
+                "session. The Dashboard 'Total Scans' counter reflects the current "
+                "session only and may differ from the database total shown here.",
+                note_style,
+            ))
+            story.append(Paragraph(
+                "Counting methodology: 'Total Scans' counts every detection event at all "
+                "risk levels. 'Confirmed Threats' counts only CRITICAL and HIGH risk events. "
+                "Category counts (phishing, URL, etc.) reflect threat types within "
+                "confirmed-threat events only. One fusion scan containing multiple threat "
+                "types contributes 1 to Total Scans and 1 to Confirmed Threats, but 1 to "
+                "each relevant category counter.",
                 note_style,
             ))
 

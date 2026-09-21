@@ -667,7 +667,10 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
 
     for rec in records[:max_rows]:
         color   = RISK_CLR.get(rec["risk_level"], INFO)
-        s_color = SUCCESS if not rec["is_threat"] else CRIT
+        # s_color derived from status (single source of truth via risk_to_status),
+        # NOT from the raw is_threat boolean (which can be True for LOW-risk events).
+        _status = rec.get("status", "SAFE")
+        s_color = CRIT if _status == "THREAT" else (WARN if _status == "REVIEW" else SUCCESS)
         sim_tag = (f"<span style='background:{PURPLE}20;color:{PURPLE};padding:1px 5px;"
                    f"border-radius:5px;font-size:0.6rem;font-weight:700'>SIM</span> "
                    ) if rec.get("is_simulated") else ""
@@ -945,13 +948,16 @@ if page == "Dashboard":
     # ── KPI Row (6 cards) ─────────────────────────────────────────
     k = st.columns(6)
     has_scans = S["total"] > 0
-    # ── Detection Accuracy from research confusion matrices ───────
-    # Formula: (TP + TN) / (TP + TN + FP + FN) × 100
-    # Source: confusion matrices on the Model Performance page.
-    #   Phishing  (DistilBERT):  TP=1409  TN=1521  FP=39   FN=31
-    #   URL       (XGBoost):     TP=21800 TN=22100 FP=420  FN=380
-    #   Login     (IsoForest):   TP=4230  TN=4380  FP=170  FN=220
-    #   Network   (XGBoost):     TP=11620 TN=11800 FP=150  FN=130
+    # ── Reference Model Accuracy from documented research experiments ───
+    # These confusion matrices come from offline evaluation on held-out
+    # test datasets (documented in the Model Performance page).
+    # Formula: (TP + TN) / (TP + TN + FP + FN) × 100, weighted by test-set size.
+    # This value does NOT change with live session scans and is NOT calculated
+    # from scan-category distribution. Source: research evaluation pipeline.
+    #   Phishing  (DistilBERT):  TP=1409  TN=1521  FP=39   FN=31   (3000 test samples)
+    #   URL       (XGBoost):     TP=21800 TN=22100 FP=420  FN=380  (44700 test samples)
+    #   Login     (IsoForest):   TP=4230  TN=4380  FP=170  FN=220  (9000 test samples)
+    #   Network   (XGBoost):     TP=11620 TN=11800 FP=150  FN=130  (23700 test samples)
     _CM_DATA = [
         (1409, 1521, 39,  31),
         (21800, 22100, 420, 380),
@@ -973,10 +979,10 @@ if page == "Dashboard":
         ("🔴","Critical Alerts",
          str(S["critical"]) if has_scans else "N/A",
          CRIT,""),
-        ("📊","Research Accuracy",
+        ("📊","Ref. Model Accuracy",
          _acc_kpi,
          SUCCESS,
-         "Pre-trained models · (TP+TN)/(TP+TN+FP+FN)"),
+         "Research eval · weighted (TP+TN)/(TP+TN+FP+FN)"),
         ("🧠","Avg Confidence",
          f"{S['avg_conf']:.0%}" if S["avg_conf"] is not None else "N/A",
          WARN,
@@ -1018,7 +1024,9 @@ if page == "Dashboard":
             # Group by minute so recent scans within the same hour are visible
             df_plot["bucket"] = df_plot["ts_ist"].dt.floor("min")
             all_t = df_plot.groupby("bucket").size().reset_index(name="scans")
-            thr_t = df_plot[df_plot["is_threat"]==True].groupby("bucket").size().reset_index(name="threats")
+            # Filter confirmed threats by status field (THREAT = critical/high only),
+            # NOT by the raw is_threat boolean which can be True for LOW-risk events.
+            thr_t = df_plot[df_plot["status"]=="THREAT"].groupby("bucket").size().reset_index(name="threats")
             # If only 1 unique minute, add a zero point before it so line renders
             if len(all_t) == 1:
                 prev = pd.DataFrame({"bucket":[all_t["bucket"].iloc[0] - pd.Timedelta(minutes=1)],
@@ -1861,8 +1869,9 @@ elif page == "Reports":
           <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
             📄 Session CSV Export</div>
           <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
-            Export all {S["total"]} scans from this session. Includes risk level,
-            threat score, confidence, model name, and timestamps (scan_time column = IST).</div>
+            Export all {S["total"]} scans from this session only (current browser session).
+            Timestamps in IST (scan_time column). This CSV covers session scans — for the
+            full historical database export, use the PDF report.</div>
         </div>""", unsafe_allow_html=True)
         if db:
             _ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
@@ -1879,8 +1888,9 @@ elif page == "Reports":
           <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
             📕 PDF Threat Report</div>
           <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
-            Formatted PDF with executive summary, model metrics, and backend
-            detections. Timestamps shown in UTC (backend database). Suitable for management briefing and project documentation.</div>
+            Formatted PDF covering all database detection events (all sessions).
+            Shows both IST and UTC timestamps. Suitable for management briefing
+            and project documentation.</div>
         </div>""", unsafe_allow_html=True)
         if st.button("⬇️ Download PDF Report",use_container_width=True):
             try:

@@ -107,13 +107,18 @@ class ThreatRepository:
     def get_threat_counts(self) -> dict:
         """Return counts of threats by type for dashboard charts.
 
+        Counts are derived from risk_level (CRITICAL or HIGH = confirmed threat),
+        NOT from the raw is_threat boolean column, which can be True for LOW-risk
+        events due to the fusion engine's probability threshold.
+
         Returns:
-            Dict mapping threat_type → count.
+            Dict mapping threat_type → count (confirmed threats only).
         """
+        _confirmed = {"critical", "high"}
         session: Session = self._SessionFactory()
         try:
             records = session.query(ThreatDetection).filter(
-                ThreatDetection.is_threat == True  # noqa: E712
+                ThreatDetection.risk_level.in_(list(_confirmed))
             ).all()
             counts: dict = {}
             for r in records:
