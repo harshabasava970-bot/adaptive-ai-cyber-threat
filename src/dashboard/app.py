@@ -1041,354 +1041,457 @@ def _do_detection(endpoint, payload, scan_type, is_simulated=False):
 if page == "Dashboard":
     st.markdown(f"<div style='height:20px'></div>", unsafe_allow_html=True)
 
-    # ── Hero Section ──────────────────────────────────────────────
+    # ── LIGHT HERO + COLORFUL DETECTION CARDS ─────────────────────
+    # All rendered as a single self-contained HTML block so Streamlit
+    # does not split the layout. Buttons are real st.button() calls
+    # placed directly below each card so they remain functional.
+    st.markdown("""
+    <style>
+    /* ── Light section wrapper ───────────────────────── */
+    .sdc-wrap {
+      background: #F0F4FA;
+      border-radius: 20px;
+      padding: 36px 36px 28px;
+      margin-bottom: 24px;
+    }
+    /* ── Hero ───────────────────────────────────────── */
+    .sdc-hero {
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 16px rgba(30,58,138,0.08);
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .sdc-hero-left { flex: 1; min-width: 260px; }
+    .sdc-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #EFF6FF; color: #2563EB;
+      border: 1px solid #BFDBFE;
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .sdc-title {
+      font-size: 1.9rem; font-weight: 800;
+      color: #0F172A; line-height: 1.15;
+      letter-spacing: -0.6px; margin-bottom: 12px;
+    }
+    .sdc-title span { color: #2563EB; }
+    .sdc-desc {
+      color: #475569; font-size: 0.9rem;
+      line-height: 1.65; max-width: 420px;
+      margin-bottom: 24px;
+    }
+    .sdc-hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .sdc-btn-primary {
+      background: #2563EB; color: #fff;
+      border: none; border-radius: 10px;
+      padding: 11px 22px; font-size: 0.84rem;
+      font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.30);
+      transition: background 0.15s, transform 0.15s;
+    }
+    .sdc-btn-primary:hover { background: #1D4ED8; transform: translateY(-1px); }
+    .sdc-btn-outline {
+      background: #fff; color: #2563EB;
+      border: 1.5px solid #BFDBFE; border-radius: 10px;
+      padding: 11px 22px; font-size: 0.84rem;
+      font-weight: 600; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .sdc-btn-outline:hover { border-color: #2563EB; background: #EFF6FF; }
+    /* ── Hero image ──────────────────────────────────── */
+    .sdc-hero-img {
+      flex-shrink: 0; border-radius: 14px;
+      overflow: hidden; width: 300px; height: 200px;
+      box-shadow: 0 8px 32px rgba(30,58,138,0.13);
+    }
+    .sdc-hero-img svg { width: 100%; height: 100%; display: block; }
+    /* ── Section heading ─────────────────────────────── */
+    .sdc-heading { text-align: center; margin-bottom: 28px; }
+    .sdc-heading h2 {
+      font-size: 1.35rem; font-weight: 800;
+      color: #0F172A; letter-spacing: -0.4px; margin-bottom: 6px;
+    }
+    .sdc-heading p { color: #64748B; font-size: 0.87rem; }
+    /* ── Detection card ──────────────────────────────── */
+    .sdc-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #E2E8F0;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      cursor: pointer;
+      height: 100%;
+    }
+    .sdc-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+    }
+    .sdc-card-img {
+      overflow: hidden; height: 168px;
+      position: relative;
+    }
+    .sdc-card-img svg {
+      width: 100%; height: 100%; display: block;
+      transition: transform 0.3s ease;
+    }
+    .sdc-card:hover .sdc-card-img svg { transform: scale(1.05); }
+    .sdc-card-body { padding: 18px 20px 20px; }
+    .sdc-card-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 20px; padding: 3px 11px;
+      font-size: 0.67rem; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .sdc-card-title {
+      font-size: 1rem; font-weight: 700;
+      color: #0F172A; margin-bottom: 7px;
+      letter-spacing: -0.2px;
+    }
+    .sdc-card-desc {
+      color: #64748B; font-size: 0.8rem;
+      line-height: 1.55; min-height: 38px;
+      margin-bottom: 14px;
+    }
+    /* Buttons injected by Streamlit sit below — hide default padding */
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ── HERO ──────────────────────────────────────────────────────
+    _HERO_SVG = """
+    <svg viewBox='0 0 300 200' xmlns='http://www.w3.org/2000/svg'>
+      <defs>
+        <linearGradient id='hg1' x1='0' y1='0' x2='1' y2='1'>
+          <stop offset='0%' stop-color='#EFF6FF'/>
+          <stop offset='100%' stop-color='#DBEAFE'/>
+        </linearGradient>
+      </defs>
+      <rect width='300' height='200' fill='url(#hg1)' rx='14'/>
+      <!-- monitor -->
+      <rect x='40' y='30' width='220' height='130' rx='10' fill='#fff' stroke='#BFDBFE' stroke-width='2'/>
+      <rect x='40' y='30' width='220' height='36' rx='10' fill='#2563EB'/>
+      <!-- monitor top bar -->
+      <circle cx='62' cy='48' r='6' fill='#fff' opacity='0.4'/>
+      <circle cx='80' cy='48' r='6' fill='#fff' opacity='0.4'/>
+      <circle cx='98' cy='48' r='6' fill='#fff' opacity='0.4'/>
+      <rect x='116' y='40' width='120' height='16' rx='8' fill='#fff' opacity='0.2'/>
+      <!-- screen content: 3 metric bars -->
+      <rect x='60' y='82' width='60' height='10' rx='5' fill='#BFDBFE'/>
+      <rect x='60' y='82' width='46' height='10' rx='5' fill='#2563EB'/>
+      <text x='128' y='92' font-size='9' fill='#64748B'>Active Threats: 2</text>
+      <rect x='60' y='100' width='60' height='10' rx='5' fill='#D1FAE5'/>
+      <rect x='60' y='100' width='55' height='10' rx='5' fill='#10B981'/>
+      <text x='128' y='110' font-size='9' fill='#64748B'>Safe Scans: 18</text>
+      <rect x='60' y='118' width='60' height='10' rx='5' fill='#FEF3C7'/>
+      <rect x='60' y='118' width='20' height='10' rx='5' fill='#F59E0B'/>
+      <text x='128' y='128' font-size='9' fill='#64748B'>Review: 3</text>
+      <!-- stand -->
+      <rect x='130' y='160' width='40' height='8' rx='4' fill='#BFDBFE'/>
+      <rect x='145' y='155' width='10' height='10' rx='2' fill='#93C5FD'/>
+      <!-- floating alerts -->
+      <rect x='220' y='60' width='58' height='32' rx='8' fill='#FEF2F2' stroke='#FCA5A5' stroke-width='1.5'/>
+      <text x='249' y='72' text-anchor='middle' font-size='8' fill='#EF4444' font-weight='bold'>⚠ ALERT</text>
+      <text x='249' y='84' text-anchor='middle' font-size='7' fill='#EF4444'>Phishing</text>
+      <rect x='12' y='90' width='52' height='28' rx='8' fill='#F0FDF4' stroke='#86EFAC' stroke-width='1.5'/>
+      <text x='38' y='101' text-anchor='middle' font-size='7' fill='#16A34A' font-weight='bold'>✓ SAFE</text>
+      <text x='38' y='112' text-anchor='middle' font-size='7' fill='#16A34A'>URL clean</text>
+      <rect x='230' y='110' width='56' height='28' rx='8' fill='#FFFBEB' stroke='#FCD34D' stroke-width='1.5'/>
+      <text x='258' y='121' text-anchor='middle' font-size='7' fill='#D97706' font-weight='bold'>REVIEW</text>
+      <text x='258' y='132' text-anchor='middle' font-size='7' fill='#D97706'>Login risk</text>
+    </svg>"""
+
     st.markdown(f"""
-    <div class='cs-hero'>
-      <div style='display:flex;justify-content:space-between;align-items:center;
-                  flex-wrap:wrap;gap:20px'>
-        <div style='flex:1;min-width:260px'>
-          <div style='display:inline-flex;align-items:center;gap:8px;
-                      background:{PRIMARY}18;border:1px solid {PRIMARY}30;
-                      border-radius:20px;padding:4px 14px;margin-bottom:16px'>
-            <div style='width:7px;height:7px;border-radius:50%;background:{SUCCESS};
-                        box-shadow:0 0 6px {SUCCESS}80'></div>
-            <span style='color:{INFO};font-size:0.72rem;font-weight:600;
-                         letter-spacing:0.5px'>LIVE MONITORING</span>
+    <div class='sdc-wrap'>
+      <div class='sdc-hero'>
+        <div class='sdc-hero-left'>
+          <div class='sdc-eyebrow'>
+            <span style='width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block'></span>
+            Live Monitoring Active
           </div>
-          <div style='font-size:1.9rem;font-weight:800;color:{TEXT};
-                      letter-spacing:-0.8px;line-height:1.15;margin-bottom:10px'>
-            Adaptive Cyber<br>
-            <span style='background:linear-gradient(90deg,{PRIMARY},{ACCENT});
-                         -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-                         background-clip:text'>Threat Intelligence</span>
+          <div class='sdc-title'>
+            Smarter Security.<br>
+            <span>Clearer Threat Detection.</span>
           </div>
-          <div style='color:{MUTED};font-size:0.88rem;line-height:1.6;
-                      max-width:420px;margin-bottom:20px'>
-            Monitor, detect and understand cyber threats across email, URLs,
-            login behaviour and network traffic — powered by DistilBERT,
-            XGBoost and Isolation Forest with SHAP-LIME explainability.
+          <div class='sdc-desc'>
+            Detect phishing, malicious URLs, suspicious login activity and network
+            anomalies — powered by DistilBERT, XGBoost, Isolation Forest and
+            explainable AI (SHAP + LIME).
           </div>
-          <div style='display:flex;gap:10px;flex-wrap:wrap'>
-            <div style='background:{PRIMARY};color:#fff;padding:9px 20px;
-                        border-radius:10px;font-size:0.82rem;font-weight:600;
-                        cursor:pointer;box-shadow:0 4px 12px {PRIMARY}40;
-                        display:inline-flex;align-items:center;gap:6px'>
-              🔍 Run Detection
-            </div>
-            <div style='background:transparent;color:{INFO};padding:9px 20px;
-                        border-radius:10px;font-size:0.82rem;font-weight:600;
-                        border:1px solid {INFO}40;cursor:pointer;
-                        display:inline-flex;align-items:center;gap:6px'>
-              ⏱ View Timeline
-            </div>
-            <div style='background:transparent;color:{MUTED};padding:9px 20px;
-                        border-radius:10px;font-size:0.82rem;font-weight:500;
-                        border:1px solid {BORDER};cursor:pointer;
-                        display:inline-flex;align-items:center;gap:6px'>
-              📋 Reports
-            </div>
+          <div class='sdc-hero-btns'>
+            <button class='sdc-btn-primary'>🔍 Start Detection</button>
+            <button class='sdc-btn-outline'>📋 Explore Modules ↓</button>
           </div>
         </div>
-        <div style='flex-shrink:0;display:flex;flex-direction:column;gap:10px;
-                    align-items:flex-end'>
-          <svg width="200" height="160" viewBox="0 0 200 160" fill="none"
-               xmlns="http://www.w3.org/2000/svg" style="opacity:0.85">
-            <!-- Shield outline -->
-            <path d="M100 12 L168 40 L168 90 Q168 130 100 152 Q32 130 32 90 L32 40 Z"
-                  fill="none" stroke="{PRIMARY}60" stroke-width="1.5"/>
-            <path d="M100 22 L158 46 L158 90 Q158 124 100 143 Q42 124 42 90 L42 46 Z"
-                  fill="{PRIMARY}10" stroke="{PRIMARY}40" stroke-width="1"/>
-            <!-- Cross / check -->
-            <circle cx="100" cy="86" r="22" fill="{PRIMARY}20" stroke="{PRIMARY}60" stroke-width="1.5"/>
-            <path d="M88 86 L97 95 L114 78" stroke="{SUCCESS}" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Orbit rings -->
-            <ellipse cx="100" cy="86" rx="38" ry="38" fill="none"
-                     stroke="{INFO}25" stroke-width="1" stroke-dasharray="4 3"/>
-            <ellipse cx="100" cy="86" rx="52" ry="52" fill="none"
-                     stroke="{PRIMARY}18" stroke-width="1" stroke-dasharray="6 4"/>
-            <!-- Dots on orbit -->
-            <circle cx="138" cy="86" r="4" fill="{CRIT}" opacity="0.8"/>
-            <circle cx="62" cy="86" r="3" fill="{WARN}" opacity="0.7"/>
-            <circle cx="100" cy="48" r="3" fill="{INFO}" opacity="0.7"/>
-            <circle cx="100" cy="124" r="2.5" fill="{SUCCESS}" opacity="0.6"/>
-            <!-- Corner brackets -->
-            <path d="M16 16 L16 30 M16 16 L30 16" stroke="{PRIMARY}50" stroke-width="1.5"
-                  stroke-linecap="round"/>
-            <path d="M184 16 L184 30 M184 16 L170 16" stroke="{PRIMARY}50" stroke-width="1.5"
-                  stroke-linecap="round"/>
-            <path d="M16 144 L16 130 M16 144 L30 144" stroke="{PRIMARY}50" stroke-width="1.5"
-                  stroke-linecap="round"/>
-            <path d="M184 144 L184 130 M184 144 L170 144" stroke="{PRIMARY}50" stroke-width="1.5"
-                  stroke-linecap="round"/>
-            <!-- Scan line animation hint -->
-            <line x1="32" y1="72" x2="168" y2="72" stroke="{INFO}30" stroke-width="1"
-                  stroke-dasharray="3 4"/>
-          </svg>
-          <div style='display:flex;gap:8px'>
-            <div style='background:{CARD};border:1px solid {BORDER};border-radius:10px;
-                        padding:10px 14px;text-align:center;min-width:70px'>
-              <div style='color:{SUCCESS};font-size:1.1rem;font-weight:800'>4</div>
-              <div style='color:{MUTED};font-size:0.6rem;font-weight:600;
-                          text-transform:uppercase;letter-spacing:0.8px'>Detectors</div>
-            </div>
-            <div style='background:{CARD};border:1px solid {BORDER};border-radius:10px;
-                        padding:10px 14px;text-align:center;min-width:70px'>
-              <div style='color:{PRIMARY};font-size:1.1rem;font-weight:800'>98%</div>
-              <div style='color:{MUTED};font-size:0.6rem;font-weight:600;
-                          text-transform:uppercase;letter-spacing:0.8px'>Accuracy</div>
-            </div>
-            <div style='background:{CARD};border:1px solid {BORDER};border-radius:10px;
-                        padding:10px 14px;text-align:center;min-width:70px'>
-              <div style='color:{WARN};font-size:1.1rem;font-weight:800'>XAI</div>
-              <div style='color:{MUTED};font-size:0.6rem;font-weight:600;
-                          text-transform:uppercase;letter-spacing:0.8px'>SHAP+LIME</div>
-            </div>
-          </div>
-        </div>
+        <div class='sdc-hero-img'>{_HERO_SVG}</div>
+      </div>
+
+      <div class='sdc-heading'>
+        <h2>Security Detection Center</h2>
+        <p>Choose a module to analyse threats across your digital environment</p>
       </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Security Detection Center — Image Cards ────────────────────
-    st.markdown(f"""
-    <div style='margin:28px 0 8px'>
-      <div style='font-size:1.05rem;font-weight:700;color:{TEXT};margin-bottom:4px'>
-        Security Detection Center</div>
-      <div style='color:{MUTED};font-size:0.82rem;margin-bottom:18px'>
-        Select a detection module to analyse threats across your digital environment</div>
-    </div>""", unsafe_allow_html=True)
-
-    # Row 1 — 3 cards
-    card_cols1 = st.columns(3)
-
-    # ── SVG images as inline data — no external URLs, always renders ──
-    _SVG_PHISHING = """
-    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
-      <rect width='320' height='160' fill='#0A1525'/>
-      <rect x='40' y='28' width='240' height='104' rx='8' fill='#0E1F3D' stroke='#1E3A6E' stroke-width='1.5'/>
-      <!-- envelope body -->
-      <rect x='60' y='44' width='200' height='72' rx='6' fill='#0F2850' stroke='#2563EB' stroke-width='1'/>
-      <!-- envelope flap lines -->
-      <line x1='60' y1='44' x2='160' y2='92' stroke='#2563EB' stroke-width='1.5' opacity='0.6'/>
-      <line x1='260' y1='44' x2='160' y2='92' stroke='#2563EB' stroke-width='1.5' opacity='0.6'/>
-      <!-- warning icon -->
-      <circle cx='242' cy='48' r='14' fill='#EF444420' stroke='#EF4444' stroke-width='1.5'/>
-      <text x='242' y='53' text-anchor='middle' font-size='14' fill='#EF4444'>!</text>
-      <!-- text lines -->
-      <rect x='80' y='58' width='100' height='6' rx='3' fill='#2563EB' opacity='0.5'/>
-      <rect x='80' y='70' width='130' height='5' rx='2.5' fill='#94A3B8' opacity='0.3'/>
-      <rect x='80' y='81' width='90' height='5' rx='2.5' fill='#94A3B8' opacity='0.25'/>
-      <!-- hook/phishing hook symbol -->
-      <path d='M200 95 Q215 80 215 95 Q215 110 200 110' stroke='#EF4444' stroke-width='2' fill='none' stroke-linecap='round'/>
-      <circle cx='200' cy='110' r='3' fill='#EF4444'/>
-      <line x1='215' y1='82' x2='230' y2='72' stroke='#EF4444' stroke-width='1.5'/>
+    # ── MODULE SVGs — bright, colorful, each with distinct palette ────
+    # Phishing: coral/rose on warm cream bg
+    _SVG_P = """<svg viewBox='0 0 320 168' xmlns='http://www.w3.org/2000/svg'>
+      <defs><linearGradient id='pg' x1='0' y1='0' x2='0' y2='1'>
+        <stop offset='0%' stop-color='#FFF1F2'/><stop offset='100%' stop-color='#FFE4E6'/></linearGradient></defs>
+      <rect width='320' height='168' fill='url(#pg)'/>
+      <!-- big envelope -->
+      <rect x='44' y='36' width='232' height='100' rx='10' fill='#fff' stroke='#FCA5A5' stroke-width='2'/>
+      <polygon points='44,36 160,102 276,36' fill='none' stroke='#F87171' stroke-width='2'/>
+      <line x1='44' y1='136' x2='120' y2='85' stroke='#FCA5A5' stroke-width='1.5'/>
+      <line x1='276' y1='136' x2='200' y2='85' stroke='#FCA5A5' stroke-width='1.5'/>
+      <!-- red warning badge -->
+      <circle cx='248' cy='44' r='20' fill='#EF4444' stroke='#fff' stroke-width='3'/>
+      <text x='248' y='50' text-anchor='middle' font-size='16' fill='#fff' font-weight='bold'>!</text>
+      <!-- phishing hook -->
+      <path d='M148 120 Q162 104 176 120 Q176 138 162 142' stroke='#DC2626' stroke-width='2.5' fill='none' stroke-linecap='round'/>
+      <circle cx='162' cy='144' r='4' fill='#DC2626'/>
+      <path d='M176 106 L192 95' stroke='#DC2626' stroke-width='2' stroke-linecap='round'/>
+      <circle cx='193' cy='93' r='3' fill='#DC2626'/>
+      <!-- text preview lines -->
+      <rect x='68' y='72' width='80' height='7' rx='3.5' fill='#FECACA'/>
+      <rect x='68' y='86' width='110' height='5' rx='2.5' fill='#FEE2E2'/>
+      <rect x='68' y='97' width='70' height='5' rx='2.5' fill='#FEE2E2'/>
     </svg>"""
 
-    _SVG_URL = """
-    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
-      <rect width='320' height='160' fill='#0A1525'/>
-      <!-- browser window -->
-      <rect x='30' y='20' width='260' height='120' rx='8' fill='#0E1F3D' stroke='#1E3A6E' stroke-width='1.5'/>
-      <rect x='30' y='20' width='260' height='28' rx='8' fill='#0F2850' stroke='#1E3A6E' stroke-width='1'/>
-      <circle cx='50' cy='34' r='5' fill='#EF4444' opacity='0.8'/>
-      <circle cx='66' cy='34' r='5' fill='#F59E0B' opacity='0.8'/>
-      <circle cx='82' cy='34' r='5' fill='#22C55E' opacity='0.8'/>
+    # URL: teal/cyan on light teal bg
+    _SVG_U = """<svg viewBox='0 0 320 168' xmlns='http://www.w3.org/2000/svg'>
+      <defs><linearGradient id='ug' x1='0' y1='0' x2='0' y2='1'>
+        <stop offset='0%' stop-color='#F0FDFA'/><stop offset='100%' stop-color='#CCFBF1'/></linearGradient></defs>
+      <rect width='320' height='168' fill='url(#ug)'/>
+      <!-- browser chrome -->
+      <rect x='28' y='20' width='264' height='130' rx='10' fill='#fff' stroke='#99F6E4' stroke-width='2'/>
+      <rect x='28' y='20' width='264' height='36' rx='10' fill='#0D9488'/>
+      <!-- traffic light -->
+      <circle cx='50' cy='38' r='6' fill='#F87171'/>
+      <circle cx='68' cy='38' r='6' fill='#FCD34D'/>
+      <circle cx='86' cy='38' r='6' fill='#34D399'/>
       <!-- URL bar -->
-      <rect x='95' y='26' width='170' height='16' rx='8' fill='#0A1220' stroke='#1E3A6E' stroke-width='1'/>
-      <text x='108' y='37' font-size='8' fill='#EF4444' font-family='monospace'>http://</text>
-      <text x='148' y='37' font-size='8' fill='#94A3B8' font-family='monospace'>suspicious-site.xyz</text>
-      <!-- shield with X -->
-      <circle cx='160' cy='100' r='32' fill='#EF444415' stroke='#EF4444' stroke-width='1.5'/>
-      <path d='M160 72 L184 82 L184 102 Q184 118 160 124 Q136 118 136 102 L136 82 Z' fill='#EF444420' stroke='#EF4444' stroke-width='1.5'/>
-      <line x1='150' y1='92' x2='170' y2='112' stroke='#EF4444' stroke-width='2.5' stroke-linecap='round'/>
-      <line x1='170' y1='92' x2='150' y2='112' stroke='#EF4444' stroke-width='2.5' stroke-linecap='round'/>
+      <rect x='100' y='28' width='168' height='20' rx='10' fill='#fff' opacity='0.25'/>
+      <text x='110' y='41' font-size='8' fill='#fff' font-family='monospace' opacity='0.9'>https://secure-site.com</text>
+      <!-- padlock in bar -->
+      <text x='184' y='42' font-size='10' fill='#34D399'>🔒</text>
+      <!-- big shield in page body -->
+      <path d='M160 68 L200 84 L200 110 Q200 134 160 145 Q120 134 120 110 L120 84 Z'
+            fill='#CCFBF1' stroke='#0D9488' stroke-width='2'/>
+      <path d='M148 108 L157 118 L174 98' stroke='#0D9488' stroke-width='3'
+            stroke-linecap='round' stroke-linejoin='round' fill='none'/>
+      <!-- scan lines -->
+      <line x1='48' y1='75' x2='108' y2='75' stroke='#99F6E4' stroke-width='1.5' stroke-dasharray='4 3'/>
+      <line x1='48' y1='90' x2='108' y2='90' stroke='#99F6E4' stroke-width='1.5' stroke-dasharray='4 3'/>
+      <line x1='212' y1='75' x2='272' y2='75' stroke='#99F6E4' stroke-width='1.5' stroke-dasharray='4 3'/>
+      <line x1='212' y1='90' x2='272' y2='90' stroke='#99F6E4' stroke-width='1.5' stroke-dasharray='4 3'/>
     </svg>"""
 
-    _SVG_LOGIN = """
-    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
-      <rect width='320' height='160' fill='#0A1525'/>
+    # Login: purple/violet on lavender bg
+    _SVG_L = """<svg viewBox='0 0 320 168' xmlns='http://www.w3.org/2000/svg'>
+      <defs><linearGradient id='lg' x1='0' y1='0' x2='0' y2='1'>
+        <stop offset='0%' stop-color='#F5F3FF'/><stop offset='100%' stop-color='#EDE9FE'/></linearGradient></defs>
+      <rect width='320' height='168' fill='url(#lg)'/>
       <!-- login card -->
-      <rect x='80' y='18' width='160' height='124' rx='12' fill='#0E1F3D' stroke='#1E3A6E' stroke-width='1.5'/>
-      <!-- avatar circle -->
-      <circle cx='160' cy='52' r='22' fill='#0F2850' stroke='#2563EB' stroke-width='1.5'/>
-      <circle cx='160' cy='46' r='9' fill='#2563EB' opacity='0.7'/>
-      <path d='M140 68 Q140 58 160 58 Q180 58 180 68' fill='#2563EB' opacity='0.5'/>
+      <rect x='76' y='14' width='168' height='142' rx='14' fill='#fff' stroke='#C4B5FD' stroke-width='2'/>
+      <!-- avatar -->
+      <circle cx='160' cy='52' r='26' fill='#EDE9FE' stroke='#8B5CF6' stroke-width='2'/>
+      <circle cx='160' cy='44' r='11' fill='#8B5CF6' opacity='0.8'/>
+      <path d='M136 68 Q136 56 160 56 Q184 56 184 68' fill='#8B5CF6' opacity='0.4'/>
       <!-- input fields -->
-      <rect x='98' y='80' width='124' height='12' rx='6' fill='#0A1220' stroke='#2563EB' stroke-width='1'/>
-      <rect x='98' y='98' width='124' height='12' rx='6' fill='#0A1220' stroke='#1E3A6E' stroke-width='1'/>
-      <!-- lock icons on fields -->
-      <text x='106' y='90' font-size='8' fill='#94A3B8'>●●●●●●●</text>
-      <text x='106' y='108' font-size='8' fill='#94A3B8'>●●●●●●●</text>
-      <!-- warning badge -->
-      <circle cx='224' cy='36' r='16' fill='#F59E0B20' stroke='#F59E0B' stroke-width='1.5'/>
-      <text x='224' y='41' text-anchor='middle' font-size='13' fill='#F59E0B'>⚠</text>
+      <rect x='96' y='86' width='128' height='14' rx='7' fill='#F5F3FF' stroke='#8B5CF6' stroke-width='1.5'/>
+      <text x='110' y='97' font-size='8' fill='#A78BFA' font-family='monospace'>user@company.com</text>
+      <rect x='96' y='106' width='128' height='14' rx='7' fill='#F5F3FF' stroke='#DDD6FE' stroke-width='1.5'/>
+      <text x='116' y='117' font-size='9' fill='#C4B5FD'>●●●●●●●●</text>
       <!-- login button -->
-      <rect x='108' y='116' width='104' height='14' rx='7' fill='#2563EB' opacity='0.85'/>
-      <text x='160' y='126' text-anchor='middle' font-size='8' fill='white' font-weight='bold'>SIGN IN</text>
+      <rect x='96' y='126' width='128' height='18' rx='9' fill='#7C3AED'/>
+      <text x='160' y='139' text-anchor='middle' font-size='9' fill='#fff' font-weight='bold'>Sign In</text>
+      <!-- alert badge -->
+      <rect x='214' y='18' width='52' height='28' rx='10' fill='#FEF3C7' stroke='#FCD34D' stroke-width='1.5'/>
+      <text x='240' y='29' text-anchor='middle' font-size='7' fill='#D97706' font-weight='bold'>⚠ New IP</text>
+      <text x='240' y='40' text-anchor='middle' font-size='7' fill='#D97706'>Review</text>
+      <!-- geo indicator -->
+      <rect x='54' y='100' width='48' height='28' rx='10' fill='#EDE9FE' stroke='#C4B5FD' stroke-width='1.5'/>
+      <text x='78' y='110' text-anchor='middle' font-size='7' fill='#7C3AED' font-weight='bold'>📍 NEW</text>
+      <text x='78' y='122' text-anchor='middle' font-size='7' fill='#7C3AED'>Location</text>
     </svg>"""
 
-    _SVG_NETWORK = """
-    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
-      <rect width='320' height='160' fill='#0A1525'/>
-      <!-- central node -->
-      <circle cx='160' cy='80' r='20' fill='#0F2850' stroke='#38BDF8' stroke-width='2'/>
-      <text x='160' y='85' text-anchor='middle' font-size='14' fill='#38BDF8'>⬡</text>
+    # Network: green/emerald on mint bg
+    _SVG_N = """<svg viewBox='0 0 320 168' xmlns='http://www.w3.org/2000/svg'>
+      <defs><linearGradient id='ng' x1='0' y1='0' x2='0' y2='1'>
+        <stop offset='0%' stop-color='#F0FDF4'/><stop offset='100%' stop-color='#DCFCE7'/></linearGradient></defs>
+      <rect width='320' height='168' fill='url(#ng)'/>
+      <!-- connection lines first (behind nodes) -->
+      <line x1='66'  y1='42'  x2='148' y2='78'  stroke='#86EFAC' stroke-width='2'/>
+      <line x1='254' y1='42'  x2='172' y2='78'  stroke='#86EFAC' stroke-width='2'/>
+      <line x1='66'  y1='128' x2='148' y2='92'  stroke='#86EFAC' stroke-width='2'/>
+      <line x1='254' y1='128' x2='172' y2='92'  stroke='#F87171' stroke-width='2.5'/>
+      <line x1='160' y1='18'  x2='160' y2='68'  stroke='#86EFAC' stroke-width='2'/>
+      <line x1='160' y1='100' x2='160' y2='150' stroke='#86EFAC' stroke-width='2'/>
       <!-- outer nodes -->
-      <circle cx='60'  cy='40'  r='12' fill='#0F2850' stroke='#22C55E' stroke-width='1.5'/>
-      <circle cx='260' cy='40'  r='12' fill='#0F2850' stroke='#22C55E' stroke-width='1.5'/>
-      <circle cx='60'  cy='120' r='12' fill='#0F2850' stroke='#F59E0B' stroke-width='1.5'/>
-      <circle cx='260' cy='120' r='12' fill='#0F2850' stroke='#EF4444' stroke-width='1.5'/>
-      <circle cx='160' cy='20'  r='10' fill='#0F2850' stroke='#22C55E' stroke-width='1.5'/>
-      <circle cx='160' cy='140' r='10' fill='#0F2850' stroke='#F59E0B' stroke-width='1.5'/>
-      <!-- connection lines -->
-      <line x1='72'  y1='48'  x2='143' y2='65'  stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
-      <line x1='248' y1='48'  x2='177' y2='65'  stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
-      <line x1='72'  y1='112' x2='143' y2='95'  stroke='#F59E0B' stroke-width='1' opacity='0.5'/>
-      <line x1='248' y1='112' x2='177' y2='95'  stroke='#EF4444' stroke-width='1.5' opacity='0.7'/>
-      <line x1='160' y1='30'  x2='160' y2='60'  stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
-      <line x1='160' y1='100' x2='160' y2='130' stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
-      <!-- alert on suspicious node -->
-      <circle cx='264' cy='36' r='6' fill='#EF4444'/>
-      <text x='264' y='40' text-anchor='middle' font-size='8' fill='white' font-weight='bold'>!</text>
-      <!-- scan pulse -->
-      <circle cx='160' cy='80' r='32' fill='none' stroke='#38BDF8' stroke-width='1' opacity='0.3' stroke-dasharray='4 3'/>
-      <circle cx='160' cy='80' r='48' fill='none' stroke='#38BDF8' stroke-width='0.8' opacity='0.15'/>
+      <circle cx='66'  cy='42'  r='18' fill='#fff' stroke='#22C55E' stroke-width='2'/>
+      <text   x='66'  y='47' text-anchor='middle' font-size='13'>💻</text>
+      <circle cx='254' cy='42'  r='18' fill='#fff' stroke='#22C55E' stroke-width='2'/>
+      <text   x='254' y='47' text-anchor='middle' font-size='13'>🖥️</text>
+      <circle cx='66'  cy='128' r='18' fill='#fff' stroke='#22C55E' stroke-width='2'/>
+      <text   x='66'  y='133' text-anchor='middle' font-size='13'>📡</text>
+      <circle cx='254' cy='128' r='18' fill='#FEF2F2' stroke='#EF4444' stroke-width='2'/>
+      <text   x='254' y='133' text-anchor='middle' font-size='13'>⚠️</text>
+      <circle cx='160' cy='14'  r='12' fill='#fff' stroke='#22C55E' stroke-width='2'/>
+      <text   x='160' y='19' text-anchor='middle' font-size='11'>🛡️</text>
+      <circle cx='160' cy='153' r='12' fill='#fff' stroke='#22C55E' stroke-width='2'/>
+      <text   x='160' y='158' text-anchor='middle' font-size='11'>📊</text>
+      <!-- central hub -->
+      <circle cx='160' cy='84' r='28' fill='#D1FAE5' stroke='#10B981' stroke-width='2.5'/>
+      <circle cx='160' cy='84' r='18' fill='#fff' stroke='#10B981' stroke-width='1.5'/>
+      <text   x='160' y='80' text-anchor='middle' font-size='8' fill='#065F46' font-weight='bold'>NET</text>
+      <text   x='160' y='92' text-anchor='middle' font-size='8' fill='#065F46'>HUB</text>
+      <!-- pulse ring -->
+      <circle cx='160' cy='84' r='40' fill='none' stroke='#86EFAC' stroke-width='1' stroke-dasharray='5 4' opacity='0.6'/>
     </svg>"""
 
-    _SVG_FUSION = """
-    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
-      <rect width='320' height='160' fill='#0A1525'/>
-      <!-- 4 source nodes -->
-      <rect x='18'  y='16' width='60' height='36' rx='6' fill='#0F2850' stroke='#EF4444' stroke-width='1.2'/>
-      <text x='48'  y='30' text-anchor='middle' font-size='9' fill='#EF4444'>PHISH</text>
-      <text x='48'  y='42' text-anchor='middle' font-size='14'>📧</text>
-      <rect x='242' y='16' width='60' height='36' rx='6' fill='#0F2850' stroke='#F97316' stroke-width='1.2'/>
-      <text x='272' y='30' text-anchor='middle' font-size='9' fill='#F97316'>URL</text>
-      <text x='272' y='42' text-anchor='middle' font-size='14'>🔗</text>
-      <rect x='18'  y='108' width='60' height='36' rx='6' fill='#0F2850' stroke='#F59E0B' stroke-width='1.2'/>
-      <text x='48'  y='122' text-anchor='middle' font-size='9' fill='#F59E0B'>LOGIN</text>
-      <text x='48'  y='134' text-anchor='middle' font-size='14'>👤</text>
-      <rect x='242' y='108' width='60' height='36' rx='6' fill='#0F2850' stroke='#38BDF8' stroke-width='1.2'/>
-      <text x='272' y='122' text-anchor='middle' font-size='9' fill='#38BDF8'>NETWORK</text>
-      <text x='272' y='134' text-anchor='middle' font-size='14'>🌐</text>
-      <!-- arrows converging -->
-      <line x1='80'  y1='34'  x2='128' y2='72'  stroke='#EF4444' stroke-width='1.5' opacity='0.7' marker-end='url(#a)'/>
-      <line x1='240' y1='34'  x2='192' y2='72'  stroke='#F97316' stroke-width='1.5' opacity='0.7'/>
-      <line x1='80'  y1='126' x2='128' y2='90'  stroke='#F59E0B' stroke-width='1.5' opacity='0.7'/>
-      <line x1='240' y1='126' x2='192' y2='90'  stroke='#38BDF8' stroke-width='1.5' opacity='0.7'/>
-      <!-- central fusion circle -->
-      <circle cx='160' cy='80' r='30' fill='#1E3A6E30' stroke='#2563EB' stroke-width='2'/>
-      <circle cx='160' cy='80' r='20' fill='#2563EB20' stroke='#2563EB' stroke-width='1.5'/>
-      <text x='160' y='76' text-anchor='middle' font-size='9' fill='#38BDF8' font-weight='bold'>FUSION</text>
-      <text x='160' y='88' text-anchor='middle' font-size='9' fill='#38BDF8'>ENGINE</text>
+    # Fusion: orange/amber on warm bg
+    _SVG_F = """<svg viewBox='0 0 320 168' xmlns='http://www.w3.org/2000/svg'>
+      <defs><linearGradient id='fg' x1='0' y1='0' x2='0' y2='1'>
+        <stop offset='0%' stop-color='#FFFBEB'/><stop offset='100%' stop-color='#FEF3C7'/></linearGradient></defs>
+      <rect width='320' height='168' fill='url(#fg)'/>
+      <!-- 4 source boxes -->
+      <rect x='12'  y='12' width='68' height='40' rx='8' fill='#FEF2F2' stroke='#FCA5A5' stroke-width='1.5'/>
+      <text x='46'  y='27' text-anchor='middle' font-size='8' fill='#EF4444' font-weight='bold'>📧 PHISH</text>
+      <text x='46'  y='40' text-anchor='middle' font-size='7' fill='#DC2626'>NLP · 97%</text>
+      <rect x='240' y='12' width='68' height='40' rx='8' fill='#F0FDFA' stroke='#99F6E4' stroke-width='1.5'/>
+      <text x='274' y='27' text-anchor='middle' font-size='8' fill='#0D9488' font-weight='bold'>🔗 URL</text>
+      <text x='274' y='40' text-anchor='middle' font-size='7' fill='#0D9488'>XGB · 98%</text>
+      <rect x='12'  y='118' width='68' height='40' rx='8' fill='#F5F3FF' stroke='#C4B5FD' stroke-width='1.5'/>
+      <text x='46'  y='133' text-anchor='middle' font-size='8' fill='#7C3AED' font-weight='bold'>👤 LOGIN</text>
+      <text x='46'  y='146' text-anchor='middle' font-size='7' fill='#7C3AED'>ISO · 95%</text>
+      <rect x='240' y='118' width='68' height='40' rx='8' fill='#F0FDF4' stroke='#86EFAC' stroke-width='1.5'/>
+      <text x='274' y='133' text-anchor='middle' font-size='8' fill='#16A34A' font-weight='bold'>🌐 NET</text>
+      <text x='274' y='146' text-anchor='middle' font-size='7' fill='#16A34A'>XGB · 98%</text>
+      <!-- converging arrows -->
+      <line x1='82'  y1='32'  x2='128' y2='76'  stroke='#FCA5A5' stroke-width='2'/>
+      <line x1='238' y1='32'  x2='192' y2='76'  stroke='#99F6E4' stroke-width='2'/>
+      <line x1='82'  y1='138' x2='128' y2='96'  stroke='#C4B5FD' stroke-width='2'/>
+      <line x1='238' y1='138' x2='192' y2='96'  stroke='#86EFAC' stroke-width='2'/>
+      <!-- central fusion -->
+      <circle cx='160' cy='84' r='36' fill='#FEF9C3' stroke='#F59E0B' stroke-width='2.5'/>
+      <circle cx='160' cy='84' r='24' fill='#FFFBEB' stroke='#F59E0B' stroke-width='1.5'/>
+      <text x='160' y='80' text-anchor='middle' font-size='9' fill='#B45309' font-weight='bold'>FUSION</text>
+      <text x='160' y='92' text-anchor='middle' font-size='8' fill='#D97706'>ENGINE</text>
     </svg>"""
 
-    _SVG_XAI = """
-    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
-      <rect width='320' height='160' fill='#0A1525'/>
-      <!-- bar chart representing SHAP values -->
-      <rect x='40' y='130' width='20' height='0'  rx='3' fill='#2563EB'/>
-      <rect x='40' y='110' width='20' height='20' rx='3' fill='#EF4444' opacity='0.85'/>
-      <rect x='70' y='90'  width='20' height='40' rx='3' fill='#F97316' opacity='0.85'/>
-      <rect x='100' y='75' width='20' height='55' rx='3' fill='#F59E0B' opacity='0.85'/>
-      <rect x='130' y='60' width='20' height='70' rx='3' fill='#22C55E' opacity='0.85'/>
-      <rect x='160' y='50' width='20' height='80' rx='3' fill='#2563EB' opacity='0.9'/>
-      <rect x='190' y='65' width='20' height='65' rx='3' fill='#22C55E' opacity='0.7'/>
-      <rect x='220' y='85' width='20' height='45' rx='3' fill='#F59E0B' opacity='0.7'/>
-      <rect x='250' y='105' width='20' height='25' rx='3' fill='#F97316' opacity='0.6'/>
+    # XAI: indigo/violet on soft purple bg
+    _SVG_X = """<svg viewBox='0 0 320 168' xmlns='http://www.w3.org/2000/svg'>
+      <defs><linearGradient id='xg' x1='0' y1='0' x2='0' y2='1'>
+        <stop offset='0%' stop-color='#F5F3FF'/><stop offset='100%' stop-color='#EDE9FE'/></linearGradient></defs>
+      <rect width='320' height='168' fill='url(#xg)'/>
+      <!-- SHAP bars — colorful -->
+      <rect x='36'  y='138' width='22' height='0'  rx='4' fill='#6366F1'/>
+      <rect x='36'  y='108' width='22' height='30' rx='4' fill='#EF4444' opacity='0.85'/>
+      <rect x='70'  y='88'  width='22' height='50' rx='4' fill='#F97316' opacity='0.85'/>
+      <rect x='104' y='72'  width='22' height='66' rx='4' fill='#F59E0B' opacity='0.85'/>
+      <rect x='138' y='52'  width='22' height='86' rx='4' fill='#22C55E' opacity='0.85'/>
+      <rect x='172' y='44'  width='22' height='94' rx='4' fill='#6366F1' opacity='0.95'/>
+      <rect x='206' y='60'  width='22' height='78' rx='4' fill='#22C55E' opacity='0.75'/>
+      <rect x='240' y='84'  width='22' height='54' rx='4' fill='#F59E0B' opacity='0.75'/>
+      <rect x='274' y='110' width='22' height='28' rx='4' fill='#F97316' opacity='0.65'/>
       <!-- baseline -->
-      <line x1='30' y1='130' x2='290' y2='130' stroke='#1E3A6E' stroke-width='1.5'/>
-      <!-- labels -->
-      <text x='50'  y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_1</text>
-      <text x='80'  y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_2</text>
-      <text x='110' y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_3</text>
-      <text x='140' y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_4</text>
-      <text x='170' y='146' text-anchor='middle' font-size='6' fill='#2563EB'>feat_5</text>
-      <text x='200' y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_6</text>
-      <!-- title -->
-      <text x='160' y='22' text-anchor='middle' font-size='11' fill='#A78BFA' font-weight='bold'>SHAP Feature Attribution</text>
-      <text x='160' y='36' text-anchor='middle' font-size='8'  fill='#94A3B8'>Model Explainability</text>
-      <!-- brain icon outline -->
-      <circle cx='280' cy='28' r='16' fill='#A78BFA15' stroke='#A78BFA' stroke-width='1.2'/>
-      <text x='280' y='33' text-anchor='middle' font-size='14'>🧠</text>
+      <line x1='28' y1='138' x2='308' y2='138' stroke='#C4B5FD' stroke-width='1.5'/>
+      <!-- feature labels -->
+      <text x='47'  y='152' text-anchor='middle' font-size='6' fill='#6B7280'>urgency</text>
+      <text x='81'  y='152' text-anchor='middle' font-size='6' fill='#6B7280'>threat</text>
+      <text x='115' y='152' text-anchor='middle' font-size='6' fill='#6B7280'>brand</text>
+      <text x='149' y='152' text-anchor='middle' font-size='6' fill='#6B7280'>url</text>
+      <text x='183' y='152' text-anchor='middle' font-size='6' fill='#6366F1' font-weight='bold'>struct</text>
+      <text x='217' y='152' text-anchor='middle' font-size='6' fill='#6B7280'>cred</text>
+      <text x='251' y='152' text-anchor='middle' font-size='6' fill='#6B7280'>sender</text>
+      <text x='285' y='152' text-anchor='middle' font-size='6' fill='#6B7280'>geo</text>
+      <!-- SHAP label -->
+      <rect x='200' y='18' width='100' height='28' rx='10' fill='#fff' stroke='#C4B5FD' stroke-width='1.5'/>
+      <text x='250' y='30' text-anchor='middle' font-size='8' fill='#6366F1' font-weight='bold'>SHAP Values</text>
+      <text x='250' y='41' text-anchor='middle' font-size='7' fill='#7C3AED'>Explainability</text>
+      <!-- brain -->
+      <circle cx='50' cy='36' r='22' fill='#EDE9FE' stroke='#8B5CF6' stroke-width='1.5'/>
+      <text x='50' y='44' text-anchor='middle' font-size='22'>🧠</text>
     </svg>"""
 
-    # Card data: (svg, accent_color, title, desc, btn_label, page_name)
+    # Card definitions: (svg, tag_bg, tag_color, tag_text, title, desc, btn_bg, btn_text_color, btn_label, page)
     _CARDS = [
-        (_SVG_PHISHING, CRIT,    "Phishing Detection",   "Detect suspicious emails using transformer-based NLP (DistilBERT).", "Analyse Email →",       "Phishing"),
-        (_SVG_URL,      HIGH,    "URL Analyser",         "Identify malicious URLs with 25-feature ML analysis (XGBoost).",     "Analyse URL →",         "URL Analyser"),
-        (_SVG_LOGIN,    WARN,    "Login Monitor",        "Detect abnormal login behaviour and account takeover patterns.",       "Monitor Login →",       "Login Monitor"),
-        (_SVG_NETWORK,  INFO,    "Network Security",     "Detect anomalous network activity using NSL-KDD ML detection.",       "Analyse Network →",     "Network"),
-        (_SVG_FUSION,   PRIMARY, "Threat Fusion",        "Combine multi-source signals into a unified risk assessment.",        "Run Threat Fusion →",   "Threat Fusion"),
-        (_SVG_XAI,      PURPLE,  "Explainable AI",       "Understand why the model generated a specific prediction (SHAP/LIME).","View Explainability →", "Model Performance"),
+        (_SVG_P, "#FEF2F2", "#EF4444", "Phishing · NLP",
+         "Phishing Detection",
+         "Detect suspicious emails using transformer-based NLP (DistilBERT). 97.67% accuracy.",
+         "#EF4444", "#fff", "Analyse Email →", "Phishing"),
+
+        (_SVG_U, "#F0FDFA", "#0D9488", "URL · XGBoost",
+         "URL Analyser",
+         "Identify malicious URLs with 25-feature ML analysis. XGBoost. 98.21% accuracy.",
+         "#0D9488", "#fff", "Analyse URL →", "URL Analyser"),
+
+        (_SVG_L, "#F5F3FF", "#7C3AED", "Login · Anomaly",
+         "Login Monitor",
+         "Detect abnormal login behaviour and account takeover. Isolation Forest. 95.67% accuracy.",
+         "#7C3AED", "#fff", "Monitor Login →", "Login Monitor"),
+
+        (_SVG_N, "#F0FDF4", "#16A34A", "Network · NSL-KDD",
+         "Network Security",
+         "Detect anomalous network activity using NSL-KDD ML detection. XGBoost. 98.82% accuracy.",
+         "#16A34A", "#fff", "Analyse Network →", "Network"),
+
+        (_SVG_F, "#FFFBEB", "#D97706", "Multi-Source Fusion",
+         "Threat Fusion",
+         "Combine phishing, URL, login and network signals into a unified risk assessment.",
+         "#F59E0B", "#fff", "Run Threat Fusion →", "Threat Fusion"),
+
+        (_SVG_X, "#F5F3FF", "#6366F1", "SHAP · LIME · XAI",
+         "Explainable AI",
+         "Understand why the model generated a prediction with SHAP feature attribution.",
+         "#6366F1", "#fff", "View Explainability →", "Model Performance"),
     ]
 
-    # Extra CSS for image cards (injected once)
-    st.markdown(f"""
+    # Inject card CSS once
+    st.markdown("""
     <style>
-    .cs-img-card {{
-      background:{CARD};
-      border:1px solid {BORDER};
-      border-radius:16px;
-      overflow:hidden;
-      box-shadow:0 4px 20px rgba(0,0,0,0.45);
-      transition:transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-      cursor:pointer;
-      height:100%;
-    }}
-    .cs-img-card:hover {{
-      transform:translateY(-5px);
-      box-shadow:0 16px 40px rgba(0,0,0,0.6);
-    }}
-    .cs-img-card .cs-img-wrap {{
-      overflow:hidden;
-      background:#070E1B;
-    }}
-    .cs-img-card .cs-img-wrap svg {{
-      display:block;
-      transition:transform 0.3s ease;
-    }}
-    .cs-img-card:hover .cs-img-wrap svg {{
-      transform:scale(1.04);
-    }}
-    .cs-img-card .cs-card-body {{
-      padding:16px 18px 18px;
-    }}
-    .cs-card-btn {{
-      display:inline-flex;align-items:center;gap:5px;
-      border-radius:8px;padding:8px 16px;
-      font-size:0.78rem;font-weight:600;
-      transition:background 0.15s ease, transform 0.15s ease;
-      margin-top:12px;border:none;cursor:pointer;
-    }}
+    div[data-testid="stButton"] > button {
+      border-radius: 9px !important;
+      padding: 9px 18px !important;
+      font-size: 0.8rem !important;
+      font-weight: 600 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+      width: 100% !important;
+    }
     </style>""", unsafe_allow_html=True)
 
-    # Render 2 rows × 3 cols
     for row_start in range(0, 6, 3):
         cols = st.columns(3)
-        for col, (svg, color, title, desc, btn_label, target_page) in zip(cols, _CARDS[row_start:row_start+3]):
+        for col, card in zip(cols, _CARDS[row_start:row_start+3]):
+            svg, tag_bg, tag_col, tag_txt, title, desc, btn_bg, btn_tc, btn_lbl, target = card
             with col:
                 st.markdown(f"""
-                <div class='cs-img-card'>
-                  <div class='cs-img-wrap'>{svg}</div>
-                  <div class='cs-card-body'>
-                    <div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'>
-                      <div style='width:8px;height:8px;border-radius:50%;background:{color};
-                                  box-shadow:0 0 5px {color}80;flex-shrink:0'></div>
-                      <span style='color:{TEXT};font-size:0.9rem;font-weight:700;
-                                   letter-spacing:-0.2px'>{title}</span>
+                <div class='sdc-card' style='margin-bottom:4px'>
+                  <div class='sdc-card-img'>{svg}</div>
+                  <div class='sdc-card-body'>
+                    <div class='sdc-card-tag'
+                         style='background:{tag_bg};color:{tag_col};border:1px solid {tag_col}30'>
+                      {tag_txt}
                     </div>
-                    <div style='color:{MUTED};font-size:0.78rem;line-height:1.55;
-                                min-height:40px'>{desc}</div>
+                    <div class='sdc-card-title'>{title}</div>
+                    <div class='sdc-card-desc'>{desc}</div>
                   </div>
                 </div>""", unsafe_allow_html=True)
-                if st.button(btn_label, key=f"det_card_{target_page}", use_container_width=True):
-                    st.session_state.page = target_page
+                if st.button(btn_lbl, key=f"sdc_{target}",
+                             use_container_width=True):
+                    st.session_state.page = target
                     st.rerun()
-        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
 
-    st.markdown("<hr style='margin:24px 0 20px'>", unsafe_allow_html=True)
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
     # ── KPI Row (6 cards) ─────────────────────────────────────────
     k = st.columns(6)
