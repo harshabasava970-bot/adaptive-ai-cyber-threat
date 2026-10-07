@@ -26,301 +26,201 @@ API_BASE = os.environ.get(
     "API_BASE_URL", "https://cyber-threat-api-4gms.onrender.com"
 ).rstrip("/") + "/api/v1"
 
-# ── Design tokens ──────────────────────────────────────────────────
-BG      = "#080E1A"
-CARD    = "#0E1729"
-SIDEBAR = "#060D18"
-BORDER  = "#1A2540"
-PRIMARY = "#2563EB"
-SUCCESS = "#22C55E"
-WARN    = "#F59E0B"
-CRIT    = "#EF4444"
-INFO    = "#38BDF8"
-HIGH    = "#F97316"
-TEXT    = "#F1F5F9"
-MUTED   = "#94A3B8"
-PURPLE  = "#818CF8"
-ACCENT  = "#0EA5E9"
+# ── Design tokens — LIGHT THEME ───────────────────────────────────
+BG       = "#F7F9FC"
+CARD     = "#FFFFFF"
+SIDEBAR  = "#FFFFFF"
+BORDER   = "#E2E8F0"
+PRIMARY  = "#2563EB"
+SUCCESS  = "#16A34A"
+WARN     = "#D97706"
+CRIT     = "#DC2626"
+INFO     = "#0891B2"
+HIGH     = "#EA580C"
+TEXT     = "#0F172A"
+MUTED    = "#64748B"
+SUBTLE   = "#94A3B8"
+PURPLE   = "#7C3AED"
+ACCENT   = "#0891B2"
+# Per-module accent colors
+M_PHISH  = "#E11D48"
+M_URL    = "#0D9488"
+M_LOGIN  = "#7C3AED"
+M_NET    = "#059669"
+M_FUSION = "#D97706"
+M_XAI    = "#4F46E5"
 
-RISK_CLR = {"critical":CRIT,"high":HIGH,"medium":WARN,"low":SUCCESS,"info":INFO}
-RISK_BG  = {"critical":"#1F0A0A","high":"#1F110A","medium":"#1F1A0A",
-            "low":"#0A1F0E","info":"#0A1525"}
+RISK_CLR = {"critical":"#DC2626","high":"#EA580C","medium":"#D97706",
+            "low":"#16A34A","info":"#0891B2"}
+RISK_BG  = {"critical":"#FFF1F2","high":"#FFF7ED","medium":"#FFFBEB",
+            "low":"#F0FDF4","info":"#ECFEFF"}
 RISK_ICO = {"critical":"🔴","high":"🟠","medium":"🟡","low":"🟢","info":"🔵"}
 
 # ══════════════════════════════════════════════════════════════════
-# GLOBAL CSS — Premium Enterprise Redesign
+# GLOBAL CSS — Complete Light Theme
 # ══════════════════════════════════════════════════════════════════
-st.markdown(f"""
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ── Reset ── */
-*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-html, body, .stApp {{
-  background: {BG} !important;
-  color: {TEXT} !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-  font-size: 14px !important;
-  line-height: 1.6 !important;
-  -webkit-font-smoothing: antialiased;
-}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-/* ── Sidebar ── */
-section[data-testid="stSidebar"] {{
-  background: {SIDEBAR} !important;
-  border-right: 1px solid {BORDER} !important;
-}}
-section[data-testid="stSidebar"] > div {{ padding: 0 !important; }}
+/* Global light background */
+html,body,.stApp{
+  background:#F7F9FC !important;
+  color:#0F172A !important;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif !important;
+  font-size:14px !important;
+  line-height:1.6 !important;
+  -webkit-font-smoothing:antialiased;
+}
 
-/* ── Main container ── */
-.block-container {{
-  padding: 0 2rem 3rem 2rem !important;
-  max-width: 100% !important;
-}}
+/* White sidebar */
+section[data-testid="stSidebar"]{
+  background:#FFFFFF !important;
+  border-right:1px solid #E2E8F0 !important;
+}
+section[data-testid="stSidebar"]>div{padding:0 !important;}
 
-/* ── Typography ── */
-h1 {{ font-size: 1.6rem !important; font-weight: 800 !important;
-     color: {TEXT} !important; letter-spacing: -0.5px !important; line-height: 1.2 !important; }}
-h2 {{ font-size: 1.2rem !important; font-weight: 700 !important;
-     color: {TEXT} !important; line-height: 1.3 !important; }}
-h3 {{ font-size: 1rem !important; font-weight: 600 !important;
-     color: {TEXT} !important; line-height: 1.3 !important; }}
-h4 {{ font-size: 0.75rem !important; font-weight: 700 !important;
-     color: {MUTED} !important; text-transform: uppercase !important;
-     letter-spacing: 1.2px !important; }}
-p {{ color: {TEXT} !important; }}
-label {{ color: {TEXT} !important; font-weight: 500 !important; }}
+/* Main container */
+.block-container{padding:0 2rem 3rem 2rem !important;max-width:100% !important;}
 
-/* ── Metric cards ── */
-div[data-testid="metric-container"] {{
-  background: {CARD} !important;
-  border: 1px solid {BORDER} !important;
-  border-radius: 16px !important;
-  padding: 22px 20px !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
-}}
-div[data-testid="metric-container"]:hover {{
-  transform: translateY(-3px) !important;
-  box-shadow: 0 12px 32px rgba(37,99,235,0.2) !important;
-  border-color: {PRIMARY}80 !important;
-}}
-div[data-testid="metric-container"] [data-testid="stMetricLabel"] > div {{
-  font-size: 0.68rem !important; font-weight: 700 !important;
-  color: {MUTED} !important; text-transform: uppercase !important; letter-spacing: 1.2px !important;
-}}
-div[data-testid="metric-container"] [data-testid="stMetricValue"] > div {{
-  font-size: 1.8rem !important; font-weight: 800 !important;
-  color: {TEXT} !important; line-height: 1.1 !important;
-}}
-div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div {{
-  font-size: 0.75rem !important; font-weight: 600 !important;
-}}
+/* Typography */
+h1{font-size:1.6rem !important;font-weight:800 !important;color:#0F172A !important;letter-spacing:-0.5px !important;}
+h2{font-size:1.2rem !important;font-weight:700 !important;color:#0F172A !important;}
+h3{font-size:1rem !important;font-weight:600 !important;color:#1E293B !important;}
+h4{font-size:0.75rem !important;font-weight:700 !important;color:#64748B !important;text-transform:uppercase !important;letter-spacing:1px !important;}
+p{color:#0F172A !important;}
+label{color:#1E293B !important;font-weight:500 !important;}
 
-/* ── Buttons — primary ── */
-.stButton > button {{
-  background: {PRIMARY} !important;
-  color: #fff !important;
-  border: none !important;
-  border-radius: 10px !important;
-  padding: 10px 22px !important;
-  font-weight: 600 !important;
-  font-size: 0.84rem !important;
-  letter-spacing: 0.15px !important;
-  font-family: 'Inter', sans-serif !important;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.30) !important;
-  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
-  width: 100% !important;
-  cursor: pointer !important;
-}}
-.stButton > button:hover {{
-  background: #1D4ED8 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 18px rgba(37,99,235,0.45) !important;
-}}
-.stButton > button:active {{ transform: translateY(0) !important; }}
-.stButton > button:disabled {{
-  background: {BORDER} !important; color: {MUTED} !important;
-  box-shadow: none !important; transform: none !important; opacity: 0.6 !important;
-}}
+/* Metric cards */
+div[data-testid="metric-container"]{
+  background:#FFFFFF !important;
+  border:1px solid #E2E8F0 !important;
+  border-radius:16px !important;
+  padding:20px !important;
+  box-shadow:0 1px 8px rgba(15,23,42,0.06) !important;
+  transition:transform 0.2s,box-shadow 0.2s !important;
+}
+div[data-testid="metric-container"]:hover{
+  transform:translateY(-2px) !important;
+  box-shadow:0 8px 24px rgba(37,99,235,0.12) !important;
+  border-color:#BFDBFE !important;
+}
+div[data-testid="metric-container"] [data-testid="stMetricLabel"]>div{
+  font-size:0.68rem !important;font-weight:700 !important;
+  color:#64748B !important;text-transform:uppercase !important;letter-spacing:1px !important;
+}
+div[data-testid="metric-container"] [data-testid="stMetricValue"]>div{
+  font-size:1.75rem !important;font-weight:800 !important;color:#0F172A !important;
+}
 
-/* ── Inputs ── */
-.stTextInput > div > div > input,
-.stTextArea > div > div > textarea,
-.stNumberInput > div > div > input {{
-  background: #0A1220 !important;
-  color: {TEXT} !important;
-  border: 1px solid {BORDER} !important;
-  border-radius: 10px !important;
-  padding: 10px 14px !important;
-  font-family: 'Inter', sans-serif !important;
-  font-size: 0.87rem !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-}}
-.stTextInput > div > div > input:focus,
-.stTextArea > div > div > textarea:focus {{
-  border-color: {PRIMARY} !important;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.15) !important;
-  outline: none !important;
-}}
-.stTextInput label, .stTextArea label, .stNumberInput label,
-.stSelectbox label, .stMultiSelect label, .stSlider label,
-.stRadio label, .stCheckbox label {{
-  color: {TEXT} !important; font-weight: 500 !important; font-size: 0.84rem !important;
-}}
-.stSelectbox > div > div, .stMultiSelect > div > div {{
-  background: #0A1220 !important; border: 1px solid {BORDER} !important;
-  border-radius: 10px !important; color: {TEXT} !important;
-}}
-.stRadio > div > div > label, .stCheckbox > label {{
-  color: {TEXT} !important; font-size: 0.86rem !important; padding: 3px 0 !important;
-}}
-.stMultiSelect [data-baseweb="tag"] {{
-  background: {PRIMARY}25 !important; color: {INFO} !important;
-}}
+/* Buttons */
+.stButton>button{
+  background:#2563EB !important;color:#fff !important;border:none !important;
+  border-radius:10px !important;padding:10px 22px !important;font-weight:600 !important;
+  font-size:0.84rem !important;font-family:'Inter',sans-serif !important;
+  box-shadow:0 2px 8px rgba(37,99,235,0.20) !important;
+  transition:background 0.15s,transform 0.15s,box-shadow 0.15s !important;
+  width:100% !important;cursor:pointer !important;
+}
+.stButton>button:hover{
+  background:#1D4ED8 !important;transform:translateY(-1px) !important;
+  box-shadow:0 6px 16px rgba(37,99,235,0.30) !important;
+}
+.stButton>button:disabled{background:#E2E8F0 !important;color:#94A3B8 !important;box-shadow:none !important;}
 
-/* ── Tabs ── */
-.stTabs [data-baseweb="tab-list"] {{
-  background: {CARD} !important; border-radius: 12px !important;
-  padding: 4px !important; border: 1px solid {BORDER} !important; gap: 3px !important;
-}}
-.stTabs [data-baseweb="tab"] {{
-  background: transparent !important; border-radius: 9px !important;
-  color: {MUTED} !important; font-weight: 500 !important;
-  padding: 8px 18px !important; font-size: 0.84rem !important; border: none !important;
-  transition: color 0.15s !important;
-}}
-.stTabs [aria-selected="true"] {{
-  background: {PRIMARY} !important; color: #fff !important; font-weight: 700 !important;
-}}
+/* Inputs — white with light borders */
+.stTextInput>div>div>input,
+.stTextArea>div>div>textarea,
+.stNumberInput>div>div>input{
+  background:#FFFFFF !important;color:#0F172A !important;
+  border:1.5px solid #CBD5E1 !important;border-radius:10px !important;
+  padding:10px 14px !important;font-family:'Inter',sans-serif !important;
+  font-size:0.87rem !important;transition:border-color 0.2s,box-shadow 0.2s !important;
+}
+.stTextInput>div>div>input:focus,
+.stTextArea>div>div>textarea:focus{
+  border-color:#2563EB !important;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.10) !important;outline:none !important;
+}
+.stTextInput label,.stTextArea label,.stNumberInput label,
+.stSelectbox label,.stMultiSelect label,.stSlider label,
+.stRadio label,.stCheckbox label{color:#1E293B !important;font-weight:500 !important;font-size:0.84rem !important;}
+.stSelectbox>div>div,.stMultiSelect>div>div{
+  background:#FFFFFF !important;border:1.5px solid #CBD5E1 !important;
+  border-radius:10px !important;color:#0F172A !important;
+}
+.stRadio>div>div>label,.stCheckbox>label{color:#1E293B !important;font-size:0.86rem !important;}
+.stMultiSelect [data-baseweb="tag"]{background:#DBEAFE !important;color:#1E40AF !important;}
 
-/* ── Dataframes ── */
-.stDataFrame {{ border-radius: 14px !important; overflow: hidden !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important; }}
-[data-testid="stDataFrameResizable"] {{ border-radius: 14px !important; }}
-.stDataFrame thead tr th {{
-  background: #0A1220 !important; color: {TEXT} !important;
-  font-weight: 700 !important; font-size: 0.75rem !important;
-  text-transform: uppercase !important; letter-spacing: 1px !important;
-  padding: 11px 14px !important; border-bottom: 1px solid {BORDER} !important;
-}}
-.stDataFrame tbody tr td {{
-  background: {CARD} !important; color: {TEXT} !important;
-  font-size: 0.84rem !important; padding: 9px 14px !important;
-  border-bottom: 1px solid {BORDER} !important;
-}}
-.stDataFrame tbody tr:hover td {{ background: #14213A !important; }}
+/* Tabs */
+.stTabs [data-baseweb="tab-list"]{
+  background:#F1F5F9 !important;border-radius:12px !important;
+  padding:4px !important;border:1px solid #E2E8F0 !important;gap:3px !important;
+}
+.stTabs [data-baseweb="tab"]{
+  background:transparent !important;border-radius:9px !important;
+  color:#64748B !important;font-weight:500 !important;
+  padding:8px 18px !important;font-size:0.84rem !important;border:none !important;
+}
+.stTabs [aria-selected="true"]{
+  background:#FFFFFF !important;color:#0F172A !important;
+  font-weight:700 !important;box-shadow:0 1px 4px rgba(0,0,0,0.08) !important;
+}
 
-/* ── Expander ── */
-.streamlit-expanderHeader {{
-  background: {CARD} !important; border: 1px solid {BORDER} !important;
-  border-radius: 12px !important; padding: 13px 18px !important;
-  color: {TEXT} !important; font-weight: 600 !important; font-size: 0.87rem !important;
-  transition: border-color 0.15s !important;
-}}
-.streamlit-expanderHeader:hover {{ border-color: {PRIMARY}60 !important; }}
-.streamlit-expanderContent {{
-  background: {BG} !important; border: 1px solid {BORDER} !important;
-  border-top: none !important; border-radius: 0 0 12px 12px !important;
-  padding: 18px !important;
-}}
+/* Dataframes */
+.stDataFrame{border-radius:14px !important;overflow:hidden !important;box-shadow:0 1px 8px rgba(15,23,42,0.06) !important;}
+.stDataFrame thead tr th{
+  background:#F8FAFC !important;color:#0F172A !important;
+  font-weight:700 !important;font-size:0.75rem !important;
+  text-transform:uppercase !important;letter-spacing:0.8px !important;
+  padding:10px 14px !important;border-bottom:1px solid #E2E8F0 !important;
+}
+.stDataFrame tbody tr td{
+  background:#FFFFFF !important;color:#1E293B !important;
+  font-size:0.84rem !important;padding:9px 14px !important;
+  border-bottom:1px solid #F1F5F9 !important;
+}
+.stDataFrame tbody tr:hover td{background:#F8FAFC !important;}
 
-/* ── Alert banners ── */
-.stSuccess > div {{ background: {SUCCESS}12 !important; border: 1px solid {SUCCESS}35 !important;
-  border-radius: 10px !important; color: {TEXT} !important; }}
-.stWarning > div {{ background: {WARN}12 !important; border: 1px solid {WARN}35 !important;
-  border-radius: 10px !important; color: {TEXT} !important; }}
-.stError > div {{ background: {CRIT}12 !important; border: 1px solid {CRIT}35 !important;
-  border-radius: 10px !important; color: {TEXT} !important; }}
-.stInfo > div {{ background: {INFO}12 !important; border: 1px solid {INFO}35 !important;
-  border-radius: 10px !important; color: {TEXT} !important; }}
+/* Expander */
+.streamlit-expanderHeader{
+  background:#FFFFFF !important;border:1px solid #E2E8F0 !important;
+  border-radius:12px !important;padding:12px 18px !important;
+  color:#0F172A !important;font-weight:600 !important;font-size:0.87rem !important;
+}
+.streamlit-expanderContent{
+  background:#F8FAFC !important;border:1px solid #E2E8F0 !important;
+  border-top:none !important;border-radius:0 0 12px 12px !important;padding:16px !important;
+}
 
-/* ── Progress bar ── */
-.stProgress > div > div {{ background: {PRIMARY} !important; border-radius: 4px !important; }}
-.stProgress > div {{ background: {BORDER} !important; border-radius: 4px !important; }}
+/* Alerts */
+.stSuccess>div{background:#F0FDF4 !important;border:1px solid #BBF7D0 !important;border-radius:10px !important;color:#166534 !important;}
+.stWarning>div{background:#FFFBEB !important;border:1px solid #FDE68A !important;border-radius:10px !important;color:#92400E !important;}
+.stError>div  {background:#FFF1F2 !important;border:1px solid #FECDD3 !important;border-radius:10px !important;color:#9F1239 !important;}
+.stInfo>div   {background:#ECFEFF !important;border:1px solid #A5F3FC !important;border-radius:10px !important;color:#164E63 !important;}
 
-/* ── Divider ── */
-hr {{ border-color: {BORDER} !important; margin: 24px 0 !important; opacity: 0.6 !important; }}
+/* Progress */
+.stProgress>div>div{background:#2563EB !important;border-radius:4px !important;}
+.stProgress>div{background:#E2E8F0 !important;border-radius:4px !important;}
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar {{ width: 5px; height: 5px; }}
-::-webkit-scrollbar-track {{ background: {BG}; }}
-::-webkit-scrollbar-thumb {{ background: #1E2F4D; border-radius: 3px; }}
-::-webkit-scrollbar-thumb:hover {{ background: {PRIMARY}; }}
+/* Divider */
+hr{border-color:#E2E8F0 !important;margin:20px 0 !important;}
 
-/* ── Hide Streamlit chrome ── */
-#MainMenu, footer, header {{ visibility: hidden !important; height: 0 !important; }}
-.viewerBadge_container__1QSob {{ display: none !important; }}
-[data-testid="stToolbar"] {{ display: none !important; }}
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:#F1F5F9;}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
 
-/* ── Custom component hover transitions ── */
-.cs-card {{
-  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-}}
-.cs-card:hover {{
-  transform: translateY(-2px) !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-}}
-
-/* ── Detection module intro cards ── */
-.det-module-card {{
-  background: linear-gradient(135deg, #0E1729 0%, #0A1525 100%);
-  border: 1px solid {BORDER};
-  border-radius: 16px;
-  padding: 28px 28px 22px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  overflow: hidden;
-  position: relative;
-}}
-.det-module-card::before {{
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: 16px 16px 0 0;
-}}
-
-/* ── Navigation active glow ── */
-.nav-active-item {{
-  background: rgba(37,99,235,0.12) !important;
-  border-left: 3px solid {PRIMARY} !important;
-}}
-
-/* ── Hero section ── */
-.cs-hero {{
-  background: linear-gradient(135deg, #0E1729 0%, #060D18 60%, #0A1220 100%);
-  border: 1px solid {BORDER};
-  border-radius: 20px;
-  padding: 36px 40px;
-  margin-bottom: 28px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-}}
-.cs-hero::after {{
-  content: '';
-  position: absolute;
-  top: -60px; right: -60px;
-  width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}}
-
-/* ── Status badges ── */
-.cs-badge {{
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.71rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}}
+/* Hide Streamlit chrome */
+#MainMenu,footer,header{visibility:hidden !important;height:0 !important;}
+.viewerBadge_container__1QSob{display:none !important;}
+[data-testid="stToolbar"]{display:none !important;}
 </style>
 """, unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════
 # SESSION STATE
@@ -797,33 +697,36 @@ api_ok = api_health()
 S      = stats()
 
 st.markdown(f"""
-<div style='background:{SIDEBAR};border-bottom:1px solid {BORDER};
-     padding:14px 32px 13px;margin:0 -2rem 0;position:sticky;top:0;z-index:100;
-     backdrop-filter:blur(12px);'>
+<div style='background:#FFFFFF;border-bottom:1px solid #E2E8F0;
+     padding:13px 32px 12px;margin:0 -2rem 0;position:sticky;top:0;z-index:100;'>
   <div style='display:flex;justify-content:space-between;align-items:center'>
-    <div style='display:flex;align-items:center;gap:14px'>
-      <div style='background:linear-gradient(135deg,{PRIMARY},{ACCENT});border-radius:10px;
-                  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
-                  font-size:1.2rem;flex-shrink:0;box-shadow:0 4px 12px {PRIMARY}40'>🛡️</div>
+    <div style='display:flex;align-items:center;gap:12px'>
+      <div style='background:linear-gradient(135deg,#2563EB,#0891B2);border-radius:10px;
+                  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+                  font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(37,99,235,0.25)'>🛡️</div>
       <div>
-        <div style='font-size:0.98rem;font-weight:800;color:{TEXT};letter-spacing:-0.2px;
+        <div style='font-size:0.96rem;font-weight:800;color:#0F172A;letter-spacing:-0.2px;
                     line-height:1.2'>CyberShield AI</div>
-        <div style='font-size:0.68rem;color:{MUTED};font-weight:400;margin-top:1px'>
+        <div style='font-size:0.66rem;color:#64748B;font-weight:400;margin-top:1px'>
           Adaptive Explainable Multi-Source Cyber Threat Detection &nbsp;·&nbsp; B.Tech Capstone 2026–2027</div>
       </div>
     </div>
-    <div style='display:flex;align-items:center;gap:20px'>
+    <div style='display:flex;align-items:center;gap:16px'>
       <div style='text-align:right'>
         <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:2px'>
           <div style='width:7px;height:7px;border-radius:50%;
-                      background:{"#22C55E" if api_ok else "#F59E0B"};
-                      box-shadow:0 0 8px {"#22C55E88" if api_ok else "#F59E0B88"}'></div>
-          <span style='color:{TEXT};font-size:0.75rem;font-weight:600'>
+                      background:{"#16A34A" if api_ok else "#D97706"};
+                      box-shadow:0 0 6px {"#16A34A80" if api_ok else "#D9770680"}'></div>
+          <span style='background:{"#F0FDF4" if api_ok else "#FFFBEB"};
+                       color:{"#166534" if api_ok else "#92400E"};
+                       border:1px solid {"#BBF7D0" if api_ok else "#FDE68A"};
+                       border-radius:20px;padding:2px 10px;
+                       font-size:0.72rem;font-weight:600'>
             {"API Online" if api_ok else "API Waking Up"}</span>
         </div>
-        <div style='color:{MUTED};font-size:0.64rem;
-                    font-family:"JetBrains Mono",monospace;letter-spacing:0.3px'>
-          {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d %b %Y · %H:%M:%S")} IST</div>
+        <div style='color:#94A3B8;font-size:0.63rem;
+                    font-family:"JetBrains Mono",monospace;text-align:right'>
+          {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d %b %Y · %H:%M")} IST</div>
       </div>
     </div>
   </div>
@@ -834,20 +737,37 @@ st.markdown(f"""
 # SIDEBAR NAVIGATION
 # ══════════════════════════════════════════════════════════════════
 with st.sidebar:
-    # ── Brand ──────────────────────────────────────────────────────
-    st.markdown(f"""
-    <div style='padding:22px 20px 18px;border-bottom:1px solid {BORDER}'>
-      <div style='display:flex;align-items:center;gap:10px;margin-bottom:2px'>
-        <div style='background:linear-gradient(135deg,{PRIMARY},{ACCENT});border-radius:8px;
+    # Brand
+    st.markdown("""
+    <div style='padding:20px 18px 16px;border-bottom:1px solid #E2E8F0'>
+      <div style='display:flex;align-items:center;gap:10px'>
+        <div style='background:linear-gradient(135deg,#2563EB,#0891B2);border-radius:8px;
                     width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-                    font-size:1rem;flex-shrink:0'>🛡️</div>
+                    font-size:1rem;flex-shrink:0;box-shadow:0 2px 8px rgba(37,99,235,0.25)'>🛡️</div>
         <div>
-          <div style='color:{TEXT};font-size:0.92rem;font-weight:800;line-height:1.2'>CyberShield AI</div>
-          <div style='color:{MUTED};font-size:0.6rem;font-weight:500;letter-spacing:0.5px'>
-            SOC Platform · v6.0</div>
+          <div style='color:#0F172A;font-size:0.9rem;font-weight:800;line-height:1.2'>CyberShield AI</div>
+          <div style='color:#94A3B8;font-size:0.59rem;font-weight:500;letter-spacing:0.5px'>SOC Platform · v6.0</div>
         </div>
       </div>
     </div>""", unsafe_allow_html=True)
+
+    # Per-page color mapping for active nav items
+    _PAGE_COLORS = {
+        "Dashboard":       ("#2563EB","#EFF6FF"),
+        "Phishing":        ("#E11D48","#FFF1F2"),
+        "URL Analyser":    ("#0D9488","#F0FDFA"),
+        "Login Monitor":   ("#7C3AED","#F5F3FF"),
+        "Network":         ("#059669","#ECFDF5"),
+        "Threat Fusion":   ("#D97706","#FFFBEB"),
+        "Timeline":        ("#4F46E5","#EEF2FF"),
+        "Reports":         ("#2563EB","#EFF6FF"),
+        "Analytics":       ("#7C3AED","#F5F3FF"),
+        "Simulation":      ("#D97706","#FFFBEB"),
+        "Model Performance":("#0D9488","#F0FDFA"),
+        "Dataset Info":    ("#059669","#ECFDF5"),
+        "System Workflow": ("#2563EB","#EFF6FF"),
+        "About":           ("#64748B","#F8FAFC"),
+    }
 
     NAV = {
         "Overview":    [("📊","Dashboard")],
@@ -860,21 +780,21 @@ with st.sidebar:
     }
     for grp, items in NAV.items():
         st.markdown(f"""
-        <div style='padding:12px 20px 4px;color:{MUTED};font-size:0.6rem;
+        <div style='padding:10px 18px 3px;color:#94A3B8;font-size:0.59rem;
                     text-transform:uppercase;letter-spacing:1.5px;font-weight:700'>
           {grp}</div>""", unsafe_allow_html=True)
         for ico, name in items:
             active = st.session_state.page == name
-            bg_c  = f"{PRIMARY}15" if active else "transparent"
-            bl_c  = PRIMARY if active else "transparent"
-            tc    = PRIMARY if active else TEXT
-            fw    = "600" if active else "400"
+            clr, bg_c = _PAGE_COLORS.get(name, ("#2563EB","#EFF6FF"))
+            a_bg = bg_c if active else "transparent"
+            a_tc = clr  if active else "#374151"
+            a_fw = "600" if active else "400"
+            a_bl = f"border-left:2px solid {clr};" if active else "border-left:2px solid transparent;"
             st.markdown(f"""
-            <div style='padding:2px 10px 2px 16px'>
-              <div style='background:{bg_c};border-left:2px solid {bl_c};
-                          border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:1px;
-                          transition:background 0.15s'>
-                <span style='color:{tc};font-weight:{fw};font-size:0.84rem'>
+            <div style='padding:1px 8px 1px 14px'>
+              <div style='background:{a_bg};{a_bl}border-radius:0 8px 8px 0;
+                          padding:8px 10px;margin-bottom:2px'>
+                <span style='color:{a_tc};font-weight:{a_fw};font-size:0.83rem'>
                   {ico}&nbsp;&nbsp;{name}</span>
               </div>
             </div>""", unsafe_allow_html=True)
@@ -882,50 +802,47 @@ with st.sidebar:
                 st.session_state.page = name
                 st.rerun()
 
-    # Session stats widget
+    # Session stats — light card
     st.markdown(f"""
-    <div style='margin:10px 12px 6px;padding:14px;background:{CARD};
-         border-radius:12px;border:1px solid {BORDER}'>
-      <div style='color:#CBD5E1;font-size:0.67rem;text-transform:uppercase;
-                  letter-spacing:1px;font-weight:700;margin-bottom:10px'>
-        Session Metrics</div>
-      <div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>
-        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
-          <div style='color:{TEXT};font-size:1.35rem;font-weight:800'>{S["total"]}</div>
-          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>SCANS</div>
+    <div style='margin:10px 12px 6px;padding:14px;background:#F8FAFC;
+         border-radius:12px;border:1px solid #E2E8F0'>
+      <div style='color:#64748B;font-size:0.62rem;text-transform:uppercase;
+                  letter-spacing:1px;font-weight:700;margin-bottom:10px'>Session Metrics</div>
+      <div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>
+        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+          <div style='color:#0F172A;font-size:1.25rem;font-weight:800'>{S["total"]}</div>
+          <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>SCANS</div>
         </div>
-        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
-          <div style='color:{CRIT};font-size:1.35rem;font-weight:800'>{S["threats"]}</div>
-          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>THREATS</div>
+        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+          <div style='color:#DC2626;font-size:1.25rem;font-weight:800'>{S["threats"]}</div>
+          <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>THREATS</div>
         </div>
-        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
-          <div style='color:{WARN};font-size:1.35rem;font-weight:800'>
+        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+          <div style='color:#D97706;font-size:1.25rem;font-weight:800'>
             {f"{S['avg_conf']:.0%}" if S["avg_conf"] is not None else "N/A"}</div>
-          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG CONF</div>
+          <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>AVG CONF</div>
         </div>
-        <div style='text-align:center;padding:8px;background:{BG};border-radius:8px'>
-          <div style='color:{INFO};font-size:1.35rem;font-weight:800'>
+        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+          <div style='color:#0891B2;font-size:1.25rem;font-weight:800'>
             {f"{S['avg_ms']:.0f}ms" if S["total"] > 0 else "N/A"}</div>
-          <div style='color:{MUTED};font-size:0.62rem;font-weight:600'>AVG SPEED</div>
+          <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>SPEED</div>
         </div>
       </div>
     </div>""", unsafe_allow_html=True)
 
     # ── API Status + Wake button ──────────────────────────────────
     st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-    status_color = SUCCESS if api_ok else WARN
+    status_color = "#16A34A" if api_ok else "#D97706"
     status_text  = "Online" if api_ok else "Sleeping"
     st.markdown(f"""
-    <div style='margin:0 12px 6px;padding:10px 14px;background:{CARD};
-         border-radius:10px;border:1px solid {BORDER}'>
+    <div style='margin:0 12px 6px;padding:10px 14px;background:#F8FAFC;
+         border-radius:10px;border:1px solid #E2E8F0'>
       <div style='display:flex;align-items:center;gap:8px;margin-bottom:3px'>
         <div style='width:7px;height:7px;border-radius:50%;
-                    background:{status_color};
-                    box-shadow:0 0 5px {status_color}'></div>
-        <span style='color:{TEXT};font-size:0.78rem;font-weight:600'>
-          API {status_text}</span>
+                    background:{status_color};box-shadow:0 0 5px {status_color}80'></div>
+        <span style='color:#0F172A;font-size:0.76rem;font-weight:600'>API {status_text}</span>
       </div>
-      <div style='color:{MUTED};font-size:0.68rem'>
+      <div style='color:#94A3B8;font-size:0.65rem'>
         {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%H:%M:%S")} IST</div>
     </div>""", unsafe_allow_html=True)
     if not api_ok:
@@ -3116,28 +3033,28 @@ elif page == "About":
 # PROFESSIONAL FOOTER
 # ══════════════════════════════════════════════════════════════════
 st.markdown("<div style='height:24px'></div>",unsafe_allow_html=True)
-st.markdown(f"""
-<div style='background:{SIDEBAR};border-top:1px solid {BORDER};
+st.markdown("""
+<div style='background:#FFFFFF;border-top:1px solid #E2E8F0;
      padding:18px 32px;margin:0 -2rem -3rem;'>
   <div style='display:flex;justify-content:space-between;align-items:center;
               flex-wrap:wrap;gap:10px'>
     <div style='display:flex;align-items:center;gap:10px'>
-      <div style='background:linear-gradient(135deg,{PRIMARY},{ACCENT});border-radius:8px;
+      <div style='background:linear-gradient(135deg,#2563EB,#0891B2);border-radius:8px;
                   width:28px;height:28px;display:flex;align-items:center;
                   justify-content:center;font-size:0.9rem;flex-shrink:0'>🛡️</div>
       <div>
-        <div style='color:{TEXT};font-weight:700;font-size:0.82rem'>CyberShield AI</div>
-        <div style='color:{MUTED};font-size:0.65rem;margin-top:1px'>
+        <div style='color:#0F172A;font-weight:700;font-size:0.82rem'>CyberShield AI</div>
+        <div style='color:#64748B;font-size:0.63rem;margin-top:1px'>
           Adaptive Explainable Multi-Source Cyber Threat Detection Framework · B.Tech Capstone 2026–2027</div>
       </div>
     </div>
-    <div style='color:{MUTED};font-size:0.68rem;text-align:center'>
+    <div style='color:#94A3B8;font-size:0.67rem;text-align:center'>
       Python · FastAPI · Streamlit · DistilBERT · XGBoost · Isolation Forest · SHAP · LIME
     </div>
     <div style='text-align:right'>
-      <div style='color:{MUTED};font-size:0.65rem'>
-        Designed with requirements engineering, software testing, and explainability principles</div>
-      <div style='color:{MUTED};font-size:0.63rem;margin-top:2px'>
+      <div style='color:#64748B;font-size:0.63rem'>
+        Designed with requirements engineering, software testing &amp; explainability principles</div>
+      <div style='color:#94A3B8;font-size:0.61rem;margin-top:2px'>
         © 2026–2027 B.Tech Capstone Project. All rights reserved.</div>
     </div>
   </div>
