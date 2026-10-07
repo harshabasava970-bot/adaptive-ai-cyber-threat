@@ -1150,6 +1150,246 @@ if page == "Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Security Detection Center — Image Cards ────────────────────
+    st.markdown(f"""
+    <div style='margin:28px 0 8px'>
+      <div style='font-size:1.05rem;font-weight:700;color:{TEXT};margin-bottom:4px'>
+        Security Detection Center</div>
+      <div style='color:{MUTED};font-size:0.82rem;margin-bottom:18px'>
+        Select a detection module to analyse threats across your digital environment</div>
+    </div>""", unsafe_allow_html=True)
+
+    # Row 1 — 3 cards
+    card_cols1 = st.columns(3)
+
+    # ── SVG images as inline data — no external URLs, always renders ──
+    _SVG_PHISHING = """
+    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
+      <rect width='320' height='160' fill='#0A1525'/>
+      <rect x='40' y='28' width='240' height='104' rx='8' fill='#0E1F3D' stroke='#1E3A6E' stroke-width='1.5'/>
+      <!-- envelope body -->
+      <rect x='60' y='44' width='200' height='72' rx='6' fill='#0F2850' stroke='#2563EB' stroke-width='1'/>
+      <!-- envelope flap lines -->
+      <line x1='60' y1='44' x2='160' y2='92' stroke='#2563EB' stroke-width='1.5' opacity='0.6'/>
+      <line x1='260' y1='44' x2='160' y2='92' stroke='#2563EB' stroke-width='1.5' opacity='0.6'/>
+      <!-- warning icon -->
+      <circle cx='242' cy='48' r='14' fill='#EF444420' stroke='#EF4444' stroke-width='1.5'/>
+      <text x='242' y='53' text-anchor='middle' font-size='14' fill='#EF4444'>!</text>
+      <!-- text lines -->
+      <rect x='80' y='58' width='100' height='6' rx='3' fill='#2563EB' opacity='0.5'/>
+      <rect x='80' y='70' width='130' height='5' rx='2.5' fill='#94A3B8' opacity='0.3'/>
+      <rect x='80' y='81' width='90' height='5' rx='2.5' fill='#94A3B8' opacity='0.25'/>
+      <!-- hook/phishing hook symbol -->
+      <path d='M200 95 Q215 80 215 95 Q215 110 200 110' stroke='#EF4444' stroke-width='2' fill='none' stroke-linecap='round'/>
+      <circle cx='200' cy='110' r='3' fill='#EF4444'/>
+      <line x1='215' y1='82' x2='230' y2='72' stroke='#EF4444' stroke-width='1.5'/>
+    </svg>"""
+
+    _SVG_URL = """
+    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
+      <rect width='320' height='160' fill='#0A1525'/>
+      <!-- browser window -->
+      <rect x='30' y='20' width='260' height='120' rx='8' fill='#0E1F3D' stroke='#1E3A6E' stroke-width='1.5'/>
+      <rect x='30' y='20' width='260' height='28' rx='8' fill='#0F2850' stroke='#1E3A6E' stroke-width='1'/>
+      <circle cx='50' cy='34' r='5' fill='#EF4444' opacity='0.8'/>
+      <circle cx='66' cy='34' r='5' fill='#F59E0B' opacity='0.8'/>
+      <circle cx='82' cy='34' r='5' fill='#22C55E' opacity='0.8'/>
+      <!-- URL bar -->
+      <rect x='95' y='26' width='170' height='16' rx='8' fill='#0A1220' stroke='#1E3A6E' stroke-width='1'/>
+      <text x='108' y='37' font-size='8' fill='#EF4444' font-family='monospace'>http://</text>
+      <text x='148' y='37' font-size='8' fill='#94A3B8' font-family='monospace'>suspicious-site.xyz</text>
+      <!-- shield with X -->
+      <circle cx='160' cy='100' r='32' fill='#EF444415' stroke='#EF4444' stroke-width='1.5'/>
+      <path d='M160 72 L184 82 L184 102 Q184 118 160 124 Q136 118 136 102 L136 82 Z' fill='#EF444420' stroke='#EF4444' stroke-width='1.5'/>
+      <line x1='150' y1='92' x2='170' y2='112' stroke='#EF4444' stroke-width='2.5' stroke-linecap='round'/>
+      <line x1='170' y1='92' x2='150' y2='112' stroke='#EF4444' stroke-width='2.5' stroke-linecap='round'/>
+    </svg>"""
+
+    _SVG_LOGIN = """
+    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
+      <rect width='320' height='160' fill='#0A1525'/>
+      <!-- login card -->
+      <rect x='80' y='18' width='160' height='124' rx='12' fill='#0E1F3D' stroke='#1E3A6E' stroke-width='1.5'/>
+      <!-- avatar circle -->
+      <circle cx='160' cy='52' r='22' fill='#0F2850' stroke='#2563EB' stroke-width='1.5'/>
+      <circle cx='160' cy='46' r='9' fill='#2563EB' opacity='0.7'/>
+      <path d='M140 68 Q140 58 160 58 Q180 58 180 68' fill='#2563EB' opacity='0.5'/>
+      <!-- input fields -->
+      <rect x='98' y='80' width='124' height='12' rx='6' fill='#0A1220' stroke='#2563EB' stroke-width='1'/>
+      <rect x='98' y='98' width='124' height='12' rx='6' fill='#0A1220' stroke='#1E3A6E' stroke-width='1'/>
+      <!-- lock icons on fields -->
+      <text x='106' y='90' font-size='8' fill='#94A3B8'>●●●●●●●</text>
+      <text x='106' y='108' font-size='8' fill='#94A3B8'>●●●●●●●</text>
+      <!-- warning badge -->
+      <circle cx='224' cy='36' r='16' fill='#F59E0B20' stroke='#F59E0B' stroke-width='1.5'/>
+      <text x='224' y='41' text-anchor='middle' font-size='13' fill='#F59E0B'>⚠</text>
+      <!-- login button -->
+      <rect x='108' y='116' width='104' height='14' rx='7' fill='#2563EB' opacity='0.85'/>
+      <text x='160' y='126' text-anchor='middle' font-size='8' fill='white' font-weight='bold'>SIGN IN</text>
+    </svg>"""
+
+    _SVG_NETWORK = """
+    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
+      <rect width='320' height='160' fill='#0A1525'/>
+      <!-- central node -->
+      <circle cx='160' cy='80' r='20' fill='#0F2850' stroke='#38BDF8' stroke-width='2'/>
+      <text x='160' y='85' text-anchor='middle' font-size='14' fill='#38BDF8'>⬡</text>
+      <!-- outer nodes -->
+      <circle cx='60'  cy='40'  r='12' fill='#0F2850' stroke='#22C55E' stroke-width='1.5'/>
+      <circle cx='260' cy='40'  r='12' fill='#0F2850' stroke='#22C55E' stroke-width='1.5'/>
+      <circle cx='60'  cy='120' r='12' fill='#0F2850' stroke='#F59E0B' stroke-width='1.5'/>
+      <circle cx='260' cy='120' r='12' fill='#0F2850' stroke='#EF4444' stroke-width='1.5'/>
+      <circle cx='160' cy='20'  r='10' fill='#0F2850' stroke='#22C55E' stroke-width='1.5'/>
+      <circle cx='160' cy='140' r='10' fill='#0F2850' stroke='#F59E0B' stroke-width='1.5'/>
+      <!-- connection lines -->
+      <line x1='72'  y1='48'  x2='143' y2='65'  stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
+      <line x1='248' y1='48'  x2='177' y2='65'  stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
+      <line x1='72'  y1='112' x2='143' y2='95'  stroke='#F59E0B' stroke-width='1' opacity='0.5'/>
+      <line x1='248' y1='112' x2='177' y2='95'  stroke='#EF4444' stroke-width='1.5' opacity='0.7'/>
+      <line x1='160' y1='30'  x2='160' y2='60'  stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
+      <line x1='160' y1='100' x2='160' y2='130' stroke='#38BDF8' stroke-width='1' opacity='0.5'/>
+      <!-- alert on suspicious node -->
+      <circle cx='264' cy='36' r='6' fill='#EF4444'/>
+      <text x='264' y='40' text-anchor='middle' font-size='8' fill='white' font-weight='bold'>!</text>
+      <!-- scan pulse -->
+      <circle cx='160' cy='80' r='32' fill='none' stroke='#38BDF8' stroke-width='1' opacity='0.3' stroke-dasharray='4 3'/>
+      <circle cx='160' cy='80' r='48' fill='none' stroke='#38BDF8' stroke-width='0.8' opacity='0.15'/>
+    </svg>"""
+
+    _SVG_FUSION = """
+    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
+      <rect width='320' height='160' fill='#0A1525'/>
+      <!-- 4 source nodes -->
+      <rect x='18'  y='16' width='60' height='36' rx='6' fill='#0F2850' stroke='#EF4444' stroke-width='1.2'/>
+      <text x='48'  y='30' text-anchor='middle' font-size='9' fill='#EF4444'>PHISH</text>
+      <text x='48'  y='42' text-anchor='middle' font-size='14'>📧</text>
+      <rect x='242' y='16' width='60' height='36' rx='6' fill='#0F2850' stroke='#F97316' stroke-width='1.2'/>
+      <text x='272' y='30' text-anchor='middle' font-size='9' fill='#F97316'>URL</text>
+      <text x='272' y='42' text-anchor='middle' font-size='14'>🔗</text>
+      <rect x='18'  y='108' width='60' height='36' rx='6' fill='#0F2850' stroke='#F59E0B' stroke-width='1.2'/>
+      <text x='48'  y='122' text-anchor='middle' font-size='9' fill='#F59E0B'>LOGIN</text>
+      <text x='48'  y='134' text-anchor='middle' font-size='14'>👤</text>
+      <rect x='242' y='108' width='60' height='36' rx='6' fill='#0F2850' stroke='#38BDF8' stroke-width='1.2'/>
+      <text x='272' y='122' text-anchor='middle' font-size='9' fill='#38BDF8'>NETWORK</text>
+      <text x='272' y='134' text-anchor='middle' font-size='14'>🌐</text>
+      <!-- arrows converging -->
+      <line x1='80'  y1='34'  x2='128' y2='72'  stroke='#EF4444' stroke-width='1.5' opacity='0.7' marker-end='url(#a)'/>
+      <line x1='240' y1='34'  x2='192' y2='72'  stroke='#F97316' stroke-width='1.5' opacity='0.7'/>
+      <line x1='80'  y1='126' x2='128' y2='90'  stroke='#F59E0B' stroke-width='1.5' opacity='0.7'/>
+      <line x1='240' y1='126' x2='192' y2='90'  stroke='#38BDF8' stroke-width='1.5' opacity='0.7'/>
+      <!-- central fusion circle -->
+      <circle cx='160' cy='80' r='30' fill='#1E3A6E30' stroke='#2563EB' stroke-width='2'/>
+      <circle cx='160' cy='80' r='20' fill='#2563EB20' stroke='#2563EB' stroke-width='1.5'/>
+      <text x='160' y='76' text-anchor='middle' font-size='9' fill='#38BDF8' font-weight='bold'>FUSION</text>
+      <text x='160' y='88' text-anchor='middle' font-size='9' fill='#38BDF8'>ENGINE</text>
+    </svg>"""
+
+    _SVG_XAI = """
+    <svg viewBox='0 0 320 160' xmlns='http://www.w3.org/2000/svg' width='100%' height='160'>
+      <rect width='320' height='160' fill='#0A1525'/>
+      <!-- bar chart representing SHAP values -->
+      <rect x='40' y='130' width='20' height='0'  rx='3' fill='#2563EB'/>
+      <rect x='40' y='110' width='20' height='20' rx='3' fill='#EF4444' opacity='0.85'/>
+      <rect x='70' y='90'  width='20' height='40' rx='3' fill='#F97316' opacity='0.85'/>
+      <rect x='100' y='75' width='20' height='55' rx='3' fill='#F59E0B' opacity='0.85'/>
+      <rect x='130' y='60' width='20' height='70' rx='3' fill='#22C55E' opacity='0.85'/>
+      <rect x='160' y='50' width='20' height='80' rx='3' fill='#2563EB' opacity='0.9'/>
+      <rect x='190' y='65' width='20' height='65' rx='3' fill='#22C55E' opacity='0.7'/>
+      <rect x='220' y='85' width='20' height='45' rx='3' fill='#F59E0B' opacity='0.7'/>
+      <rect x='250' y='105' width='20' height='25' rx='3' fill='#F97316' opacity='0.6'/>
+      <!-- baseline -->
+      <line x1='30' y1='130' x2='290' y2='130' stroke='#1E3A6E' stroke-width='1.5'/>
+      <!-- labels -->
+      <text x='50'  y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_1</text>
+      <text x='80'  y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_2</text>
+      <text x='110' y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_3</text>
+      <text x='140' y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_4</text>
+      <text x='170' y='146' text-anchor='middle' font-size='6' fill='#2563EB'>feat_5</text>
+      <text x='200' y='146' text-anchor='middle' font-size='6' fill='#94A3B8'>feat_6</text>
+      <!-- title -->
+      <text x='160' y='22' text-anchor='middle' font-size='11' fill='#A78BFA' font-weight='bold'>SHAP Feature Attribution</text>
+      <text x='160' y='36' text-anchor='middle' font-size='8'  fill='#94A3B8'>Model Explainability</text>
+      <!-- brain icon outline -->
+      <circle cx='280' cy='28' r='16' fill='#A78BFA15' stroke='#A78BFA' stroke-width='1.2'/>
+      <text x='280' y='33' text-anchor='middle' font-size='14'>🧠</text>
+    </svg>"""
+
+    # Card data: (svg, accent_color, title, desc, btn_label, page_name)
+    _CARDS = [
+        (_SVG_PHISHING, CRIT,    "Phishing Detection",   "Detect suspicious emails using transformer-based NLP (DistilBERT).", "Analyse Email →",       "Phishing"),
+        (_SVG_URL,      HIGH,    "URL Analyser",         "Identify malicious URLs with 25-feature ML analysis (XGBoost).",     "Analyse URL →",         "URL Analyser"),
+        (_SVG_LOGIN,    WARN,    "Login Monitor",        "Detect abnormal login behaviour and account takeover patterns.",       "Monitor Login →",       "Login Monitor"),
+        (_SVG_NETWORK,  INFO,    "Network Security",     "Detect anomalous network activity using NSL-KDD ML detection.",       "Analyse Network →",     "Network"),
+        (_SVG_FUSION,   PRIMARY, "Threat Fusion",        "Combine multi-source signals into a unified risk assessment.",        "Run Threat Fusion →",   "Threat Fusion"),
+        (_SVG_XAI,      PURPLE,  "Explainable AI",       "Understand why the model generated a specific prediction (SHAP/LIME).","View Explainability →", "Model Performance"),
+    ]
+
+    # Extra CSS for image cards (injected once)
+    st.markdown(f"""
+    <style>
+    .cs-img-card {{
+      background:{CARD};
+      border:1px solid {BORDER};
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 4px 20px rgba(0,0,0,0.45);
+      transition:transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      cursor:pointer;
+      height:100%;
+    }}
+    .cs-img-card:hover {{
+      transform:translateY(-5px);
+      box-shadow:0 16px 40px rgba(0,0,0,0.6);
+    }}
+    .cs-img-card .cs-img-wrap {{
+      overflow:hidden;
+      background:#070E1B;
+    }}
+    .cs-img-card .cs-img-wrap svg {{
+      display:block;
+      transition:transform 0.3s ease;
+    }}
+    .cs-img-card:hover .cs-img-wrap svg {{
+      transform:scale(1.04);
+    }}
+    .cs-img-card .cs-card-body {{
+      padding:16px 18px 18px;
+    }}
+    .cs-card-btn {{
+      display:inline-flex;align-items:center;gap:5px;
+      border-radius:8px;padding:8px 16px;
+      font-size:0.78rem;font-weight:600;
+      transition:background 0.15s ease, transform 0.15s ease;
+      margin-top:12px;border:none;cursor:pointer;
+    }}
+    </style>""", unsafe_allow_html=True)
+
+    # Render 2 rows × 3 cols
+    for row_start in range(0, 6, 3):
+        cols = st.columns(3)
+        for col, (svg, color, title, desc, btn_label, target_page) in zip(cols, _CARDS[row_start:row_start+3]):
+            with col:
+                st.markdown(f"""
+                <div class='cs-img-card'>
+                  <div class='cs-img-wrap'>{svg}</div>
+                  <div class='cs-card-body'>
+                    <div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'>
+                      <div style='width:8px;height:8px;border-radius:50%;background:{color};
+                                  box-shadow:0 0 5px {color}80;flex-shrink:0'></div>
+                      <span style='color:{TEXT};font-size:0.9rem;font-weight:700;
+                                   letter-spacing:-0.2px'>{title}</span>
+                    </div>
+                    <div style='color:{MUTED};font-size:0.78rem;line-height:1.55;
+                                min-height:40px'>{desc}</div>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+                if st.button(btn_label, key=f"det_card_{target_page}", use_container_width=True):
+                    st.session_state.page = target_page
+                    st.rerun()
+        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
+    st.markdown("<hr style='margin:24px 0 20px'>", unsafe_allow_html=True)
+
     # ── KPI Row (6 cards) ─────────────────────────────────────────
     k = st.columns(6)
     has_scans = S["total"] > 0
@@ -1496,16 +1736,6 @@ elif page == "Phishing":
 
     with st.form("phi_form"):
         email_text = st.text_area("Email Content (subject + body)", height=190,
-            placeholder="Subject: Urgent: Verify Your Bank Account Immediately\n\n"
-                        "Dear Customer,\nWe detected suspicious activity on your account.\n"
-                        "Please verify immediately.\n"
-                        "Failure to verify within 24 hours will result in suspension.\n"
-                        "http://secure-hdfc-verification-login.com")
-        c1,c2 = st.columns([1,3])
-        with c1:
-            sub = st.form_submit_button("🔍 Analyse Email", use_container_width=True)
-    with st.form("phi_form"):
-        email_text = st.text_area("📨 Email Content (subject + body)", height=190,
             placeholder="Subject: Urgent: Verify Your Bank Account Immediately\n\n"
                         "Dear Customer,\nWe detected suspicious activity on your account.\n"
                         "Please verify immediately.\n"
