@@ -27,202 +27,212 @@ API_BASE = os.environ.get(
 ).rstrip("/") + "/api/v1"
 
 # ── Design tokens ──────────────────────────────────────────────────
-BG      = "#0B1120"
-CARD    = "#111827"
-SIDEBAR = "#0F172A"
-BORDER  = "#1E293B"
+BG      = "#080E1A"
+CARD    = "#0E1729"
+SIDEBAR = "#060D18"
+BORDER  = "#1A2540"
 PRIMARY = "#2563EB"
 SUCCESS = "#22C55E"
 WARN    = "#F59E0B"
 CRIT    = "#EF4444"
 INFO    = "#38BDF8"
 HIGH    = "#F97316"
-TEXT    = "#F8FAFC"
-MUTED   = "#CBD5E1"   # raised from #94A3B8 for WCAG AA contrast on dark bg
-PURPLE  = "#A78BFA"
+TEXT    = "#F1F5F9"
+MUTED   = "#94A3B8"
+PURPLE  = "#818CF8"
+ACCENT  = "#0EA5E9"
 
 RISK_CLR = {"critical":CRIT,"high":HIGH,"medium":WARN,"low":SUCCESS,"info":INFO}
-RISK_BG  = {"critical":"#2D1515","high":"#2D1A0E","medium":"#2D2710",
-            "low":"#0F2D1A","info":"#0F2133"}
+RISK_BG  = {"critical":"#1F0A0A","high":"#1F110A","medium":"#1F1A0A",
+            "low":"#0A1F0E","info":"#0A1525"}
 RISK_ICO = {"critical":"🔴","high":"🟠","medium":"🟡","low":"🟢","info":"🔵"}
 
 # ══════════════════════════════════════════════════════════════════
-# GLOBAL CSS — Final production polish
+# GLOBAL CSS — Premium Enterprise Redesign
 # ══════════════════════════════════════════════════════════════════
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* Base reset */
+/* ── Reset ── */
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body, .stApp {{
   background: {BG} !important;
   color: {TEXT} !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
   font-size: 14px !important;
-  line-height: 1.65 !important;
+  line-height: 1.6 !important;
   -webkit-font-smoothing: antialiased;
 }}
 
-/* Sidebar */
+/* ── Sidebar ── */
 section[data-testid="stSidebar"] {{
   background: {SIDEBAR} !important;
   border-right: 1px solid {BORDER} !important;
 }}
-section[data-testid="stSidebar"] > div {{
-  padding: 0 !important;
-}}
+section[data-testid="stSidebar"] > div {{ padding: 0 !important; }}
 
-/* Main container */
+/* ── Main container ── */
 .block-container {{
   padding: 0 2rem 3rem 2rem !important;
   max-width: 100% !important;
 }}
 
 /* ── Typography ── */
-h1 {{ font-size: 1.65rem !important; font-weight: 900 !important;
-     color: {TEXT} !important; letter-spacing: -0.6px !important;
-     line-height: 1.2 !important; }}
-h2 {{ font-size: 1.25rem !important; font-weight: 700 !important;
+h1 {{ font-size: 1.6rem !important; font-weight: 800 !important;
+     color: {TEXT} !important; letter-spacing: -0.5px !important; line-height: 1.2 !important; }}
+h2 {{ font-size: 1.2rem !important; font-weight: 700 !important;
      color: {TEXT} !important; line-height: 1.3 !important; }}
-h3 {{ font-size: 1.05rem !important; font-weight: 600 !important;
-     color: {INFO} !important; line-height: 1.3 !important; }}
-h4 {{ font-size: 0.78rem !important; font-weight: 700 !important;
-     color: #CBD5E1 !important; text-transform: uppercase !important;
-     letter-spacing: 1px !important; }}
+h3 {{ font-size: 1rem !important; font-weight: 600 !important;
+     color: {TEXT} !important; line-height: 1.3 !important; }}
+h4 {{ font-size: 0.75rem !important; font-weight: 700 !important;
+     color: {MUTED} !important; text-transform: uppercase !important;
+     letter-spacing: 1.2px !important; }}
 p {{ color: {TEXT} !important; }}
 label {{ color: {TEXT} !important; font-weight: 500 !important; }}
-small, .caption {{ color: #CBD5E1 !important; }}
 
 /* ── Metric cards ── */
 div[data-testid="metric-container"] {{
   background: {CARD} !important;
   border: 1px solid {BORDER} !important;
-  border-radius: 14px !important;
-  padding: 20px 20px !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
-  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+  border-radius: 16px !important;
+  padding: 22px 20px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
 }}
 div[data-testid="metric-container"]:hover {{
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 24px rgba(37,99,235,0.18) !important;
-  border-color: {PRIMARY}60 !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 32px rgba(37,99,235,0.2) !important;
+  border-color: {PRIMARY}80 !important;
 }}
 div[data-testid="metric-container"] [data-testid="stMetricLabel"] > div {{
-  font-size: 0.72rem !important; font-weight: 700 !important;
-  color: #CBD5E1 !important; text-transform: uppercase !important;
-  letter-spacing: 1px !important;
+  font-size: 0.68rem !important; font-weight: 700 !important;
+  color: {MUTED} !important; text-transform: uppercase !important; letter-spacing: 1.2px !important;
 }}
 div[data-testid="metric-container"] [data-testid="stMetricValue"] > div {{
-  font-size: 1.85rem !important; font-weight: 800 !important;
+  font-size: 1.8rem !important; font-weight: 800 !important;
   color: {TEXT} !important; line-height: 1.1 !important;
 }}
 div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div {{
-  font-size: 0.78rem !important; font-weight: 600 !important;
+  font-size: 0.75rem !important; font-weight: 600 !important;
 }}
 
-/* ── Buttons ── */
+/* ── Buttons — primary ── */
 .stButton > button {{
-  background: linear-gradient(135deg, {PRIMARY}, #1D4ED8) !important;
-  color: {TEXT} !important; border: none !important;
-  border-radius: 10px !important; padding: 10px 20px !important;
-  font-weight: 600 !important; font-size: 0.85rem !important;
-  letter-spacing: 0.2px !important; font-family: 'Inter', sans-serif !important;
-  box-shadow: 0 4px 12px rgba(37,99,235,0.35) !important;
-  transition: all 0.18s ease !important; width: 100% !important;
+  background: {PRIMARY} !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 10px 22px !important;
+  font-weight: 600 !important;
+  font-size: 0.84rem !important;
+  letter-spacing: 0.15px !important;
+  font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.30) !important;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
+  width: 100% !important;
   cursor: pointer !important;
 }}
 .stButton > button:hover {{
-  background: linear-gradient(135deg, #1D4ED8, #1E40AF) !important;
-  box-shadow: 0 6px 20px rgba(37,99,235,0.5) !important;
+  background: #1D4ED8 !important;
   transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.45) !important;
 }}
+.stButton > button:active {{ transform: translateY(0) !important; }}
 .stButton > button:disabled {{
   background: {BORDER} !important; color: {MUTED} !important;
-  box-shadow: none !important; transform: none !important;
+  box-shadow: none !important; transform: none !important; opacity: 0.6 !important;
 }}
 
 /* ── Inputs ── */
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea,
 .stNumberInput > div > div > input {{
-  background: {CARD} !important; color: {TEXT} !important;
-  border: 1px solid {BORDER} !important; border-radius: 10px !important;
-  padding: 10px 14px !important; font-family: 'Inter', sans-serif !important;
-  font-size: 0.87rem !important; transition: border-color 0.18s !important;
+  background: #0A1220 !important;
+  color: {TEXT} !important;
+  border: 1px solid {BORDER} !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.87rem !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }}
 .stTextInput > div > div > input:focus,
 .stTextArea > div > div > textarea:focus {{
   border-color: {PRIMARY} !important;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important; outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15) !important;
+  outline: none !important;
 }}
 .stTextInput label, .stTextArea label, .stNumberInput label,
 .stSelectbox label, .stMultiSelect label, .stSlider label,
 .stRadio label, .stCheckbox label {{
-  color: {TEXT} !important; font-weight: 500 !important; font-size: 0.85rem !important;
+  color: {TEXT} !important; font-weight: 500 !important; font-size: 0.84rem !important;
 }}
 .stSelectbox > div > div, .stMultiSelect > div > div {{
-  background: {CARD} !important; border: 1px solid {BORDER} !important;
+  background: #0A1220 !important; border: 1px solid {BORDER} !important;
   border-radius: 10px !important; color: {TEXT} !important;
 }}
-.stSlider [data-baseweb="slider"] {{ padding: 8px 0 !important; }}
 .stRadio > div > div > label, .stCheckbox > label {{
-  color: {TEXT} !important; font-size: 0.87rem !important; padding: 4px 0 !important;
+  color: {TEXT} !important; font-size: 0.86rem !important; padding: 3px 0 !important;
 }}
 .stMultiSelect [data-baseweb="tag"] {{
-  background: {PRIMARY}30 !important; color: {INFO} !important;
+  background: {PRIMARY}25 !important; color: {INFO} !important;
 }}
 
 /* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"] {{
   background: {CARD} !important; border-radius: 12px !important;
-  padding: 4px !important; border: 1px solid {BORDER} !important; gap: 4px !important;
+  padding: 4px !important; border: 1px solid {BORDER} !important; gap: 3px !important;
 }}
 .stTabs [data-baseweb="tab"] {{
   background: transparent !important; border-radius: 9px !important;
-  color: #CBD5E1 !important; font-weight: 500 !important;
-  padding: 8px 18px !important; font-size: 0.85rem !important; border: none !important;
+  color: {MUTED} !important; font-weight: 500 !important;
+  padding: 8px 18px !important; font-size: 0.84rem !important; border: none !important;
+  transition: color 0.15s !important;
 }}
 .stTabs [aria-selected="true"] {{
-  background: {PRIMARY} !important; color: {TEXT} !important; font-weight: 700 !important;
+  background: {PRIMARY} !important; color: #fff !important; font-weight: 700 !important;
 }}
 
 /* ── Dataframes ── */
-.stDataFrame {{ border-radius: 12px !important; overflow: hidden !important; }}
-[data-testid="stDataFrameResizable"] {{ border-radius: 12px !important; }}
+.stDataFrame {{ border-radius: 14px !important; overflow: hidden !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important; }}
+[data-testid="stDataFrameResizable"] {{ border-radius: 14px !important; }}
 .stDataFrame thead tr th {{
-  background: {SIDEBAR} !important; color: {TEXT} !important;
-  font-weight: 700 !important; font-size: 0.8rem !important;
-  text-transform: uppercase !important; letter-spacing: 0.8px !important;
-  padding: 10px 14px !important;
+  background: #0A1220 !important; color: {TEXT} !important;
+  font-weight: 700 !important; font-size: 0.75rem !important;
+  text-transform: uppercase !important; letter-spacing: 1px !important;
+  padding: 11px 14px !important; border-bottom: 1px solid {BORDER} !important;
 }}
 .stDataFrame tbody tr td {{
   background: {CARD} !important; color: {TEXT} !important;
-  font-size: 0.85rem !important; padding: 8px 14px !important;
+  font-size: 0.84rem !important; padding: 9px 14px !important;
   border-bottom: 1px solid {BORDER} !important;
 }}
-.stDataFrame tbody tr:hover td {{ background: {BORDER}80 !important; }}
+.stDataFrame tbody tr:hover td {{ background: #14213A !important; }}
 
 /* ── Expander ── */
 .streamlit-expanderHeader {{
   background: {CARD} !important; border: 1px solid {BORDER} !important;
-  border-radius: 10px !important; padding: 12px 18px !important;
-  color: {TEXT} !important; font-weight: 600 !important; font-size: 0.88rem !important;
+  border-radius: 12px !important; padding: 13px 18px !important;
+  color: {TEXT} !important; font-weight: 600 !important; font-size: 0.87rem !important;
+  transition: border-color 0.15s !important;
 }}
+.streamlit-expanderHeader:hover {{ border-color: {PRIMARY}60 !important; }}
 .streamlit-expanderContent {{
   background: {BG} !important; border: 1px solid {BORDER} !important;
-  border-top: none !important; border-radius: 0 0 10px 10px !important;
-  padding: 16px !important;
+  border-top: none !important; border-radius: 0 0 12px 12px !important;
+  padding: 18px !important;
 }}
 
-/* ── Alerts ── */
-.stSuccess > div {{ background: {SUCCESS}15 !important; border: 1px solid {SUCCESS}40 !important;
+/* ── Alert banners ── */
+.stSuccess > div {{ background: {SUCCESS}12 !important; border: 1px solid {SUCCESS}35 !important;
   border-radius: 10px !important; color: {TEXT} !important; }}
-.stWarning > div {{ background: {WARN}15 !important; border: 1px solid {WARN}40 !important;
+.stWarning > div {{ background: {WARN}12 !important; border: 1px solid {WARN}35 !important;
   border-radius: 10px !important; color: {TEXT} !important; }}
-.stError > div {{ background: {CRIT}15 !important; border: 1px solid {CRIT}40 !important;
+.stError > div {{ background: {CRIT}12 !important; border: 1px solid {CRIT}35 !important;
   border-radius: 10px !important; color: {TEXT} !important; }}
-.stInfo > div {{ background: {INFO}15 !important; border: 1px solid {INFO}40 !important;
+.stInfo > div {{ background: {INFO}12 !important; border: 1px solid {INFO}35 !important;
   border-radius: 10px !important; color: {TEXT} !important; }}
 
 /* ── Progress bar ── */
@@ -230,21 +240,85 @@ div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div {{
 .stProgress > div {{ background: {BORDER} !important; border-radius: 4px !important; }}
 
 /* ── Divider ── */
-hr {{ border-color: {BORDER} !important; margin: 20px 0 !important; }}
+hr {{ border-color: {BORDER} !important; margin: 24px 0 !important; opacity: 0.6 !important; }}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
 ::-webkit-scrollbar-track {{ background: {BG}; }}
-::-webkit-scrollbar-thumb {{ background: {BORDER}; border-radius: 3px; }}
+::-webkit-scrollbar-thumb {{ background: #1E2F4D; border-radius: 3px; }}
 ::-webkit-scrollbar-thumb:hover {{ background: {PRIMARY}; }}
-
-/* ── Tooltip ── */
-[data-baseweb="tooltip"] {{ font-family: 'Inter', sans-serif !important; }}
 
 /* ── Hide Streamlit chrome ── */
 #MainMenu, footer, header {{ visibility: hidden !important; height: 0 !important; }}
 .viewerBadge_container__1QSob {{ display: none !important; }}
 [data-testid="stToolbar"] {{ display: none !important; }}
+
+/* ── Custom component hover transitions ── */
+.cs-card {{
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}}
+.cs-card:hover {{
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+}}
+
+/* ── Detection module intro cards ── */
+.det-module-card {{
+  background: linear-gradient(135deg, #0E1729 0%, #0A1525 100%);
+  border: 1px solid {BORDER};
+  border-radius: 16px;
+  padding: 28px 28px 22px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  overflow: hidden;
+  position: relative;
+}}
+.det-module-card::before {{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+}}
+
+/* ── Navigation active glow ── */
+.nav-active-item {{
+  background: rgba(37,99,235,0.12) !important;
+  border-left: 3px solid {PRIMARY} !important;
+}}
+
+/* ── Hero section ── */
+.cs-hero {{
+  background: linear-gradient(135deg, #0E1729 0%, #060D18 60%, #0A1220 100%);
+  border: 1px solid {BORDER};
+  border-radius: 20px;
+  padding: 36px 40px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}}
+.cs-hero::after {{
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}}
+
+/* ── Status badges ── */
+.cs-badge {{
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -478,28 +552,42 @@ def card_wrap(html: str, border_color: str = "", extra_style: str = "") -> str:
 
 
 def section_hdr(icon: str, title: str, sub: str = "") -> None:
-    s = f"<div style='color:#CBD5E1;font-size:0.84rem;margin-top:3px'>{sub}</div>" if sub else ""
+    sub_html = f"<div style='color:{MUTED};font-size:0.83rem;margin-top:4px;font-weight:400'>{sub}</div>" if sub else ""
     st.markdown(f"""
-    <div style='margin:20px 0 18px;display:flex;align-items:center;gap:12px'>
-      <span style='font-size:1.4rem;line-height:1'>{icon}</span>
-      <div><div style='font-size:1.1rem;font-weight:700;color:{TEXT}'>{title}</div>{s}</div>
+    <div style='margin:24px 0 20px;display:flex;align-items:center;gap:14px;
+                padding-bottom:16px;border-bottom:1px solid {BORDER}'>
+      <div style='background:linear-gradient(135deg,{PRIMARY}25,{INFO}15);
+                  border-radius:12px;width:42px;height:42px;display:flex;
+                  align-items:center;justify-content:center;font-size:1.25rem;
+                  flex-shrink:0;border:1px solid {PRIMARY}30'>
+        {icon}</div>
+      <div>
+        <div style='font-size:1.15rem;font-weight:700;color:{TEXT};letter-spacing:-0.2px'>{title}</div>
+        {sub_html}
+      </div>
     </div>""", unsafe_allow_html=True)
 
 
 def kpi_card(icon: str, label: str, value: str, color: str = TEXT,
              sub: str = "") -> str:
-    sub_html = f"<div style='color:#CBD5E1;font-size:0.74rem;margin-top:4px'>{sub}</div>" if sub else ""
+    sub_html = f"<div style='color:{MUTED};font-size:0.72rem;margin-top:6px;line-height:1.4'>{sub}</div>" if sub else ""
     return f"""
-    <div style='background:{CARD};border-radius:14px;border:1px solid {BORDER};
-         padding:20px 18px;box-shadow:0 2px 12px rgba(0,0,0,0.35);
-         transition:transform 0.18s,box-shadow 0.18s;height:100%'>
-      <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px'>
-        <span style='font-size:1.3rem;background:{color}18;border-radius:8px;
-                     padding:6px;line-height:1'>{icon}</span>
-        <span style='color:#CBD5E1;font-size:0.72rem;font-weight:700;
-                     text-transform:uppercase;letter-spacing:1px'>{label}</span>
+    <div style='background:{CARD};border-radius:16px;border:1px solid {BORDER};
+         padding:22px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.45);
+         transition:transform 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;
+         height:100%;cursor:default'
+         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(37,99,235,0.18)';this.style.borderColor='{PRIMARY}70'"
+         onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(0,0,0,0.45)';this.style.borderColor='{BORDER}'">
+      <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px'>
+        <div style='font-size:1.1rem;background:{color}18;border-radius:10px;
+                    width:36px;height:36px;display:flex;align-items:center;
+                    justify-content:center;flex-shrink:0;border:1px solid {color}20'>
+          {icon}</div>
+        <span style='color:{MUTED};font-size:0.68rem;font-weight:700;
+                     text-transform:uppercase;letter-spacing:1.2px;line-height:1.3'>{label}</span>
       </div>
-      <div style='color:{color};font-size:1.9rem;font-weight:800;line-height:1'>{value}</div>
+      <div style='color:{color};font-size:1.8rem;font-weight:800;line-height:1;
+                  letter-spacing:-0.5px'>{value}</div>
       {sub_html}
     </div>"""
 
@@ -709,33 +797,33 @@ api_ok = api_health()
 S      = stats()
 
 st.markdown(f"""
-<div style='background:linear-gradient(135deg,{SIDEBAR},{BG});
-     border-bottom:1px solid {BORDER};padding:16px 32px 14px;
-     margin:0 -2rem 0;position:sticky;top:0;z-index:100'>
+<div style='background:{SIDEBAR};border-bottom:1px solid {BORDER};
+     padding:14px 32px 13px;margin:0 -2rem 0;position:sticky;top:0;z-index:100;
+     backdrop-filter:blur(12px);'>
   <div style='display:flex;justify-content:space-between;align-items:center'>
-    <div style='display:flex;align-items:center;gap:16px'>
-      <div style='background:linear-gradient(135deg,{PRIMARY},{INFO});border-radius:12px;
-                  padding:10px;font-size:1.4rem;line-height:1'>🛡️</div>
+    <div style='display:flex;align-items:center;gap:14px'>
+      <div style='background:linear-gradient(135deg,{PRIMARY},{ACCENT});border-radius:10px;
+                  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+                  font-size:1.2rem;flex-shrink:0;box-shadow:0 4px 12px {PRIMARY}40'>🛡️</div>
       <div>
-        <div style='font-size:1.05rem;font-weight:900;color:{TEXT};letter-spacing:-0.3px;
-                    line-height:1.2'>Adaptive Explainable AI for Cyber Threat Detection</div>
-        <div style='font-size:0.73rem;color:#CBD5E1;font-weight:500;margin-top:2px'>
-          Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
-          Designed with requirements engineering, software testing, and explainability principles &nbsp;·&nbsp; B.Tech Capstone 2026-2027</div>
+        <div style='font-size:0.98rem;font-weight:800;color:{TEXT};letter-spacing:-0.2px;
+                    line-height:1.2'>CyberShield AI</div>
+        <div style='font-size:0.68rem;color:{MUTED};font-weight:400;margin-top:1px'>
+          Adaptive Explainable Multi-Source Cyber Threat Detection &nbsp;·&nbsp; B.Tech Capstone 2026–2027</div>
       </div>
     </div>
-    <div style='display:flex;align-items:center;gap:16px'>
+    <div style='display:flex;align-items:center;gap:20px'>
       <div style='text-align:right'>
-        <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end'>
+        <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:2px'>
           <div style='width:7px;height:7px;border-radius:50%;
                       background:{"#22C55E" if api_ok else "#F59E0B"};
-                      box-shadow:0 0 6px {"#22C55E" if api_ok else "#F59E0B"}'></div>
-          <span style='color:{TEXT};font-size:0.78rem;font-weight:600'>
+                      box-shadow:0 0 8px {"#22C55E88" if api_ok else "#F59E0B88"}'></div>
+          <span style='color:{TEXT};font-size:0.75rem;font-weight:600'>
             {"API Online" if api_ok else "API Waking Up"}</span>
         </div>
-        <div style='color:{MUTED};font-size:0.68rem;margin-top:2px;
-                    font-family:"JetBrains Mono",monospace'>
-          {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%Y-%m-%d %H:%M:%S")} IST</div>
+        <div style='color:{MUTED};font-size:0.64rem;
+                    font-family:"JetBrains Mono",monospace;letter-spacing:0.3px'>
+          {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d %b %Y · %H:%M:%S")} IST</div>
       </div>
     </div>
   </div>
@@ -746,39 +834,47 @@ st.markdown(f"""
 # SIDEBAR NAVIGATION
 # ══════════════════════════════════════════════════════════════════
 with st.sidebar:
+    # ── Brand ──────────────────────────────────────────────────────
     st.markdown(f"""
-    <div style='padding:20px 18px 16px;border-bottom:1px solid {BORDER}'>
-      <div style='color:{TEXT};font-size:0.9rem;font-weight:800;margin-bottom:2px'>
-        CyberShield AI</div>
-      <div style='color:{MUTED};font-size:0.65rem;font-weight:500'>
-        SOC Platform &nbsp;·&nbsp; v6.0 Final</div>
+    <div style='padding:22px 20px 18px;border-bottom:1px solid {BORDER}'>
+      <div style='display:flex;align-items:center;gap:10px;margin-bottom:2px'>
+        <div style='background:linear-gradient(135deg,{PRIMARY},{ACCENT});border-radius:8px;
+                    width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+                    font-size:1rem;flex-shrink:0'>🛡️</div>
+        <div>
+          <div style='color:{TEXT};font-size:0.92rem;font-weight:800;line-height:1.2'>CyberShield AI</div>
+          <div style='color:{MUTED};font-size:0.6rem;font-weight:500;letter-spacing:0.5px'>
+            SOC Platform · v6.0</div>
+        </div>
+      </div>
     </div>""", unsafe_allow_html=True)
 
     NAV = {
-        "🏠 Overview":    [("📊","Dashboard")],
-        "🔍 Detection":   [("📧","Phishing"),("🔗","URL Analyser"),
-                           ("👤","Login Monitor"),("🌐","Network")],
-        "🔀 Analysis":    [("⚡","Threat Fusion"),("⏱","Timeline")],
-        "📋 Operations":  [("📋","Reports"),("📊","Analytics"),("🎮","Simulation")],
-        "🔬 Research":    [("🏆","Model Performance"),("📚","Dataset Info"),
-                           ("⚙","System Workflow"),("ℹ","About")],
+        "Overview":    [("📊","Dashboard")],
+        "Detection":   [("📧","Phishing"),("🔗","URL Analyser"),
+                        ("👤","Login Monitor"),("🌐","Network")],
+        "Analysis":    [("⚡","Threat Fusion"),("⏱","Timeline")],
+        "Operations":  [("📋","Reports"),("📊","Analytics"),("🎮","Simulation")],
+        "Research":    [("🏆","Model Performance"),("📚","Dataset Info"),
+                        ("⚙","System Workflow"),("ℹ","About")],
     }
     for grp, items in NAV.items():
         st.markdown(f"""
-        <div style='padding:10px 18px 3px;color:{MUTED};font-size:0.62rem;
-                    text-transform:uppercase;letter-spacing:1.2px;font-weight:700'>
+        <div style='padding:12px 20px 4px;color:{MUTED};font-size:0.6rem;
+                    text-transform:uppercase;letter-spacing:1.5px;font-weight:700'>
           {grp}</div>""", unsafe_allow_html=True)
         for ico, name in items:
             active = st.session_state.page == name
-            ab = f"{PRIMARY}20" if active else "transparent"
-            ab2 = PRIMARY if active else "transparent"
-            tc  = PRIMARY if active else TEXT
-            fw  = "700" if active else "400"
+            bg_c  = f"{PRIMARY}15" if active else "transparent"
+            bl_c  = PRIMARY if active else "transparent"
+            tc    = PRIMARY if active else TEXT
+            fw    = "600" if active else "400"
             st.markdown(f"""
-            <div style='padding:1px 10px'>
-              <div style='background:{ab};border-left:3px solid {ab2};
-                          border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:2px'>
-                <span style='color:{tc};font-weight:{fw};font-size:0.86rem'>
+            <div style='padding:2px 10px 2px 16px'>
+              <div style='background:{bg_c};border-left:2px solid {bl_c};
+                          border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:1px;
+                          transition:background 0.15s'>
+                <span style='color:{tc};font-weight:{fw};font-size:0.84rem'>
                   {ico}&nbsp;&nbsp;{name}</span>
               </div>
             </div>""", unsafe_allow_html=True)
@@ -945,6 +1041,115 @@ def _do_detection(endpoint, payload, scan_type, is_simulated=False):
 if page == "Dashboard":
     st.markdown(f"<div style='height:20px'></div>", unsafe_allow_html=True)
 
+    # ── Hero Section ──────────────────────────────────────────────
+    st.markdown(f"""
+    <div class='cs-hero'>
+      <div style='display:flex;justify-content:space-between;align-items:center;
+                  flex-wrap:wrap;gap:20px'>
+        <div style='flex:1;min-width:260px'>
+          <div style='display:inline-flex;align-items:center;gap:8px;
+                      background:{PRIMARY}18;border:1px solid {PRIMARY}30;
+                      border-radius:20px;padding:4px 14px;margin-bottom:16px'>
+            <div style='width:7px;height:7px;border-radius:50%;background:{SUCCESS};
+                        box-shadow:0 0 6px {SUCCESS}80'></div>
+            <span style='color:{INFO};font-size:0.72rem;font-weight:600;
+                         letter-spacing:0.5px'>LIVE MONITORING</span>
+          </div>
+          <div style='font-size:1.9rem;font-weight:800;color:{TEXT};
+                      letter-spacing:-0.8px;line-height:1.15;margin-bottom:10px'>
+            Adaptive Cyber<br>
+            <span style='background:linear-gradient(90deg,{PRIMARY},{ACCENT});
+                         -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                         background-clip:text'>Threat Intelligence</span>
+          </div>
+          <div style='color:{MUTED};font-size:0.88rem;line-height:1.6;
+                      max-width:420px;margin-bottom:20px'>
+            Monitor, detect and understand cyber threats across email, URLs,
+            login behaviour and network traffic — powered by DistilBERT,
+            XGBoost and Isolation Forest with SHAP-LIME explainability.
+          </div>
+          <div style='display:flex;gap:10px;flex-wrap:wrap'>
+            <div style='background:{PRIMARY};color:#fff;padding:9px 20px;
+                        border-radius:10px;font-size:0.82rem;font-weight:600;
+                        cursor:pointer;box-shadow:0 4px 12px {PRIMARY}40;
+                        display:inline-flex;align-items:center;gap:6px'>
+              🔍 Run Detection
+            </div>
+            <div style='background:transparent;color:{INFO};padding:9px 20px;
+                        border-radius:10px;font-size:0.82rem;font-weight:600;
+                        border:1px solid {INFO}40;cursor:pointer;
+                        display:inline-flex;align-items:center;gap:6px'>
+              ⏱ View Timeline
+            </div>
+            <div style='background:transparent;color:{MUTED};padding:9px 20px;
+                        border-radius:10px;font-size:0.82rem;font-weight:500;
+                        border:1px solid {BORDER};cursor:pointer;
+                        display:inline-flex;align-items:center;gap:6px'>
+              📋 Reports
+            </div>
+          </div>
+        </div>
+        <div style='flex-shrink:0;display:flex;flex-direction:column;gap:10px;
+                    align-items:flex-end'>
+          <svg width="200" height="160" viewBox="0 0 200 160" fill="none"
+               xmlns="http://www.w3.org/2000/svg" style="opacity:0.85">
+            <!-- Shield outline -->
+            <path d="M100 12 L168 40 L168 90 Q168 130 100 152 Q32 130 32 90 L32 40 Z"
+                  fill="none" stroke="{PRIMARY}60" stroke-width="1.5"/>
+            <path d="M100 22 L158 46 L158 90 Q158 124 100 143 Q42 124 42 90 L42 46 Z"
+                  fill="{PRIMARY}10" stroke="{PRIMARY}40" stroke-width="1"/>
+            <!-- Cross / check -->
+            <circle cx="100" cy="86" r="22" fill="{PRIMARY}20" stroke="{PRIMARY}60" stroke-width="1.5"/>
+            <path d="M88 86 L97 95 L114 78" stroke="{SUCCESS}" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Orbit rings -->
+            <ellipse cx="100" cy="86" rx="38" ry="38" fill="none"
+                     stroke="{INFO}25" stroke-width="1" stroke-dasharray="4 3"/>
+            <ellipse cx="100" cy="86" rx="52" ry="52" fill="none"
+                     stroke="{PRIMARY}18" stroke-width="1" stroke-dasharray="6 4"/>
+            <!-- Dots on orbit -->
+            <circle cx="138" cy="86" r="4" fill="{CRIT}" opacity="0.8"/>
+            <circle cx="62" cy="86" r="3" fill="{WARN}" opacity="0.7"/>
+            <circle cx="100" cy="48" r="3" fill="{INFO}" opacity="0.7"/>
+            <circle cx="100" cy="124" r="2.5" fill="{SUCCESS}" opacity="0.6"/>
+            <!-- Corner brackets -->
+            <path d="M16 16 L16 30 M16 16 L30 16" stroke="{PRIMARY}50" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <path d="M184 16 L184 30 M184 16 L170 16" stroke="{PRIMARY}50" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <path d="M16 144 L16 130 M16 144 L30 144" stroke="{PRIMARY}50" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <path d="M184 144 L184 130 M184 144 L170 144" stroke="{PRIMARY}50" stroke-width="1.5"
+                  stroke-linecap="round"/>
+            <!-- Scan line animation hint -->
+            <line x1="32" y1="72" x2="168" y2="72" stroke="{INFO}30" stroke-width="1"
+                  stroke-dasharray="3 4"/>
+          </svg>
+          <div style='display:flex;gap:8px'>
+            <div style='background:{CARD};border:1px solid {BORDER};border-radius:10px;
+                        padding:10px 14px;text-align:center;min-width:70px'>
+              <div style='color:{SUCCESS};font-size:1.1rem;font-weight:800'>4</div>
+              <div style='color:{MUTED};font-size:0.6rem;font-weight:600;
+                          text-transform:uppercase;letter-spacing:0.8px'>Detectors</div>
+            </div>
+            <div style='background:{CARD};border:1px solid {BORDER};border-radius:10px;
+                        padding:10px 14px;text-align:center;min-width:70px'>
+              <div style='color:{PRIMARY};font-size:1.1rem;font-weight:800'>98%</div>
+              <div style='color:{MUTED};font-size:0.6rem;font-weight:600;
+                          text-transform:uppercase;letter-spacing:0.8px'>Accuracy</div>
+            </div>
+            <div style='background:{CARD};border:1px solid {BORDER};border-radius:10px;
+                        padding:10px 14px;text-align:center;min-width:70px'>
+              <div style='color:{WARN};font-size:1.1rem;font-weight:800'>XAI</div>
+              <div style='color:{MUTED};font-size:0.6rem;font-weight:600;
+                          text-transform:uppercase;letter-spacing:0.8px'>SHAP+LIME</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     # ── KPI Row (6 cards) ─────────────────────────────────────────
     k = st.columns(6)
     has_scans = S["total"] > 0
@@ -1001,8 +1206,12 @@ if page == "Dashboard":
     df = get_df()
 
     with c1:
-        st.markdown(f"<h3 style='margin-bottom:12px'>📅 Threat Activity Timeline</h3>",
-                    unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style='font-size:0.78rem;font-weight:700;color:{MUTED};text-transform:uppercase;
+                    letter-spacing:1.2px;margin-bottom:10px'>Threat Activity Timeline
+          <span style='color:{INFO};margin-left:8px;font-size:0.65rem;font-weight:600;
+                       background:{INFO}15;padding:2px 8px;border-radius:10px;letter-spacing:0'>
+            IST</span></div>""", unsafe_allow_html=True)
         if df.empty:
             st.markdown(f"""
             <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
@@ -1074,7 +1283,9 @@ if page == "Dashboard":
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with c2:
-        st.markdown(f"<h3 style='margin-bottom:12px'>🎯 Attack Distribution</h3>",
+        st.markdown(f"""
+        <div style='font-size:0.78rem;font-weight:700;color:{MUTED};text-transform:uppercase;
+                    letter-spacing:1.2px;margin-bottom:10px'>Attack Distribution</div>""",
                     unsafe_allow_html=True)
         if df.empty:
             st.markdown(f"""
@@ -1120,8 +1331,13 @@ if page == "Dashboard":
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
     # ── Recent Alerts — full width ─────────────────────────────────
-    st.markdown(f"<h3 style='margin-bottom:12px'>🚨 Recent Alerts</h3>",
-                unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style='display:flex;align-items:center;justify-content:space-between;
+                margin:4px 0 12px'>
+      <div style='font-size:0.78rem;font-weight:700;color:{MUTED};text-transform:uppercase;
+                  letter-spacing:1.2px'>Recent Alerts</div>
+      <div style='color:{MUTED};font-size:0.7rem'>Last {min(len(st.session_state.scan_db),6)} events</div>
+    </div>""", unsafe_allow_html=True)
     db = st.session_state.scan_db
     if db:
         render_timeline(db[:6], max_rows=6)
@@ -1144,11 +1360,11 @@ if page == "Dashboard":
     rt_col, ss_col = st.columns([3, 2])
 
     with rt_col:
-        st.markdown(f"<h3 style='margin-bottom:4px'>📊 Risk Score Trend</h3>",
-                    unsafe_allow_html=True)
-        st.markdown(f"<div style='color:{MUTED};font-size:0.75rem;margin-bottom:10px'>"
-                    f"Risk score (0–100) per scan, colour-coded by risk level. "
-                    f"Showing last 20 scans (oldest → newest).</div>",
+        st.markdown(f"""
+        <div style='font-size:0.78rem;font-weight:700;color:{MUTED};text-transform:uppercase;
+                    letter-spacing:1.2px;margin-bottom:4px'>Risk Score Trend</div>
+        <div style='color:{MUTED};font-size:0.7rem;margin-bottom:10px'>
+          Risk score per scan (0–100), colour-coded by level · last 20 scans oldest→newest</div>""",
                     unsafe_allow_html=True)
         db = st.session_state.scan_db
         if db and len(db) >= 2:
@@ -1215,7 +1431,9 @@ if page == "Dashboard":
             </div>""", unsafe_allow_html=True)
 
     with ss_col:
-        st.markdown(f"<h3 style='margin-bottom:10px'>🖥️ System Status</h3>",
+        st.markdown(f"""
+        <div style='font-size:0.78rem;font-weight:700;color:{MUTED};text-transform:uppercase;
+                    letter-spacing:1.2px;margin-bottom:10px'>System Status</div>""",
                     unsafe_allow_html=True)
         for name, status, ok in [
             ("AI Detection Engine", "Online",       True),
@@ -1226,14 +1444,18 @@ if page == "Dashboard":
             ("Simulation Engine",   "Ready",         True),
         ]:
             sc = SUCCESS if ok else WARN
+            dot = "🟢" if ok else "🟡"
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:9px;padding:9px 13px;
+            <div style='background:{CARD};border-radius:10px;padding:8px 12px;
                         margin-bottom:5px;border:1px solid {BORDER};
-                        display:flex;justify-content:space-between;align-items:center'>
-              <span style='color:{TEXT};font-size:0.82rem'>{name}</span>
-              <span style='color:{sc};font-size:0.7rem;font-weight:700;
-                           background:{sc}15;padding:2px 8px;border-radius:8px;
-                           border:1px solid {sc}35'>{status}</span>
+                        display:flex;justify-content:space-between;align-items:center;
+                        transition:border-color 0.15s'>
+              <span style='color:{TEXT};font-size:0.8rem;font-weight:500'>{name}</span>
+              <div style='display:flex;align-items:center;gap:5px'>
+                <div style='width:6px;height:6px;border-radius:50%;background:{sc};
+                            box-shadow:0 0 5px {sc}70'></div>
+                <span style='color:{sc};font-size:0.68rem;font-weight:700'>{status}</span>
+              </div>
             </div>""", unsafe_allow_html=True)
 
 
@@ -1242,16 +1464,46 @@ if page == "Dashboard":
 # ══════════════════════════════════════════════════════════════════
 elif page == "Phishing":
     if not _api_status_banner(): st.stop()
-    section_hdr("📧","Phishing Email Detector",
-                "6-signal NLP ensemble · Urgency · Threat language · Brand impersonation")
+    # ── Visual intro card ─────────────────────────────────────────
     st.markdown(f"""
-    <div style='background:{INFO}10;border:1px solid {INFO}30;border-radius:12px;
-         padding:14px 18px;margin-bottom:20px;border-left:3px solid {INFO}'>
-      <span style='color:{INFO};font-weight:700;font-size:0.83rem'>💡 Tip: </span>
-      <span style='color:{MUTED};font-size:0.82rem'>
-        Include subject line and full email body. The AI analyses urgency, threats,
-        social engineering, brand impersonation, and suspicious URLs simultaneously.</span>
+    <div style='background:{CARD};border:1px solid {BORDER};border-radius:16px;
+         padding:26px 30px 22px;margin-bottom:22px;
+         box-shadow:0 4px 20px rgba(0,0,0,0.4)'>
+      <div style='display:flex;align-items:flex-start;gap:16px'>
+        <div style='background:{CRIT}18;border:1px solid {CRIT}30;border-radius:12px;
+                    width:48px;height:48px;display:flex;align-items:center;
+                    justify-content:center;font-size:1.4rem;flex-shrink:0'>📧</div>
+        <div>
+          <div style='font-size:1.1rem;font-weight:700;color:{TEXT};margin-bottom:5px'>
+            Phishing Email Detection</div>
+          <div style='color:{MUTED};font-size:0.84rem;line-height:1.6;max-width:560px'>
+            Detect suspicious phishing messages using transformer-based NLP.
+            Analyses urgency, brand impersonation, social engineering and credential harvesting.</div>
+          <div style='display:flex;gap:7px;margin-top:12px;flex-wrap:wrap'>
+            <span style='background:{CRIT}15;color:{CRIT};border:1px solid {CRIT}30;
+                         border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:600'>
+              DistilBERT NLP</span>
+            <span style='background:{INFO}15;color:{INFO};border:1px solid {INFO}30;
+                         border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:600'>
+              6-Signal Ensemble</span>
+            <span style='background:{SUCCESS}15;color:{SUCCESS};border:1px solid {SUCCESS}30;
+                         border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:600'>
+              97.67% Accuracy</span>
+          </div>
+        </div>
+      </div>
     </div>""", unsafe_allow_html=True)
+
+    with st.form("phi_form"):
+        email_text = st.text_area("Email Content (subject + body)", height=190,
+            placeholder="Subject: Urgent: Verify Your Bank Account Immediately\n\n"
+                        "Dear Customer,\nWe detected suspicious activity on your account.\n"
+                        "Please verify immediately.\n"
+                        "Failure to verify within 24 hours will result in suspension.\n"
+                        "http://secure-hdfc-verification-login.com")
+        c1,c2 = st.columns([1,3])
+        with c1:
+            sub = st.form_submit_button("🔍 Analyse Email", use_container_width=True)
     with st.form("phi_form"):
         email_text = st.text_area("📨 Email Content (subject + body)", height=190,
             placeholder="Subject: Urgent: Verify Your Bank Account Immediately\n\n"
@@ -1292,21 +1544,35 @@ elif page == "URL Analyser":
     if not _api_status_banner(): st.stop()
     section_hdr("🔗","Malicious URL Analyser",
                 "25-feature extraction · Trusted domain whitelist · Shannon entropy analysis")
+    # ── Visual intro card ─────────────────────────────────────────
     st.markdown(f"""
-    <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px'>
-      <div style='background:{SUCCESS}10;border:1px solid {SUCCESS}30;
-                  border-radius:10px;padding:12px 14px'>
-        <div style='color:{SUCCESS};font-weight:700;font-size:0.8rem;margin-bottom:3px'>
-          ✅ Safe Examples</div>
-        <code style='color:{MUTED};font-size:0.76rem'>
-          https://google.com · https://github.com</code>
+    <div style='background:{CARD};border:1px solid {BORDER};border-radius:16px;
+         padding:20px 24px;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,0.3)'>
+      <div style='display:flex;align-items:center;gap:14px;margin-bottom:14px'>
+        <div style='background:{HIGH}18;border:1px solid {HIGH}30;border-radius:10px;
+                    width:42px;height:42px;display:flex;align-items:center;
+                    justify-content:center;font-size:1.2rem;flex-shrink:0'>🔗</div>
+        <div>
+          <div style='font-size:0.95rem;font-weight:700;color:{TEXT}'>Malicious URL Detection</div>
+          <div style='color:{MUTED};font-size:0.78rem;margin-top:2px'>
+            Identify malicious URLs using 25-feature ML analysis · XGBoost · 98.21% accuracy</div>
+        </div>
       </div>
-      <div style='background:{CRIT}10;border:1px solid {CRIT}30;
-                  border-radius:10px;padding:12px 14px'>
-        <div style='color:{CRIT};font-weight:700;font-size:0.8rem;margin-bottom:3px'>
-          ⚠️ Phishing Examples</div>
-        <code style='color:{MUTED};font-size:0.76rem'>
-          http://paypal-verify.xyz · http://192.168.1.1/admin</code>
+      <div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>
+        <div style='background:{SUCCESS}10;border:1px solid {SUCCESS}25;
+                    border-radius:10px;padding:11px 14px'>
+          <div style='color:{SUCCESS};font-weight:600;font-size:0.75rem;margin-bottom:4px'>
+            ✓ Safe examples</div>
+          <code style='color:{MUTED};font-size:0.74rem'>
+            https://google.com · https://github.com</code>
+        </div>
+        <div style='background:{CRIT}10;border:1px solid {CRIT}25;
+                    border-radius:10px;padding:11px 14px'>
+          <div style='color:{CRIT};font-weight:600;font-size:0.75rem;margin-bottom:4px'>
+            ⚠ Suspicious examples</div>
+          <code style='color:{MUTED};font-size:0.74rem'>
+            http://paypal-verify.xyz · http://192.168.1.1/admin</code>
+        </div>
       </div>
     </div>""", unsafe_allow_html=True)
     with st.form("url_form"):
@@ -1348,6 +1614,20 @@ elif page == "Login Monitor":
     if not _api_status_banner(): st.stop()
     section_hdr("👤","Suspicious Login Monitor",
                 "Context-aware anomaly scoring · Human-readable inputs")
+    st.markdown(f"""
+    <div style='background:{CARD};border:1px solid {BORDER};border-radius:14px;
+         padding:16px 20px;margin-bottom:18px;border-left:3px solid {WARN};
+         box-shadow:0 2px 12px rgba(0,0,0,0.3)'>
+      <div style='display:flex;align-items:center;gap:10px'>
+        <div style='background:{WARN}18;border-radius:8px;width:36px;height:36px;
+                    display:flex;align-items:center;justify-content:center;font-size:1.1rem'>👤</div>
+        <div>
+          <div style='font-size:0.9rem;font-weight:600;color:{TEXT}'>Login Behaviour Monitoring</div>
+          <div style='color:{MUTED};font-size:0.78rem;margin-top:2px'>
+            Detect account takeover and anomalous login patterns · Isolation Forest · 95.67% accuracy</div>
+        </div>
+      </div>
+    </div>""", unsafe_allow_html=True)
     with st.form("login_form"):
         c1,c2 = st.columns(2)
         with c1:
@@ -1408,6 +1688,20 @@ elif page == "Network":
     if not _api_status_banner(): st.stop()
     section_hdr("🌐","Network Anomaly Sentinel",
                 "Protocol-aware · NSL-KDD feature mapping · Real-time detection")
+    st.markdown(f"""
+    <div style='background:{CARD};border:1px solid {BORDER};border-radius:14px;
+         padding:16px 20px;margin-bottom:18px;border-left:3px solid {INFO};
+         box-shadow:0 2px 12px rgba(0,0,0,0.3)'>
+      <div style='display:flex;align-items:center;gap:10px'>
+        <div style='background:{INFO}18;border-radius:8px;width:36px;height:36px;
+                    display:flex;align-items:center;justify-content:center;font-size:1.1rem'>🌐</div>
+        <div>
+          <div style='font-size:0.9rem;font-weight:600;color:{TEXT}'>Network Intrusion Detection</div>
+          <div style='color:{MUTED};font-size:0.78rem;margin-top:2px'>
+            Identify anomalous network traffic using NSL-KDD features · XGBoost · 98.82% accuracy</div>
+        </div>
+      </div>
+    </div>""", unsafe_allow_html=True)
     with st.form("net_form"):
         c1,c2,c3 = st.columns(3)
         with c1:
@@ -1470,13 +1764,43 @@ elif page == "Threat Fusion":
     section_hdr("⚡","Adaptive Threat Fusion Engine",
                 "Confidence-weighted · Rule-based escalation · Co-occurrence amplification")
     st.markdown(f"""
-    <div style='background:{PRIMARY}10;border:1px solid {PRIMARY}30;border-radius:12px;
-         padding:14px 18px;margin-bottom:20px;border-left:3px solid {PRIMARY}'>
-      <span style='color:{PRIMARY};font-weight:700;font-size:0.83rem'>⚡ How it works: </span>
-      <span style='color:{MUTED};font-size:0.82rem'>
-        Submit any combination of inputs. Each module returns a confidence-weighted score.
-        Rule-based escalation ensures a 90%+ single-module hit floors the composite at 75%.
-        3+ simultaneous threats apply a 1.20× co-occurrence multiplier.</span>
+    <div style='background:{CARD};border:1px solid {BORDER};border-radius:16px;
+         padding:20px 24px;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,0.3)'>
+      <div style='display:flex;align-items:flex-start;gap:14px'>
+        <div style='background:{PRIMARY}20;border:1px solid {PRIMARY}35;border-radius:10px;
+                    width:42px;height:42px;display:flex;align-items:center;
+                    justify-content:center;font-size:1.2rem;flex-shrink:0'>⚡</div>
+        <div style='flex:1'>
+          <div style='font-size:0.95rem;font-weight:700;color:{TEXT};margin-bottom:6px'>
+            Multi-Source Threat Fusion</div>
+          <div style='color:{MUTED};font-size:0.82rem;line-height:1.6;margin-bottom:12px'>
+            Combine signals from multiple attack surfaces into one unified risk score.
+            Each module returns a confidence-weighted probability — the fusion engine
+            applies rule-based escalation and co-occurrence amplification.</div>
+          <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px'>
+            <div style='background:#0A1220;border:1px solid {BORDER};border-radius:9px;
+                        padding:9px 10px;text-align:center'>
+              <div style='font-size:1rem;margin-bottom:4px'>📧</div>
+              <div style='color:{MUTED};font-size:0.66rem;font-weight:600;text-transform:uppercase'>Phishing</div>
+            </div>
+            <div style='background:#0A1220;border:1px solid {BORDER};border-radius:9px;
+                        padding:9px 10px;text-align:center'>
+              <div style='font-size:1rem;margin-bottom:4px'>🔗</div>
+              <div style='color:{MUTED};font-size:0.66rem;font-weight:600;text-transform:uppercase'>URL</div>
+            </div>
+            <div style='background:#0A1220;border:1px solid {BORDER};border-radius:9px;
+                        padding:9px 10px;text-align:center'>
+              <div style='font-size:1rem;margin-bottom:4px'>👤</div>
+              <div style='color:{MUTED};font-size:0.66rem;font-weight:600;text-transform:uppercase'>Login</div>
+            </div>
+            <div style='background:#0A1220;border:1px solid {BORDER};border-radius:9px;
+                        padding:9px 10px;text-align:center'>
+              <div style='font-size:1rem;margin-bottom:4px'>🌐</div>
+              <div style='color:{MUTED};font-size:0.66rem;font-weight:600;text-transform:uppercase'>Network</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>""", unsafe_allow_html=True)
     with st.form("fus_form"):
         c1,c2 = st.columns(2)
@@ -2461,27 +2785,27 @@ elif page == "About":
 st.markdown("<div style='height:24px'></div>",unsafe_allow_html=True)
 st.markdown(f"""
 <div style='background:{SIDEBAR};border-top:1px solid {BORDER};
-     padding:20px 32px;margin:0 -2rem -3rem;'>
+     padding:18px 32px;margin:0 -2rem -3rem;'>
   <div style='display:flex;justify-content:space-between;align-items:center;
-              flex-wrap:wrap;gap:12px'>
-    <div>
-      <div style='color:{TEXT};font-weight:700;font-size:0.85rem;margin-bottom:3px'>
-        🛡️ Adaptive Explainable AI for Cyber Threat Detection</div>
-      <div style='color:{MUTED};font-size:0.72rem'>
-        Enterprise Security Operations Center Dashboard &nbsp;·&nbsp;
-        B.Tech Capstone Project &nbsp;·&nbsp; Academic Year 2026-2027</div>
+              flex-wrap:wrap;gap:10px'>
+    <div style='display:flex;align-items:center;gap:10px'>
+      <div style='background:linear-gradient(135deg,{PRIMARY},{ACCENT});border-radius:8px;
+                  width:28px;height:28px;display:flex;align-items:center;
+                  justify-content:center;font-size:0.9rem;flex-shrink:0'>🛡️</div>
+      <div>
+        <div style='color:{TEXT};font-weight:700;font-size:0.82rem'>CyberShield AI</div>
+        <div style='color:{MUTED};font-size:0.65rem;margin-top:1px'>
+          Adaptive Explainable Multi-Source Cyber Threat Detection Framework · B.Tech Capstone 2026–2027</div>
+      </div>
     </div>
-    <div style='text-align:center'>
-      <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>Tech Stack</div>
-      <div style='color:{INFO};font-size:0.72rem;font-weight:500'>
-        Python · FastAPI · Streamlit · PyTorch · DistilBERT
-        · XGBoost · Isolation Forest · SHAP · LIME · SQLite</div>
+    <div style='color:{MUTED};font-size:0.68rem;text-align:center'>
+      Python · FastAPI · Streamlit · DistilBERT · XGBoost · Isolation Forest · SHAP · LIME
     </div>
     <div style='text-align:right'>
-      <div style='color:{MUTED};font-size:0.7rem;margin-bottom:2px'>
-        Version 6.0 · Requirements Engineering · Software Testing · XAI</div>
-      <div style='color:{MUTED};font-size:0.68rem'>
-        © 2026-2027 B.Tech Capstone Project. All rights reserved.</div>
+      <div style='color:{MUTED};font-size:0.65rem'>
+        Designed with requirements engineering, software testing, and explainability principles</div>
+      <div style='color:{MUTED};font-size:0.63rem;margin-top:2px'>
+        © 2026–2027 B.Tech Capstone Project. All rights reserved.</div>
     </div>
   </div>
 </div>
