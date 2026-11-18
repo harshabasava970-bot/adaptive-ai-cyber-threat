@@ -777,8 +777,7 @@ st.markdown(f"""
         <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:2px'>
           <div style='width:7px;height:7px;border-radius:50%;
                       background:{"#10B981" if api_ok else "#F59E0B"};
-                      box-shadow:0 0 7px {"#10B98180" if api_ok else "#F59E0B80"}'''
-                      ''></div>
+                      box-shadow:0 0 7px {"#10B98180" if api_ok else "#F59E0B80"}'></div>
           <span style='background:{"rgba(16,185,129,0.15)" if api_ok else "rgba(245,158,11,0.15)"};
                        color:{"#10B981" if api_ok else "#F59E0B"};
                        border:1px solid {"rgba(16,185,129,0.3)" if api_ok else "rgba(245,158,11,0.3)"};
