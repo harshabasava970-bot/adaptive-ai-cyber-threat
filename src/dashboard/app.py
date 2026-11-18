@@ -26,23 +26,38 @@ API_BASE = os.environ.get(
     "API_BASE_URL", "https://cyber-threat-api-4gms.onrender.com"
 ).rstrip("/") + "/api/v1"
 
-# ── Design tokens — LIGHT THEME ───────────────────────────────────
-BG       = "#F7F9FC"
-CARD     = "#FFFFFF"
-SIDEBAR  = "#FFFFFF"
-BORDER   = "#E2E8F0"
-PRIMARY  = "#2563EB"
-SUCCESS  = "#16A34A"
-WARN     = "#D97706"
-CRIT     = "#DC2626"
-INFO     = "#0891B2"
-HIGH     = "#EA580C"
-TEXT     = "#0F172A"
-MUTED    = "#64748B"
-SUBTLE   = "#94A3B8"
-PURPLE   = "#7C3AED"
-ACCENT   = "#0891B2"
-# Per-module accent colors
+# ── Design tokens — Premium Cybersecurity Theme ──────────────────
+# Backgrounds
+BG       = "#F4F6F9"      # soft off-white page bg
+CARD     = "#FFFFFF"      # pure white cards
+SIDEBAR  = "#0D1B2A"      # deep midnight navy sidebar
+SIDEBAR2 = "#1A2B3C"      # slightly lighter sidebar hover
+BORDER   = "#E0E7EF"      # subtle border
+SECTION  = "#EEF2F7"      # section background tint
+
+# Brand / Accents
+PRIMARY  = "#0E7490"      # muted teal
+PRIMARY2 = "#0C6480"      # darker teal hover
+ACCENT   = "#10B981"      # emerald accent
+ACCENT2  = "#059669"      # deeper emerald
+LAVENDER = "#818CF8"      # soft lavender highlight
+NAVY     = "#0D1B2A"      # deep navy text / sidebar
+
+# Status
+SUCCESS  = "#10B981"      # emerald green
+WARN     = "#F59E0B"      # amber
+CRIT     = "#EF4444"      # red
+INFO     = "#0E7490"      # teal
+HIGH     = "#F97316"      # orange
+PURPLE   = "#818CF8"      # lavender
+
+# Text
+TEXT     = "#1A202C"      # near-black primary text
+MUTED    = "#6B7280"      # medium grey muted
+SUBTLE   = "#9CA3AF"      # lighter grey subtle
+TEXT_INV = "#F8FAFC"      # inverted text on dark bg
+
+# Per-module accents
 M_PHISH  = "#E11D48"
 M_URL    = "#0D9488"
 M_LOGIN  = "#7C3AED"
@@ -50,176 +65,248 @@ M_NET    = "#059669"
 M_FUSION = "#D97706"
 M_XAI    = "#4F46E5"
 
-RISK_CLR = {"critical":"#DC2626","high":"#EA580C","medium":"#D97706",
-            "low":"#16A34A","info":"#0891B2"}
+RISK_CLR = {"critical":"#EF4444","high":"#F97316","medium":"#F59E0B",
+            "low":"#10B981","info":"#0E7490"}
 RISK_BG  = {"critical":"#FFF1F2","high":"#FFF7ED","medium":"#FFFBEB",
             "low":"#F0FDF4","info":"#ECFEFF"}
 RISK_ICO = {"critical":"🔴","high":"🟠","medium":"🟡","low":"🟢","info":"🔵"}
 
 # ══════════════════════════════════════════════════════════════════
-# GLOBAL CSS — Complete Light Theme
+# GLOBAL CSS — Premium Cybersecurity SaaS Design
 # ══════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+/* ── Reset ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-/* Global light background */
+/* ── Root ── */
 html,body,.stApp{
-  background:#F7F9FC !important;
-  color:#0F172A !important;
-  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif !important;
+  background:#F4F6F9 !important;
+  color:#1A202C !important;
+  font-family:'Plus Jakarta Sans','Manrope',-apple-system,BlinkMacSystemFont,sans-serif !important;
   font-size:14px !important;
-  line-height:1.6 !important;
+  line-height:1.65 !important;
   -webkit-font-smoothing:antialiased;
 }
 
-/* White sidebar */
+/* ── Sidebar — deep navy ── */
 section[data-testid="stSidebar"]{
-  background:#FFFFFF !important;
-  border-right:1px solid #E2E8F0 !important;
+  background:#0D1B2A !important;
+  border-right:none !important;
+  box-shadow:4px 0 24px rgba(0,0,0,0.18) !important;
 }
 section[data-testid="stSidebar"]>div{padding:0 !important;}
 
-/* Main container */
-.block-container{padding:0 2rem 3rem 2rem !important;max-width:100% !important;}
+/* ── Main container ── */
+.block-container{padding:0 2.5rem 4rem 2.5rem !important;max-width:100% !important;}
 
-/* Typography */
-h1{font-size:1.6rem !important;font-weight:800 !important;color:#0F172A !important;letter-spacing:-0.5px !important;}
-h2{font-size:1.2rem !important;font-weight:700 !important;color:#0F172A !important;}
-h3{font-size:1rem !important;font-weight:600 !important;color:#1E293B !important;}
-h4{font-size:0.75rem !important;font-weight:700 !important;color:#64748B !important;text-transform:uppercase !important;letter-spacing:1px !important;}
-p{color:#0F172A !important;}
-label{color:#1E293B !important;font-weight:500 !important;}
+/* ── Typography ── */
+h1{font-size:1.65rem !important;font-weight:800 !important;color:#1A202C !important;letter-spacing:-0.5px !important;line-height:1.2 !important;}
+h2{font-size:1.25rem !important;font-weight:700 !important;color:#1A202C !important;}
+h3{font-size:1rem !important;font-weight:600 !important;color:#1A202C !important;}
+h4{font-size:0.75rem !important;font-weight:700 !important;color:#6B7280 !important;text-transform:uppercase !important;letter-spacing:1px !important;}
+p{color:#1A202C !important;}
+label{color:#374151 !important;font-weight:500 !important;}
+code,pre,[class*="mono"]{font-family:'JetBrains Mono',monospace !important;}
 
-/* Metric cards */
+/* ── Metric cards ── */
 div[data-testid="metric-container"]{
   background:#FFFFFF !important;
-  border:1px solid #E2E8F0 !important;
-  border-radius:16px !important;
+  border:1px solid #E0E7EF !important;
+  border-radius:14px !important;
   padding:20px !important;
-  box-shadow:0 1px 8px rgba(15,23,42,0.06) !important;
-  transition:transform 0.2s,box-shadow 0.2s !important;
+  box-shadow:0 1px 6px rgba(0,0,0,0.05),0 4px 16px rgba(0,0,0,0.04) !important;
+  transition:transform 0.2s ease,box-shadow 0.2s ease !important;
 }
 div[data-testid="metric-container"]:hover{
   transform:translateY(-2px) !important;
-  box-shadow:0 8px 24px rgba(37,99,235,0.12) !important;
-  border-color:#BFDBFE !important;
+  box-shadow:0 8px 28px rgba(14,116,144,0.14) !important;
+  border-color:#0E7490 !important;
 }
 div[data-testid="metric-container"] [data-testid="stMetricLabel"]>div{
   font-size:0.68rem !important;font-weight:700 !important;
-  color:#64748B !important;text-transform:uppercase !important;letter-spacing:1px !important;
+  color:#6B7280 !important;text-transform:uppercase !important;letter-spacing:1.1px !important;
 }
 div[data-testid="metric-container"] [data-testid="stMetricValue"]>div{
-  font-size:1.75rem !important;font-weight:800 !important;color:#0F172A !important;
+  font-size:1.75rem !important;font-weight:800 !important;color:#1A202C !important;
 }
 
-/* Buttons */
+/* ── Buttons ── */
 .stButton>button{
-  background:#2563EB !important;color:#fff !important;border:none !important;
+  background:#0E7490 !important;color:#fff !important;border:none !important;
   border-radius:10px !important;padding:10px 22px !important;font-weight:600 !important;
-  font-size:0.84rem !important;font-family:'Inter',sans-serif !important;
-  box-shadow:0 2px 8px rgba(37,99,235,0.20) !important;
+  font-size:0.84rem !important;font-family:'Plus Jakarta Sans',sans-serif !important;
+  box-shadow:0 2px 8px rgba(14,116,144,0.25) !important;
   transition:background 0.15s,transform 0.15s,box-shadow 0.15s !important;
-  width:100% !important;cursor:pointer !important;
+  width:100% !important;cursor:pointer !important;letter-spacing:0.1px !important;
 }
 .stButton>button:hover{
-  background:#1D4ED8 !important;transform:translateY(-1px) !important;
-  box-shadow:0 6px 16px rgba(37,99,235,0.30) !important;
+  background:#0C6480 !important;transform:translateY(-1px) !important;
+  box-shadow:0 6px 18px rgba(14,116,144,0.35) !important;
 }
-.stButton>button:disabled{background:#E2E8F0 !important;color:#94A3B8 !important;box-shadow:none !important;}
+.stButton>button:disabled{background:#D1D5DB !important;color:#9CA3AF !important;box-shadow:none !important;}
 
-/* Inputs — white with light borders */
+/* ── Inputs ── */
 .stTextInput>div>div>input,
 .stTextArea>div>div>textarea,
 .stNumberInput>div>div>input{
-  background:#FFFFFF !important;color:#0F172A !important;
-  border:1.5px solid #CBD5E1 !important;border-radius:10px !important;
-  padding:10px 14px !important;font-family:'Inter',sans-serif !important;
+  background:#FFFFFF !important;color:#1A202C !important;
+  border:1.5px solid #D1D5DB !important;border-radius:10px !important;
+  padding:10px 14px !important;font-family:'Plus Jakarta Sans',sans-serif !important;
   font-size:0.87rem !important;transition:border-color 0.2s,box-shadow 0.2s !important;
 }
 .stTextInput>div>div>input:focus,
 .stTextArea>div>div>textarea:focus{
-  border-color:#2563EB !important;
-  box-shadow:0 0 0 3px rgba(37,99,235,0.10) !important;outline:none !important;
+  border-color:#0E7490 !important;box-shadow:0 0 0 3px rgba(14,116,144,0.12) !important;
+  outline:none !important;
 }
 .stTextInput label,.stTextArea label,.stNumberInput label,
 .stSelectbox label,.stMultiSelect label,.stSlider label,
-.stRadio label,.stCheckbox label{color:#1E293B !important;font-weight:500 !important;font-size:0.84rem !important;}
-.stSelectbox>div>div,.stMultiSelect>div>div{
-  background:#FFFFFF !important;border:1.5px solid #CBD5E1 !important;
-  border-radius:10px !important;color:#0F172A !important;
+.stRadio label,.stCheckbox label{
+  color:#374151 !important;font-weight:500 !important;font-size:0.84rem !important;
 }
-.stRadio>div>div>label,.stCheckbox>label{color:#1E293B !important;font-size:0.86rem !important;}
-.stMultiSelect [data-baseweb="tag"]{background:#DBEAFE !important;color:#1E40AF !important;}
+.stSelectbox>div>div,.stMultiSelect>div>div{
+  background:#FFFFFF !important;border:1.5px solid #D1D5DB !important;
+  border-radius:10px !important;color:#1A202C !important;
+}
+.stMultiSelect [data-baseweb="tag"]{background:#DCFCE7 !important;color:#065F46 !important;}
 
-/* Tabs */
+/* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"]{
-  background:#F1F5F9 !important;border-radius:12px !important;
-  padding:4px !important;border:1px solid #E2E8F0 !important;gap:3px !important;
+  background:#EEF2F7 !important;border-radius:12px !important;
+  padding:4px !important;border:1px solid #E0E7EF !important;gap:3px !important;
 }
 .stTabs [data-baseweb="tab"]{
   background:transparent !important;border-radius:9px !important;
-  color:#64748B !important;font-weight:500 !important;
+  color:#6B7280 !important;font-weight:500 !important;
   padding:8px 18px !important;font-size:0.84rem !important;border:none !important;
 }
 .stTabs [aria-selected="true"]{
-  background:#FFFFFF !important;color:#0F172A !important;
+  background:#FFFFFF !important;color:#1A202C !important;
   font-weight:700 !important;box-shadow:0 1px 4px rgba(0,0,0,0.08) !important;
 }
 
-/* Dataframes */
-.stDataFrame{border-radius:14px !important;overflow:hidden !important;box-shadow:0 1px 8px rgba(15,23,42,0.06) !important;}
+/* ── Dataframes ── */
+.stDataFrame{border-radius:14px !important;overflow:hidden !important;
+  box-shadow:0 1px 6px rgba(0,0,0,0.05) !important;}
 .stDataFrame thead tr th{
-  background:#F8FAFC !important;color:#0F172A !important;
-  font-weight:700 !important;font-size:0.75rem !important;
+  background:#F8FAFC !important;color:#1A202C !important;
+  font-weight:700 !important;font-size:0.74rem !important;
   text-transform:uppercase !important;letter-spacing:0.8px !important;
-  padding:10px 14px !important;border-bottom:1px solid #E2E8F0 !important;
+  padding:10px 14px !important;border-bottom:1px solid #E0E7EF !important;
 }
 .stDataFrame tbody tr td{
-  background:#FFFFFF !important;color:#1E293B !important;
+  background:#FFFFFF !important;color:#374151 !important;
   font-size:0.84rem !important;padding:9px 14px !important;
-  border-bottom:1px solid #F1F5F9 !important;
+  border-bottom:1px solid #F3F4F6 !important;
 }
 .stDataFrame tbody tr:hover td{background:#F8FAFC !important;}
 
-/* Expander */
+/* ── Expander ── */
 .streamlit-expanderHeader{
-  background:#FFFFFF !important;border:1px solid #E2E8F0 !important;
+  background:#FFFFFF !important;border:1px solid #E0E7EF !important;
   border-radius:12px !important;padding:12px 18px !important;
-  color:#0F172A !important;font-weight:600 !important;font-size:0.87rem !important;
+  color:#1A202C !important;font-weight:600 !important;font-size:0.87rem !important;
 }
 .streamlit-expanderContent{
-  background:#F8FAFC !important;border:1px solid #E2E8F0 !important;
+  background:#F8FAFC !important;border:1px solid #E0E7EF !important;
   border-top:none !important;border-radius:0 0 12px 12px !important;padding:16px !important;
 }
 
-/* Alerts */
-.stSuccess>div{background:#F0FDF4 !important;border:1px solid #BBF7D0 !important;border-radius:10px !important;color:#166534 !important;}
+/* ── Alerts ── */
+.stSuccess>div{background:#F0FDF4 !important;border:1px solid #A7F3D0 !important;border-radius:10px !important;color:#065F46 !important;}
 .stWarning>div{background:#FFFBEB !important;border:1px solid #FDE68A !important;border-radius:10px !important;color:#92400E !important;}
-.stError>div  {background:#FFF1F2 !important;border:1px solid #FECDD3 !important;border-radius:10px !important;color:#9F1239 !important;}
-.stInfo>div   {background:#ECFEFF !important;border:1px solid #A5F3FC !important;border-radius:10px !important;color:#164E63 !important;}
+.stError>div{background:#FFF1F2 !important;border:1px solid #FECDD3 !important;border-radius:10px !important;color:#9F1239 !important;}
+.stInfo>div{background:#ECFEFF !important;border:1px solid #A5F3FC !important;border-radius:10px !important;color:#164E63 !important;}
 
-/* Progress */
-.stProgress>div>div{background:#2563EB !important;border-radius:4px !important;}
-.stProgress>div{background:#E2E8F0 !important;border-radius:4px !important;}
+/* ── Progress ── */
+.stProgress>div>div{background:#0E7490 !important;border-radius:4px !important;}
+.stProgress>div{background:#E5E7EB !important;border-radius:4px !important;}
 
-/* Divider */
-hr{border-color:#E2E8F0 !important;margin:20px 0 !important;}
+/* ── Divider ── */
+hr{border-color:#E0E7EF !important;margin:20px 0 !important;}
 
-/* Scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:#F1F5F9;}
+::-webkit-scrollbar-track{background:#F4F6F9;}
 ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
 
-/* Hide Streamlit chrome */
+/* ── Hide Streamlit chrome ── */
 #MainMenu,footer,header{visibility:hidden !important;height:0 !important;}
 .viewerBadge_container__1QSob{display:none !important;}
 [data-testid="stToolbar"]{display:none !important;}
+
+/* ── Page hero sections ── */
+.page-hero{
+  background:linear-gradient(135deg,#0D1B2A 0%,#0E3A4A 100%);
+  border-radius:18px;padding:32px 36px;margin-bottom:28px;
+  box-shadow:0 8px 32px rgba(13,27,42,0.15);position:relative;overflow:hidden;
+}
+.page-hero::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(16,185,129,0.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.page-hero::after{
+  content:'';position:absolute;bottom:-30px;left:20%;
+  width:150px;height:150px;
+  background:radial-gradient(circle,rgba(14,116,144,0.10) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* ── Section cards ── */
+.section-card{
+  background:#FFFFFF;border:1px solid #E0E7EF;
+  border-radius:16px;padding:24px;
+  box-shadow:0 1px 6px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.03);
+  margin-bottom:20px;
+}
+
+/* ── Status badges ── */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 11px;border-radius:20px;
+  font-size:0.71rem;font-weight:700;letter-spacing:0.3px;white-space:nowrap;
+}
+
+/* ── Detection result card ── */
+.result-card{
+  border-radius:16px;padding:24px 28px;
+  box-shadow:0 6px 24px rgba(0,0,0,0.08);
+  transition:transform 0.2s;
+}
+.result-card:hover{transform:translateY(-2px);}
+
+/* ── Animated loading ── */
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.loading-pulse{animation:pulse 1.5s ease-in-out infinite;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn 0.4s ease-out both;}
+
+/* ── Feature cards on landing ── */
+.feature-card{
+  background:#FFFFFF;border:1px solid #E0E7EF;border-radius:16px;
+  padding:24px;transition:transform 0.22s,box-shadow 0.22s,border-color 0.22s;
+  cursor:default;
+}
+.feature-card:hover{
+  transform:translateY(-4px);border-color:#0E7490;
+  box-shadow:0 12px 36px rgba(14,116,144,0.14);
+}
+
+/* ── Nav items ── */
+.nav-item-active{
+  background:rgba(14,116,144,0.15) !important;
+  border-left:3px solid #0E7490 !important;
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -452,55 +539,59 @@ def card_wrap(html: str, border_color: str = "", extra_style: str = "") -> str:
 
 
 def section_hdr(icon: str, title: str, sub: str = "") -> None:
-    sub_html = f"<div style='color:{MUTED};font-size:0.83rem;margin-top:4px;font-weight:400'>{sub}</div>" if sub else ""
+    sub_html = f"<div style='color:rgba(248,250,252,0.7);font-size:0.84rem;margin-top:5px;font-weight:400;line-height:1.5'>{sub}</div>" if sub else ""
     st.markdown(f"""
-    <div style='margin:24px 0 20px;display:flex;align-items:center;gap:14px;
-                padding-bottom:16px;border-bottom:1px solid {BORDER}'>
-      <div style='background:linear-gradient(135deg,{PRIMARY}25,{INFO}15);
-                  border-radius:12px;width:42px;height:42px;display:flex;
-                  align-items:center;justify-content:center;font-size:1.25rem;
-                  flex-shrink:0;border:1px solid {PRIMARY}30'>
-        {icon}</div>
-      <div>
-        <div style='font-size:1.15rem;font-weight:700;color:{TEXT};letter-spacing:-0.2px'>{title}</div>
-        {sub_html}
+    <div class='page-hero fade-in'>
+      <div style='display:flex;align-items:center;gap:16px'>
+        <div style='background:rgba(14,116,144,0.3);border:1px solid rgba(14,116,144,0.5);
+                    border-radius:14px;width:50px;height:50px;display:flex;
+                    align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0'>
+          {icon}</div>
+        <div>
+          <div style='font-size:1.3rem;font-weight:800;color:#F8FAFC;letter-spacing:-0.3px'>{title}</div>
+          {sub_html}
+        </div>
       </div>
     </div>""", unsafe_allow_html=True)
 
-
-def kpi_card(icon: str, label: str, value: str, color: str = TEXT,
+def kpi_card(icon: str, label: str, value: str, color: str = "",
              sub: str = "") -> str:
-    sub_html = f"<div style='color:{MUTED};font-size:0.72rem;margin-top:6px;line-height:1.4'>{sub}</div>" if sub else ""
+    color = color or "#0E7490"
+    sub_html = f"<div style='color:#6B7280;font-size:0.71rem;margin-top:5px;line-height:1.4'>{sub}</div>" if sub else ""
     return f"""
-    <div style='background:{CARD};border-radius:16px;border:1px solid {BORDER};
-         padding:22px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.45);
-         transition:transform 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;
+    <div style='background:#FFFFFF;border-radius:16px;border:1px solid #E0E7EF;
+         padding:22px 20px;box-shadow:0 1px 6px rgba(0,0,0,0.05);
+         transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;
          height:100%;cursor:default'
-         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(37,99,235,0.18)';this.style.borderColor='{PRIMARY}70'"
-         onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(0,0,0,0.45)';this.style.borderColor='{BORDER}'">
+         onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(14,116,144,0.14)';this.style.borderColor='{color}'"
+         onmouseout="this.style.transform='';this.style.boxShadow='0 1px 6px rgba(0,0,0,0.05)';this.style.borderColor='#E0E7EF'">
       <div style='display:flex;align-items:center;gap:10px;margin-bottom:12px'>
-        <div style='font-size:1.1rem;background:{color}18;border-radius:10px;
-                    width:36px;height:36px;display:flex;align-items:center;
-                    justify-content:center;flex-shrink:0;border:1px solid {color}20'>
+        <div style='font-size:1.05rem;background:{color}18;border-radius:10px;
+                    width:38px;height:38px;display:flex;align-items:center;
+                    justify-content:center;flex-shrink:0;border:1px solid {color}22'>
           {icon}</div>
-        <span style='color:{MUTED};font-size:0.68rem;font-weight:700;
-                     text-transform:uppercase;letter-spacing:1.2px;line-height:1.3'>{label}</span>
+        <span style='color:#6B7280;font-size:0.68rem;font-weight:700;
+                     text-transform:uppercase;letter-spacing:1.1px;line-height:1.3'>{label}</span>
       </div>
-      <div style='color:{color};font-size:1.8rem;font-weight:800;line-height:1;
+      <div style='color:{color};font-size:1.75rem;font-weight:800;line-height:1;
                   letter-spacing:-0.5px'>{value}</div>
       {sub_html}
     </div>"""
 
-
 def loading_card() -> None:
     ph = st.empty()
     ph.markdown(f"""
-    <div style='background:{CARD};border:1px solid {PRIMARY}35;border-radius:14px;
-         padding:36px;text-align:center;margin:12px 0'>
-      <div style='font-size:2rem;margin-bottom:10px'>⚡</div>
-      <div style='color:{PRIMARY};font-size:1rem;font-weight:700;margin-bottom:5px'>
+    <div style='background:#FFFFFF;border:1px solid #E0E7EF;border-radius:16px;
+         padding:40px;text-align:center;margin:12px 0;
+         box-shadow:0 4px 20px rgba(14,116,144,0.08)'>
+      <div style='width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#0E7490,#10B981);
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:1.4rem;margin:0 auto 14px;
+                  box-shadow:0 4px 14px rgba(14,116,144,0.3)' class='loading-pulse'>⚡</div>
+      <div style='color:#0E7490;font-size:1rem;font-weight:700;margin-bottom:6px;
+                  font-family:"Plus Jakarta Sans",sans-serif'>
         AI Engine Processing...</div>
-      <div style='color:{MUTED};font-size:0.82rem'>
+      <div style='color:#6B7280;font-size:0.82rem'>
         Running multi-signal analysis · Please wait</div>
     </div>""", unsafe_allow_html=True)
     return ph
@@ -631,10 +722,10 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
     """Render scan timeline with full metadata."""
     if not records:
         st.markdown(f"""
-        <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+        <div style='background:{CARD};border:2px dashed #D1D5DB;border-radius:14px;
              padding:44px;text-align:center'>
           <div style='font-size:2.2rem;margin-bottom:12px'>📡</div>
-          <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+          <div style='color:#1A202C;font-size:1rem;font-weight:700;margin-bottom:8px'>
             No Scans Recorded Yet</div>
           <div style='color:{MUTED};font-size:0.85rem;margin-bottom:22px'>
             Run a threat analysis to begin monitoring. Every scan is automatically
@@ -648,7 +739,8 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
     # Header row
     st.markdown(f"""
     <div style='display:grid;grid-template-columns:90px 80px 1fr 90px 90px 80px 80px 70px;
-         gap:8px;padding:8px 14px;background:{SIDEBAR};border-radius:8px;margin-bottom:4px'>
+         gap:8px;padding:9px 14px;background:#EEF2F7;border-radius:10px;margin-bottom:6px;
+         border:1px solid #E0E7EF;'>
       {"".join(f"<div style='color:{MUTED};font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px'>{h}</div>"
         for h in ["Date","Time (IST)","Label","Type","Risk","Score","Process","Status"])}
     </div>""", unsafe_allow_html=True)
@@ -662,70 +754,39 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
         sim_tag = (f"<span style='background:{PURPLE}20;color:{PURPLE};padding:1px 5px;"
                    f"border-radius:5px;font-size:0.6rem;font-weight:700'>SIM</span> "
                    ) if rec.get("is_simulated") else ""
-        st.markdown(f"""
-        <div style='display:grid;grid-template-columns:90px 80px 1fr 90px 90px 80px 80px 70px;
-             gap:8px;padding:10px 14px;background:{CARD};border-radius:9px;
-             margin-bottom:4px;border:1px solid {BORDER};border-left:3px solid {color};
-             align-items:center'>
-          <div style='color:{MUTED};font-size:0.75rem;font-family:"JetBrains Mono",monospace'>
-            {rec.get("scan_date","")}</div>
-          <div style='color:{MUTED};font-size:0.75rem;font-family:"JetBrains Mono",monospace'>
-            {rec.get("scan_time","")}</div>
-          <div style='color:{TEXT};font-size:0.83rem;font-weight:500;
-                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>
-            {sim_tag}{rec.get("label","")}</div>
-          <div style='color:{INFO};font-size:0.73rem;font-weight:600;
-                      text-transform:uppercase'>{rec.get("scan_type","")}</div>
-          <div>{risk_pill(rec["risk_level"])}</div>
-          <div style='color:{color};font-weight:700;font-size:0.85rem;
-                      font-family:"JetBrains Mono",monospace'>
-            {rec.get("threat_score",0)}/100</div>
-          <div style='color:{MUTED};font-size:0.73rem;font-family:"JetBrains Mono",monospace'
-               title='High values may indicate API cold-start (normal on Render free-tier)'>
-            {rec.get("processing_ms",0):.0f}ms{"⚠" if rec.get("processing_ms",0) > 5000 else ""}</div>
-          <div style='background:{s_color}18;color:{s_color};padding:3px 8px;
-                      border-radius:8px;font-size:0.68rem;font-weight:700;
-                      border:1px solid {s_color}35;text-align:center'>
-            {rec.get("status","SAFE")}</div>
-        </div>""", unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════════════════════════════════
-# PROFESSIONAL HEADER
-# ══════════════════════════════════════════════════════════════════
-api_ok = api_health()
+        api_ok = api_health()
 S      = stats()
 
 st.markdown(f"""
-<div style='background:#FFFFFF;border-bottom:1px solid #E2E8F0;
-     padding:13px 32px 12px;margin:0 -2rem 0;position:sticky;top:0;z-index:100;'>
+<div style='background:#0D1B2A;border-bottom:1px solid rgba(255,255,255,0.08);
+     padding:14px 32px;margin:0 -2.5rem 0;position:sticky;top:0;z-index:100;
+     box-shadow:0 2px 16px rgba(0,0,0,0.25);'>
   <div style='display:flex;justify-content:space-between;align-items:center'>
-    <div style='display:flex;align-items:center;gap:12px'>
-      <div style='background:linear-gradient(135deg,#2563EB,#0891B2);border-radius:10px;
-                  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-                  font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(37,99,235,0.25)'>🛡️</div>
+    <div style='display:flex;align-items:center;gap:14px'>
+      <div style='background:linear-gradient(135deg,#0E7490,#10B981);border-radius:11px;
+                  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+                  font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(14,116,144,0.4)'>🛡️</div>
       <div>
-        <div style='font-size:0.96rem;font-weight:800;color:#0F172A;letter-spacing:-0.2px;
-                    line-height:1.2'>CyberShield AI</div>
-        <div style='font-size:0.66rem;color:#64748B;font-weight:400;margin-top:1px'>
-          Adaptive Explainable Multi-Source Cyber Threat Detection &nbsp;·&nbsp; B.Tech Capstone 2026–2027</div>
+        <div style='font-size:0.96rem;font-weight:800;color:#F8FAFC;letter-spacing:-0.2px'>CyberShield AI</div>
+        <div style='font-size:0.63rem;color:rgba(248,250,252,0.55);font-weight:400;margin-top:1px'>
+          Multi-Source Threat Detection · B.Tech Capstone 2026–2027</div>
       </div>
     </div>
-    <div style='display:flex;align-items:center;gap:16px'>
-      <div style='text-align:right'>
+    <div style='display:flex;align-items:center;gap:14px'>
+      <div>
         <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:2px'>
           <div style='width:7px;height:7px;border-radius:50%;
-                      background:{"#16A34A" if api_ok else "#D97706"};
-                      box-shadow:0 0 6px {"#16A34A80" if api_ok else "#D9770680"}'></div>
-          <span style='background:{"#F0FDF4" if api_ok else "#FFFBEB"};
-                       color:{"#166534" if api_ok else "#92400E"};
-                       border:1px solid {"#BBF7D0" if api_ok else "#FDE68A"};
-                       border-radius:20px;padding:2px 10px;
-                       font-size:0.72rem;font-weight:600'>
-            {"API Online" if api_ok else "API Waking Up"}</span>
+                      background:{"#10B981" if api_ok else "#F59E0B"};
+                      box-shadow:0 0 7px {"#10B98180" if api_ok else "#F59E0B80"}'''
+                      ''></div>
+          <span style='background:{"rgba(16,185,129,0.15)" if api_ok else "rgba(245,158,11,0.15)"};
+                       color:{"#10B981" if api_ok else "#F59E0B"};
+                       border:1px solid {"rgba(16,185,129,0.3)" if api_ok else "rgba(245,158,11,0.3)"};
+                       border-radius:20px;padding:2px 10px;font-size:0.71rem;font-weight:600'>
+            {"API Online" if api_ok else "API Waking"}</span>
         </div>
-        <div style='color:#94A3B8;font-size:0.63rem;
-                    font-family:"JetBrains Mono",monospace;text-align:right'>
+        <div style='color:rgba(248,250,252,0.45);font-size:0.62rem;text-align:right;
+                    font-family:"JetBrains Mono",monospace'>
           {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d %b %Y · %H:%M")} IST</div>
       </div>
     </div>
@@ -737,37 +798,20 @@ st.markdown(f"""
 # SIDEBAR NAVIGATION
 # ══════════════════════════════════════════════════════════════════
 with st.sidebar:
-    # Brand
+    # ── Brand ──────────────────────────────────────────────────────
     st.markdown("""
-    <div style='padding:20px 18px 16px;border-bottom:1px solid #E2E8F0'>
-      <div style='display:flex;align-items:center;gap:10px'>
-        <div style='background:linear-gradient(135deg,#2563EB,#0891B2);border-radius:8px;
-                    width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-                    font-size:1rem;flex-shrink:0;box-shadow:0 2px 8px rgba(37,99,235,0.25)'>🛡️</div>
+    <div style='padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08)'>
+      <div style='display:flex;align-items:center;gap:11px'>
+        <div style='background:linear-gradient(135deg,#0E7490,#10B981);border-radius:10px;
+                    width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+                    font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 8px rgba(14,116,144,0.4)'>🛡️</div>
         <div>
-          <div style='color:#0F172A;font-size:0.9rem;font-weight:800;line-height:1.2'>CyberShield AI</div>
-          <div style='color:#94A3B8;font-size:0.59rem;font-weight:500;letter-spacing:0.5px'>SOC Platform · v6.0</div>
+          <div style='color:#F8FAFC;font-size:0.9rem;font-weight:800;line-height:1.2'>CyberShield AI</div>
+          <div style='color:rgba(248,250,252,0.45);font-size:0.59rem;font-weight:400;margin-top:1px'>
+            Threat Detection Platform</div>
         </div>
       </div>
     </div>""", unsafe_allow_html=True)
-
-    # Per-page color mapping for active nav items
-    _PAGE_COLORS = {
-        "Dashboard":       ("#2563EB","#EFF6FF"),
-        "Phishing":        ("#E11D48","#FFF1F2"),
-        "URL Analyser":    ("#0D9488","#F0FDFA"),
-        "Login Monitor":   ("#7C3AED","#F5F3FF"),
-        "Network":         ("#059669","#ECFDF5"),
-        "Threat Fusion":   ("#D97706","#FFFBEB"),
-        "Timeline":        ("#4F46E5","#EEF2FF"),
-        "Reports":         ("#2563EB","#EFF6FF"),
-        "Analytics":       ("#7C3AED","#F5F3FF"),
-        "Simulation":      ("#D97706","#FFFBEB"),
-        "Model Performance":("#0D9488","#F0FDFA"),
-        "Dataset Info":    ("#059669","#ECFDF5"),
-        "System Workflow": ("#2563EB","#EFF6FF"),
-        "About":           ("#64748B","#F8FAFC"),
-    }
 
     NAV = {
         "Overview":    [("📊","Dashboard")],
@@ -809,20 +853,20 @@ with st.sidebar:
       <div style='color:#64748B;font-size:0.62rem;text-transform:uppercase;
                   letter-spacing:1px;font-weight:700;margin-bottom:10px'>Session Metrics</div>
       <div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>
-        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
-          <div style='color:#0F172A;font-size:1.25rem;font-weight:800'>{S["total"]}</div>
-          <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>SCANS</div>
+        <div style='text-align:center;padding:8px;background:rgba(255,255,255,0.08);border-radius:8px;border:1px solid rgba(255,255,255,0.1)'>
+          <div style='color:#F8FAFC;font-size:1.25rem;font-weight:800'>{S["total"]}</div>
+          <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase;color:rgba(248,250,252,0.45)'>SCANS</div>
         </div>
-        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+        <div style='text-align:center;padding:8px;background:rgba(255,255,255,0.08);border-radius:8px;border:1px solid rgba(255,255,255,0.1)'>
           <div style='color:#DC2626;font-size:1.25rem;font-weight:800'>{S["threats"]}</div>
           <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>THREATS</div>
         </div>
-        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+        <div style='text-align:center;padding:8px;background:rgba(255,255,255,0.08);border-radius:8px;border:1px solid rgba(255,255,255,0.1)'>
           <div style='color:#D97706;font-size:1.25rem;font-weight:800'>
             {f"{S['avg_conf']:.0%}" if S["avg_conf"] is not None else "N/A"}</div>
           <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>AVG CONF</div>
         </div>
-        <div style='text-align:center;padding:8px;background:#FFFFFF;border-radius:8px;border:1px solid #E2E8F0'>
+        <div style='text-align:center;padding:8px;background:rgba(255,255,255,0.08);border-radius:8px;border:1px solid rgba(255,255,255,0.1)'>
           <div style='color:#0891B2;font-size:1.25rem;font-weight:800'>
             {f"{S['avg_ms']:.0f}ms" if S["total"] > 0 else "N/A"}</div>
           <div style='color:#94A3B8;font-size:0.59rem;font-weight:600;text-transform:uppercase'>SPEED</div>
@@ -835,12 +879,12 @@ with st.sidebar:
     status_color = "#16A34A" if api_ok else "#D97706"
     status_text  = "Online" if api_ok else "Sleeping"
     st.markdown(f"""
-    <div style='margin:0 12px 6px;padding:10px 14px;background:#F8FAFC;
-         border-radius:10px;border:1px solid #E2E8F0'>
+    <div style='margin:0 12px 6px;padding:10px 14px;background:rgba(255,255,255,0.06);
+         border-radius:10px;border:1px solid rgba(255,255,255,0.1)'>
       <div style='display:flex;align-items:center;gap:8px;margin-bottom:3px'>
         <div style='width:7px;height:7px;border-radius:50%;
                     background:{status_color};box-shadow:0 0 5px {status_color}80'></div>
-        <span style='color:#0F172A;font-size:0.76rem;font-weight:600'>API {status_text}</span>
+        <span style='color:#F8FAFC;font-size:0.76rem;font-weight:600'>API {status_text}</span>
       </div>
       <div style='color:#94A3B8;font-size:0.65rem'>
         {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%H:%M:%S")} IST</div>
@@ -1474,13 +1518,13 @@ if page == "Dashboard":
             IST</span></div>""", unsafe_allow_html=True)
         if df.empty:
             st.markdown(f"""
-            <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+            <div style='background:{CARD};border:2px dashed #D1D5DB;border-radius:14px;
                  padding:44px;text-align:center;height:266px;
                  display:flex;flex-direction:column;justify-content:center;align-items:center'>
               <div style='font-size:2.2rem;margin-bottom:12px'>📈</div>
-              <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+              <div style='color:#1A202C;font-size:1rem;font-weight:700;margin-bottom:8px'>
                 No scan data available</div>
-              <div style='color:#CBD5E1;font-size:0.87rem'>
+              <div style='color:#6B7280;font-size:0.87rem'>
                 Run your first analysis to populate analytics.</div>
             </div>""", unsafe_allow_html=True)
         else:
@@ -1526,17 +1570,17 @@ if page == "Dashboard":
                 ))
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Inter", color="#CBD5E1", size=11), height=230,
+                font=dict(family="Inter", color="#6B7280", size=11), height=230,
                 margin=dict(t=8, b=30, l=40, r=16),
-                xaxis=dict(gridcolor=BORDER, zeroline=False,
-                           tickfont=dict(color="#CBD5E1", size=10),
+                xaxis=dict(gridcolor="#E5E7EB", zeroline=False,
+                           tickfont=dict(color="#6B7280", size=10),
                            tickformat="%H:%M",
-                           title=dict(text="Time (IST)", font=dict(color="#CBD5E1", size=10))),
-                yaxis=dict(gridcolor=BORDER, zeroline=False,
-                           tickfont=dict(color="#CBD5E1", size=10),
-                           title=dict(text="Scan Count", font=dict(color="#CBD5E1", size=10)),
+                           title=dict(text="Time (IST)", font=dict(color="#6B7280", size=10))),
+                yaxis=dict(gridcolor="#E5E7EB", zeroline=False,
+                           tickfont=dict(color="#6B7280", size=10),
+                           title=dict(text="Scan Count", font=dict(color="#6B7280", size=10)),
                            rangemode="tozero"),
-                legend=dict(font=dict(color=TEXT, size=11), bgcolor="rgba(0,0,0,0)",
+                legend=dict(font=dict(color="#1A202C", size=11), bgcolor="rgba(0,0,0,0)",
                             orientation="h", y=-0.28),
                 hovermode="x unified",
             )
@@ -1549,13 +1593,13 @@ if page == "Dashboard":
                     unsafe_allow_html=True)
         if df.empty:
             st.markdown(f"""
-            <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+            <div style='background:{CARD};border:2px dashed #D1D5DB;border-radius:14px;
                  padding:44px;text-align:center;height:266px;
                  display:flex;flex-direction:column;justify-content:center;align-items:center'>
               <div style='font-size:2.2rem;margin-bottom:12px'>🎯</div>
-              <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+              <div style='color:#1A202C;font-size:1rem;font-weight:700;margin-bottom:8px'>
                 No scan data available</div>
-              <div style='color:#CBD5E1;font-size:0.87rem'>
+              <div style='color:#6B7280;font-size:0.87rem'>
                 Run your first analysis to populate analytics.</div>
             </div>""", unsafe_allow_html=True)
         else:
@@ -1603,7 +1647,7 @@ if page == "Dashboard":
         render_timeline(db[:6], max_rows=6)
     else:
         st.markdown(f"""
-        <div style='background:{CARD};border:2px dashed {BORDER};border-radius:14px;
+        <div style='background:{CARD};border:2px dashed #D1D5DB;border-radius:14px;
              padding:36px;text-align:center'>
           <div style='font-size:1.6rem;margin-bottom:10px'>📭</div>
           <div style='color:{TEXT};font-weight:600;margin-bottom:6px'>No alerts yet</div>
@@ -1654,28 +1698,28 @@ if page == "Dashboard":
             # Reference lines for risk thresholds
             fig3.add_hline(y=85, line_dash="dot", line_color=CRIT,
                            annotation_text="CRITICAL", annotation_position="right",
-                           annotation_font=dict(color=CRIT, size=9))
+                           annotation_font=dict(color="#EF4444", size=9))
             fig3.add_hline(y=65, line_dash="dot", line_color=HIGH,
                            annotation_text="HIGH", annotation_position="right",
-                           annotation_font=dict(color=HIGH, size=9))
+                           annotation_font=dict(color="#F97316", size=9))
             fig3.add_hline(y=45, line_dash="dot", line_color=WARN,
                            annotation_text="MEDIUM", annotation_position="right",
-                           annotation_font=dict(color=WARN, size=9))
+                           annotation_font=dict(color="#F59E0B", size=9))
             fig3.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Inter", color="#CBD5E1", size=10),
+                font=dict(family="Inter", color="#6B7280", size=10),
                 height=210, margin=dict(t=8, b=36, l=50, r=60),
                 xaxis=dict(
                     title=dict(text="Scan # (oldest → newest)",
-                               font=dict(color="#CBD5E1", size=10)),
+                               font=dict(color="#6B7280", size=10)),
                     gridcolor="rgba(0,0,0,0)", fixedrange=True,
-                    tickfont=dict(color="#CBD5E1"),
+                    tickfont=dict(color="#6B7280"),
                 ),
                 yaxis=dict(
                     title=dict(text="Risk Score /100",
-                               font=dict(color="#CBD5E1", size=10)),
-                    gridcolor=BORDER, range=[0, 120], fixedrange=True,
-                    tickfont=dict(color="#CBD5E1", size=10),
+                               font=dict(color="#6B7280", size=10)),
+                    gridcolor="#E5E7EB", range=[0, 120], fixedrange=True,
+                    tickfont=dict(color="#6B7280", size=10),
                 ),
                 showlegend=False,
             )
@@ -1683,10 +1727,10 @@ if page == "Dashboard":
                             config={"displayModeBar": False, "staticPlot": True})
         else:
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:12px;border:1px solid {BORDER};
+            <div style='background:#FFFFFF;border-radius:12px;border:1px solid #E0E7EF;
                  padding:20px;text-align:center;height:200px;
                  display:flex;flex-direction:column;justify-content:center'>
-              <div style='color:{MUTED};font-size:0.83rem'>
+              <div style='color:#6B7280;font-size:0.83rem'>
                 Risk score trend appears after 2+ scans</div>
             </div>""", unsafe_allow_html=True)
 
@@ -1706,8 +1750,8 @@ if page == "Dashboard":
             sc = SUCCESS if ok else WARN
             dot = "🟢" if ok else "🟡"
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:10px;padding:8px 12px;
-                        margin-bottom:5px;border:1px solid {BORDER};
+            <div style='background:#FFFFFF;border-radius:10px;padding:9px 13px;
+                        margin-bottom:6px;border:1px solid #E0E7EF;
                         display:flex;justify-content:space-between;align-items:center;
                         transition:border-color 0.15s'>
               <span style='color:{TEXT};font-size:0.8rem;font-weight:500'>{name}</span>
@@ -1726,9 +1770,9 @@ elif page == "Phishing":
     if not _api_status_banner(): st.stop()
     # ── Visual intro card ─────────────────────────────────────────
     st.markdown(f"""
-    <div style='background:{CARD};border:1px solid {BORDER};border-radius:16px;
-         padding:26px 30px 22px;margin-bottom:22px;
-         box-shadow:0 4px 20px rgba(0,0,0,0.4)'>
+    <div style='background:#FFFFFF;border:1px solid #E0E7EF;border-left:4px solid #E11D48;
+         border-radius:16px;padding:26px 30px 22px;margin-bottom:22px;
+         box-shadow:0 2px 12px rgba(0,0,0,0.05)'>
       <div style='display:flex;align-items:flex-start;gap:16px'>
         <div style='background:{CRIT}18;border:1px solid {CRIT}30;border-radius:12px;
                     width:48px;height:48px;display:flex;align-items:center;
@@ -1796,8 +1840,9 @@ elif page == "URL Analyser":
                 "25-feature extraction · Trusted domain whitelist · Shannon entropy analysis")
     # ── Visual intro card ─────────────────────────────────────────
     st.markdown(f"""
-    <div style='background:{CARD};border:1px solid {BORDER};border-radius:16px;
-         padding:20px 24px;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,0.3)'>
+    <div style='background:#FFFFFF;border:1px solid #E0E7EF;border-left:4px solid #0D9488;
+         border-radius:16px;padding:20px 24px;margin-bottom:18px;
+         box-shadow:0 2px 12px rgba(0,0,0,0.05)'>
       <div style='display:flex;align-items:center;gap:14px;margin-bottom:14px'>
         <div style='background:{HIGH}18;border:1px solid {HIGH}30;border-radius:10px;
                     width:42px;height:42px;display:flex;align-items:center;
@@ -1866,7 +1911,7 @@ elif page == "Login Monitor":
                 "Context-aware anomaly scoring · Human-readable inputs")
     st.markdown(f"""
     <div style='background:{CARD};border:1px solid {BORDER};border-radius:14px;
-         padding:16px 20px;margin-bottom:18px;border-left:3px solid {WARN};
+         padding:16px 20px;margin-bottom:18px;border-left:4px solid #7C3AED;
          box-shadow:0 2px 12px rgba(0,0,0,0.3)'>
       <div style='display:flex;align-items:center;gap:10px'>
         <div style='background:{WARN}18;border-radius:8px;width:36px;height:36px;
@@ -1940,7 +1985,7 @@ elif page == "Network":
                 "Protocol-aware · NSL-KDD feature mapping · Real-time detection")
     st.markdown(f"""
     <div style='background:{CARD};border:1px solid {BORDER};border-radius:14px;
-         padding:16px 20px;margin-bottom:18px;border-left:3px solid {INFO};
+         padding:16px 20px;margin-bottom:18px;border-left:4px solid #059669;
          box-shadow:0 2px 12px rgba(0,0,0,0.3)'>
       <div style='display:flex;align-items:center;gap:10px'>
         <div style='background:{INFO}18;border-radius:8px;width:36px;height:36px;
@@ -2014,8 +2059,8 @@ elif page == "Threat Fusion":
     section_hdr("⚡","Adaptive Threat Fusion Engine",
                 "Confidence-weighted · Rule-based escalation · Co-occurrence amplification")
     st.markdown(f"""
-    <div style='background:{CARD};border:1px solid {BORDER};border-radius:16px;
-         padding:20px 24px;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,0.3)'>
+    <div style='background:#FFFFFF;border:1px solid #E0E7EF;border-radius:16px;
+         padding:22px 26px;margin-bottom:22px;box-shadow:0 2px 12px rgba(0,0,0,0.05)'>
       <div style='display:flex;align-items:flex-start;gap:14px'>
         <div style='background:{PRIMARY}20;border:1px solid {PRIMARY}35;border-radius:10px;
                     width:42px;height:42px;display:flex;align-items:center;
@@ -2220,7 +2265,7 @@ elif page == "Model Performance":
             paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Inter",color="#CBD5E1",size=11),height=340,
             margin=dict(t=36,b=20,l=10,r=10),
-            xaxis=dict(range=[0.88,1.0],gridcolor=BORDER,tickformat=".3f",
+            xaxis=dict(range=[0.88,1.0],gridcolor="#E5E7EB",tickformat=".3f",
                        tickfont=dict(color="#CBD5E1",size=11)),
             yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT,size=11)),
             legend=dict(font=dict(color=TEXT,size=11),bgcolor="rgba(0,0,0,0)"),
@@ -2241,7 +2286,7 @@ elif page == "Model Performance":
             paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Inter",color="#CBD5E1",size=11),height=340,
             margin=dict(t=36,b=20,l=10,r=10),
-            xaxis=dict(range=[0.90,1.0],gridcolor=BORDER,tickformat=".3f",
+            xaxis=dict(range=[0.90,1.0],gridcolor="#E5E7EB",tickformat=".3f",
                        tickfont=dict(color="#CBD5E1",size=11)),
             yaxis=dict(gridcolor="rgba(0,0,0,0)",tickfont=dict(color=TEXT,size=11)),
             legend=dict(font=dict(color=TEXT,size=11),bgcolor="rgba(0,0,0,0)"),
@@ -2287,12 +2332,12 @@ elif page == "Model Performance":
     fig_bar.update_layout(
         barmode="group",
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter", color=MUTED, size=11),
+        font=dict(family="Plus Jakarta Sans", color="#6B7280", size=11),
         height=380, margin=dict(t=30, b=60, l=50, r=20),
-        xaxis=dict(gridcolor=BORDER, tickfont=dict(color=TEXT, size=11)),
-        yaxis=dict(gridcolor=BORDER, range=[90,101], tickfont=dict(color=MUTED),
+        xaxis=dict(gridcolor="#E5E7EB", tickfont=dict(color="#1A202C", size=11)),
+        yaxis=dict(gridcolor="#E5E7EB", range=[90,101], tickfont=dict(color="#6B7280"),
                    ticksuffix="%"),
-        legend=dict(font=dict(color=TEXT, size=11), bgcolor="rgba(0,0,0,0)",
+        legend=dict(font=dict(color="#1A202C", size=11), bgcolor="rgba(0,0,0,0)",
                     orientation="h", y=-0.18),
     )
     st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
@@ -2303,7 +2348,7 @@ elif page == "Model Performance":
     st.markdown(f"""
     <div style='background:{INFO}10;border:1px solid {INFO}30;border-radius:10px;
          padding:12px 16px;margin-bottom:16px;border-left:3px solid {INFO}'>
-      <span style='color:{MUTED};font-size:0.83rem'>
+      <span style='color:#6B7280;font-size:0.83rem'>
         <strong style='color:{INFO}'>ℹ AUC Explanation:</strong>
         Higher ROC-AUC indicates better discrimination between malicious and benign samples.
         1.0 = perfect classifier; 0.5 = random guessing.</span>
@@ -2321,10 +2366,10 @@ elif page == "Model Performance":
     ))
     fig_auc2.update_layout(
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter", color=MUTED, size=11),
+        font=dict(family="Plus Jakarta Sans", color="#6B7280", size=11),
         height=260, margin=dict(t=10, b=30, l=10, r=60),
-        xaxis=dict(range=[0.90, 1.01], gridcolor=BORDER, tickfont=dict(color=MUTED)),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(color=TEXT, size=11)),
+        xaxis=dict(range=[0.90, 1.01], gridcolor="#E5E7EB", tickfont=dict(color="#6B7280")),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(color="#1A202C", size=11)),
         showlegend=False,
     )
     fig_auc2.add_vline(x=0.95, line_dash="dash", line_color=WARN,
@@ -2357,12 +2402,12 @@ elif page == "Model Performance":
                 textfont=dict(size=12, color=TEXT, family="JetBrains Mono"),
             ))
             fig_cm.update_layout(
-                title=dict(text=cm_title, font=dict(color=TEXT, size=12), x=0.5),
+                title=dict(text=cm_title, font=dict(color="#1A202C", size=12), x=0.5),
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Inter", color=TEXT, size=11),
                 height=260, margin=dict(t=40, b=40, l=100, r=20),
-                xaxis=dict(tickfont=dict(color=TEXT)),
-                yaxis=dict(tickfont=dict(color=TEXT)),
+                xaxis=dict(tickfont=dict(color="#1A202C")),
+                yaxis=dict(tickfont=dict(color="#1A202C")),
             )
             st.plotly_chart(fig_cm, use_container_width=True,
                             config={"displayModeBar":False})
@@ -2374,8 +2419,9 @@ elif page == "Model Performance":
     ps1, ps2, ps3 = st.columns(3)
     with ps1:
         st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:4px solid {SUCCESS};text-align:center'>
+        <div style='background:#FFFFFF;border-radius:14px;padding:22px;
+             border:1px solid #E0E7EF;border-top:4px solid #10B981;text-align:center;
+             box-shadow:0 2px 10px rgba(0,0,0,0.04)'>
           <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
                       letter-spacing:1px;font-weight:700;margin-bottom:8px'>
             Overall Average Accuracy</div>
@@ -2384,8 +2430,9 @@ elif page == "Model Performance":
         </div>""", unsafe_allow_html=True)
     with ps2:
         st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:4px solid {INFO};text-align:center'>
+        <div style='background:#FFFFFF;border-radius:14px;padding:22px;
+             border:1px solid #E0E7EF;border-top:4px solid #0E7490;text-align:center;
+             box-shadow:0 2px 10px rgba(0,0,0,0.04)'>
           <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
                       letter-spacing:1px;font-weight:700;margin-bottom:8px'>
             Best Performing Model</div>
@@ -2396,8 +2443,9 @@ elif page == "Model Performance":
         </div>""", unsafe_allow_html=True)
     with ps3:
         st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:4px solid {WARN};text-align:center'>
+        <div style='background:#FFFFFF;border-radius:14px;padding:22px;
+             border:1px solid #E0E7EF;border-top:4px solid #F59E0B;text-align:center;
+             box-shadow:0 2px 10px rgba(0,0,0,0.04)'>
           <div style='color:{MUTED};font-size:0.72rem;text-transform:uppercase;
                       letter-spacing:1px;font-weight:700;margin-bottom:8px'>
             Lowest False Positive Rate</div>
@@ -2438,9 +2486,10 @@ elif page == "Reports":
     db = st.session_state.scan_db
     with c1:
         st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:3px solid {SUCCESS};margin-bottom:12px'>
-          <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+        <div style='background:#FFFFFF;border-radius:14px;padding:22px;
+             border:1px solid #E0E7EF;border-top:3px solid #10B981;margin-bottom:12px;
+             box-shadow:0 2px 8px rgba(0,0,0,0.04)'>
+          <div style='color:#1A202C;font-size:1rem;font-weight:700;margin-bottom:8px'>
             📄 Session CSV Export</div>
           <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
             Export all {S["total"]} scans from this session only (current browser session).
@@ -2457,9 +2506,10 @@ elif page == "Reports":
             st.button("💾 No scans to export yet",disabled=True,use_container_width=True)
     with c2:
         st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:22px;
-             border:1px solid {BORDER};border-top:3px solid {CRIT};margin-bottom:12px'>
-          <div style='color:{TEXT};font-size:1rem;font-weight:700;margin-bottom:8px'>
+        <div style='background:#FFFFFF;border-radius:14px;padding:22px;
+             border:1px solid #E0E7EF;border-top:3px solid #EF4444;margin-bottom:12px;
+             box-shadow:0 2px 8px rgba(0,0,0,0.04)'>
+          <div style='color:#1A202C;font-size:1rem;font-weight:700;margin-bottom:8px'>
             📕 PDF Threat Report</div>
           <div style='color:{MUTED};font-size:0.82rem;margin-bottom:4px'>
             Formatted PDF covering all database detection events (all sessions).
@@ -2496,7 +2546,7 @@ elif page == "Reports":
 # ══════════════════════════════════════════════════════════════════
 elif page == "Timeline":
     section_hdr("⏱","Live Scan Timeline",
-                "Auto-updated after every scan · Full metadata · IST timestamps (Asia/Kolkata)")
+                "Real-time event log · Full metadata · Asia/Kolkata (IST) timestamps")
     c1,c2,c3 = st.columns([4,1,1])
     with c2:
         if st.button("🔄 Refresh",use_container_width=True):
@@ -2515,15 +2565,15 @@ elif page == "Simulation":
     section_hdr("🎮","Simulation Mode",
                 "Auto-generate realistic events · Real AI inference · SIM badge on all events")
     st.markdown(f"""
-    <div style='background:{PURPLE}15;border:1px solid {PURPLE}35;border-radius:12px;
-         padding:14px 18px;margin-bottom:20px;border-left:3px solid {PURPLE}'>
+    <div style='background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;
+         padding:14px 18px;margin-bottom:20px;border-left:4px solid #7C3AED'>
       <span style='color:{PURPLE};font-weight:700;font-size:0.85rem'>🎮 </span>
       <span style='color:{TEXT};font-size:0.83rem'>
         Generates realistic cybersecurity events using real AI inference on the live backend.
         All events are marked </span>
       <span style='background:{PURPLE}20;color:{PURPLE};padding:1px 7px;border-radius:6px;
                    font-size:0.72rem;font-weight:700;border:1px solid {PURPLE}35'>SIM</span>
-      <span style='color:{MUTED};font-size:0.83rem'>
+      <span style='color:#6B7280;font-size:0.83rem'>
         &nbsp;and automatically appear in Dashboard, Timeline, and Reports.</span>
     </div>""", unsafe_allow_html=True)
 
@@ -2668,8 +2718,8 @@ elif page == "Analytics":
         fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Inter",color=MUTED,size=11),height=280,
             margin=dict(t=10,b=30,l=40,r=16),
-            xaxis=dict(gridcolor=BORDER,tickfont=dict(color=TEXT)),
-            yaxis=dict(gridcolor=BORDER,tickfont=dict(color=MUTED)),
+            xaxis=dict(gridcolor="#E5E7EB",tickfont=dict(color="#1A202C")),
+            yaxis=dict(gridcolor="#E5E7EB",tickfont=dict(color="#6B7280")),
             showlegend=False)
         st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
 
@@ -2685,8 +2735,8 @@ elif page == "Analytics":
         fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Inter",color=MUTED,size=11),height=260,
             margin=dict(t=10,b=30,l=40,r=16),
-            xaxis=dict(gridcolor=BORDER,tickfont=dict(color=TEXT)),
-            yaxis=dict(gridcolor=BORDER,tickfont=dict(color=MUTED)),
+            xaxis=dict(gridcolor="#E5E7EB",tickfont=dict(color="#1A202C")),
+            yaxis=dict(gridcolor="#E5E7EB",tickfont=dict(color="#6B7280")),
             showlegend=False)
         st.plotly_chart(fig2,use_container_width=True,config={"displayModeBar":False})
     else:
@@ -2760,8 +2810,8 @@ elif page == "Dataset Info":
     for col, ds in zip(cols_cycle, DATASETS):
         with col:
             st.markdown(f"""
-            <div style='background:{CARD};border-radius:14px;padding:22px 24px;
-                 border:1px solid {BORDER};border-left:5px solid {ds["color"]};
+            <div style='background:#FFFFFF;border-radius:14px;padding:22px 24px;
+                 border:1px solid #E0E7EF;border-left:5px solid {ds["color"]};
                  margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,0.3)'>
               <div style='display:flex;align-items:center;gap:10px;margin-bottom:14px'>
                 <span style='font-size:1.5rem;background:{ds["color"]}18;
@@ -2775,13 +2825,13 @@ elif page == "Dataset Info":
                 </div>
               </div>
               <div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px'>
-                <div style='background:{SIDEBAR};border-radius:8px;padding:10px 12px'>
+                <div style='background:#F4F6F9;border-radius:8px;padding:10px 12px;border:1px solid #E0E7EF'>
                   <div style='color:{MUTED};font-size:0.65rem;text-transform:uppercase;
                               letter-spacing:0.8px;font-weight:700;margin-bottom:3px'>Samples</div>
                   <div style='color:{ds["color"]};font-size:1.1rem;font-weight:800'>
                     {ds["samples"]}</div>
                 </div>
-                <div style='background:{SIDEBAR};border-radius:8px;padding:10px 12px'>
+                <div style='background:#F4F6F9;border-radius:8px;padding:10px 12px;border:1px solid #E0E7EF'>
                   <div style='color:{MUTED};font-size:0.65rem;text-transform:uppercase;
                               letter-spacing:0.8px;font-weight:700;margin-bottom:3px'>Split</div>
                   <div style='color:{TEXT};font-size:0.8rem;font-weight:600'>
@@ -2852,8 +2902,8 @@ elif page == "System Workflow":
                       opacity:0.6'></div>
         </div>"""
         st.markdown(f"""
-        <div style='background:{CARD};border-radius:14px;padding:18px 22px;
-             border:1px solid {BORDER};border-left:5px solid {color};
+        <div style='background:#FFFFFF;border-radius:14px;padding:18px 22px;
+             border:1px solid #E0E7EF;border-left:5px solid {color};
              box-shadow:0 4px 16px rgba(0,0,0,0.25)'>
           <div style='display:flex;align-items:center;gap:14px'>
             <div style='background:{color}20;border-radius:12px;padding:10px;
@@ -2900,15 +2950,15 @@ elif page == "About":
                 "Project information, academic context, and technical overview")
 
     st.markdown(f"""
-    <div style='background:linear-gradient(135deg,{PRIMARY}18,{INFO}12);
-         border:1px solid {PRIMARY}35;border-radius:16px;
-         padding:28px 32px;margin-bottom:24px;
-         box-shadow:0 6px 24px rgba(37,99,235,0.15)'>
-      <div style='font-size:1.4rem;font-weight:900;color:{TEXT};margin-bottom:6px'>
+    <div style='background:linear-gradient(135deg,#0D1B2A 0%,#0E3A4A 100%);
+         border:none;border-radius:18px;
+         padding:30px 36px;margin-bottom:24px;
+         box-shadow:0 8px 32px rgba(13,27,42,0.18)'>
+      <div style='font-size:1.3rem;font-weight:800;color:#F8FAFC;margin-bottom:8px;line-height:1.3'>
         Adaptive Explainable Multi-Source Cyber Threat Detection Framework using DistilBERT, XGBoost, Isolation Forest and SHAP-LIME</div>
-      <div style='color:{INFO};font-size:0.88rem;font-weight:600;margin-bottom:12px'>
-        Enterprise Security Operations Center · Research-Grade AI Platform</div>
-      <div style='color:{MUTED};font-size:0.85rem;line-height:1.7'>
+      <div style='color:#10B981;font-size:0.86rem;font-weight:600;margin-bottom:12px'>
+        Research-Grade AI Platform · B.Tech Capstone 2026–2027</div>
+      <div style='color:rgba(248,250,252,0.72);font-size:0.84rem;line-height:1.7'>
         An intelligent, production-grade cybersecurity platform that leverages
         Machine Learning, Deep Learning (Transformer-based NLP), and Explainable AI (XAI)
         to detect, classify, and explain multiple categories of cyber threats in real time.
@@ -3034,28 +3084,28 @@ elif page == "About":
 # ══════════════════════════════════════════════════════════════════
 st.markdown("<div style='height:24px'></div>",unsafe_allow_html=True)
 st.markdown("""
-<div style='background:#FFFFFF;border-top:1px solid #E2E8F0;
-     padding:18px 32px;margin:0 -2rem -3rem;'>
+<div style='background:#0D1B2A;border-top:1px solid rgba(255,255,255,0.07);
+     padding:20px 32px;margin:0 -2.5rem -4rem;'>
   <div style='display:flex;justify-content:space-between;align-items:center;
-              flex-wrap:wrap;gap:10px'>
-    <div style='display:flex;align-items:center;gap:10px'>
-      <div style='background:linear-gradient(135deg,#2563EB,#0891B2);border-radius:8px;
-                  width:28px;height:28px;display:flex;align-items:center;
-                  justify-content:center;font-size:0.9rem;flex-shrink:0'>🛡️</div>
+              flex-wrap:wrap;gap:12px;max-width:1200px;margin:0 auto'>
+    <div style='display:flex;align-items:center;gap:11px'>
+      <div style='background:linear-gradient(135deg,#0E7490,#10B981);border-radius:9px;
+                  width:30px;height:30px;display:flex;align-items:center;
+                  justify-content:center;font-size:0.95rem'>🛡️</div>
       <div>
-        <div style='color:#0F172A;font-weight:700;font-size:0.82rem'>CyberShield AI</div>
-        <div style='color:#64748B;font-size:0.63rem;margin-top:1px'>
-          Adaptive Explainable Multi-Source Cyber Threat Detection Framework · B.Tech Capstone 2026–2027</div>
+        <div style='color:#F8FAFC;font-weight:700;font-size:0.82rem'>CyberShield AI</div>
+        <div style='color:rgba(248,250,252,0.4);font-size:0.62rem;margin-top:1px'>
+          Adaptive Explainable Multi-Source Cyber Threat Detection</div>
       </div>
     </div>
-    <div style='color:#94A3B8;font-size:0.67rem;text-align:center'>
+    <div style='color:rgba(248,250,252,0.35);font-size:0.66rem;text-align:center'>
       Python · FastAPI · Streamlit · DistilBERT · XGBoost · Isolation Forest · SHAP · LIME
     </div>
     <div style='text-align:right'>
-      <div style='color:#64748B;font-size:0.63rem'>
-        Designed with requirements engineering, software testing &amp; explainability principles</div>
-      <div style='color:#94A3B8;font-size:0.61rem;margin-top:2px'>
-        © 2026–2027 B.Tech Capstone Project. All rights reserved.</div>
+      <div style='color:rgba(248,250,252,0.4);font-size:0.62rem'>
+        B.Tech Capstone Project · 2026–2027</div>
+      <div style='color:rgba(248,250,252,0.25);font-size:0.6rem;margin-top:2px'>
+        Designed with requirements engineering &amp; explainability principles</div>
     </div>
   </div>
 </div>
