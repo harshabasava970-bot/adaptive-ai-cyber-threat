@@ -757,6 +757,14 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
         api_ok = api_health()
 S      = stats()
 
+# Pre-compute header colour variables (avoids inline ternaries in f-string HTML)
+_hdr_dot_clr  = "#10B981" if api_ok else "#F59E0B"
+_hdr_dot_glow = "#10B98180" if api_ok else "#F59E0B80"
+_hdr_pill_bg  = "rgba(16,185,129,0.15)" if api_ok else "rgba(245,158,11,0.15)"
+_hdr_pill_bdr = "rgba(16,185,129,0.3)" if api_ok else "rgba(245,158,11,0.3)"
+_hdr_pill_txt = "API Online" if api_ok else "API Waking"
+_hdr_time     = (datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d %b %Y · %H:%M")
+
 st.markdown(f"""
 <div style='background:#0D1B2A;border-bottom:1px solid rgba(255,255,255,0.08);
      padding:14px 32px;margin:0 -2.5rem 0;position:sticky;top:0;z-index:100;
@@ -776,17 +784,17 @@ st.markdown(f"""
       <div>
         <div style='display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-bottom:2px'>
           <div style='width:7px;height:7px;border-radius:50%;
-                      background:{"#10B981" if api_ok else "#F59E0B"};
-                      box-shadow:0 0 7px {"#10B98180" if api_ok else "#F59E0B80"}'></div>
-          <span style='background:{"rgba(16,185,129,0.15)" if api_ok else "rgba(245,158,11,0.15)"};
-                       color:{"#10B981" if api_ok else "#F59E0B"};
-                       border:1px solid {"rgba(16,185,129,0.3)" if api_ok else "rgba(245,158,11,0.3)"};
+                      background:{_hdr_dot_clr};
+                      box-shadow:0 0 7px {_hdr_dot_glow}'></div>
+          <span style='background:{_hdr_pill_bg};
+                       color:{_hdr_dot_clr};
+                       border:1px solid {_hdr_pill_bdr};
                        border-radius:20px;padding:2px 10px;font-size:0.71rem;font-weight:600'>
-            {"API Online" if api_ok else "API Waking"}</span>
+            {_hdr_pill_txt}</span>
         </div>
         <div style='color:rgba(248,250,252,0.45);font-size:0.62rem;text-align:right;
                     font-family:"JetBrains Mono",monospace'>
-          {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d %b %Y · %H:%M")} IST</div>
+          {_hdr_time} IST</div>
       </div>
     </div>
   </div>
