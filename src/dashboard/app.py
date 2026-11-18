@@ -754,10 +754,14 @@ def render_timeline(records: list, max_rows: int = 20) -> None:
         sim_tag = (f"<span style='background:{PURPLE}20;color:{PURPLE};padding:1px 5px;"
                    f"border-radius:5px;font-size:0.6rem;font-weight:700'>SIM</span> "
                    ) if rec.get("is_simulated") else ""
-        api_ok = api_health()
+
+# ══════════════════════════════════════════════════════════════════
+# PROFESSIONAL HEADER
+# ══════════════════════════════════════════════════════════════════
+api_ok = api_health()
 S      = stats()
 
-# Pre-compute header colour variables (avoids inline ternaries in f-string HTML)
+# Pre-compute header colour variables
 _hdr_dot_clr  = "#10B981" if api_ok else "#F59E0B"
 _hdr_dot_glow = "#10B98180" if api_ok else "#F59E0B80"
 _hdr_pill_bg  = "rgba(16,185,129,0.15)" if api_ok else "rgba(245,158,11,0.15)"
