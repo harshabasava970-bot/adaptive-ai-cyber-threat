@@ -1,0 +1,134 @@
+.root { max-width: 1100px; }
+
+.hero {
+  position: relative;
+  height: 280px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(42,31,23,0.75), rgba(42,31,23,0.2));
+}
+.heroText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem;
+}
+.heroText h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  color: #FFFDF8;
+  margin-bottom: 0.5rem;
+}
+.heroText p {
+  color: rgba(243,233,220,0.75);
+  font-size: 0.95rem;
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.reportCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.reportCard:hover {
+  box-shadow: 0 8px 32px rgba(42,31,23,0.08);
+  transform: translateY(-2px);
+}
+.reportIcon {
+  width: 56px;
+  height: 56px;
+  background: rgba(184,111,82,0.1);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--terra);
+}
+.reportBody { flex: 1; }
+.reportTitle {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--espresso);
+  margin-bottom: 0.6rem;
+}
+.reportDesc {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+.reportMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--terra);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.infoItem {
+  background: rgba(184,111,82,0.04);
+  border: 1px solid rgba(184,111,82,0.12);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.infoItem h4 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--espresso);
+  margin-bottom: 0.75rem;
+}
+.infoItem ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.infoItem li {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding-left: 1.1rem;
+  position: relative;
+}
+.infoItem li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--terra);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .cardRow, .infoGrid { grid-template-columns: 1fr; }
+}

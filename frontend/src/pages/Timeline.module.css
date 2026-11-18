@@ -1,0 +1,68 @@
+.root { max-width: 1200px; }
+
+.loading, .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  min-height: 300px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.tableCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.tableWrap { overflow-x: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 800px;
+}
+.table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: rgba(232,221,212,0.4);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.75rem 1rem;
+  color: var(--espresso);
+  border-bottom: 1px solid rgba(232,221,212,0.5);
+  white-space: nowrap;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(232,221,212,0.25); }
+
+.typeTag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--terra);
+  background: rgba(184,111,82,0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+.numCell { color: var(--muted); font-size: 0.8rem; }
+.modelCell, .algoCell { font-size: 0.8rem; color: var(--muted); }
+.threatCell { color: #dc2626; font-weight: 600; font-size: 0.82rem; }
+.cleanCell { color: #15803d; font-weight: 600; font-size: 0.82rem; }
+.timeCell { color: var(--muted); font-size: 0.78rem; }
+
+.tableFooter {
+  padding: 0.75rem 1.2rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  background: rgba(232,221,212,0.2);
+}

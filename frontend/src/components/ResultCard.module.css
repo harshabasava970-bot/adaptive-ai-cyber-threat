@@ -1,0 +1,58 @@
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  margin-top: 1.5rem;
+  animation: fadeUp 0.4s ease-out;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+.header {
+  padding: 1.25rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+}
+.verdict { font-weight: 700; font-size: 1.1rem; }
+.badges  { display: flex; gap: 8px; align-items: center; }
+.statusBadge {
+  display: inline-flex; padding: 3px 11px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 700; border: 1px solid;
+}
+
+.stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+.stat {}
+.statLabel { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 3px; }
+.statVal   { font-weight: 700; font-size: 1rem; color: var(--text); font-family: var(--font-display); }
+
+.barWrap { padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 10px; }
+.bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.barFill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.barLabel { font-size: 0.75rem; font-weight: 700; min-width: 36px; text-align: right; }
+
+.reasoning { padding: 1rem 1.5rem; border-top: 1px solid var(--border); }
+.reasoning h4 { margin-bottom: 0.4rem; }
+.reasoning p  { font-size: 0.87rem; }
+
+.signals { padding: 1rem 1.5rem; border-top: 1px solid var(--border); }
+.signals h4 { margin-bottom: 0.75rem; }
+.signal { margin-bottom: 10px; }
+.signalHeader { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.signalName  { font-size: 0.84rem; font-weight: 600; color: var(--text); }
+.signalScore { font-size: 0.78rem; font-weight: 700; font-family: var(--font-mono); }
+.signalBar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.signalBar div { height: 100%; border-radius: 2px; }
+.signalDetail { font-size: 0.76rem; color: var(--muted); margin-top: 3px; }
+
+.recs { padding: 1rem 1.5rem; border-top: 1px solid var(--border); }
+.recs h4 { margin-bottom: 0.5rem; }
+.rec { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 0.84rem; }
+
+@media (max-width: 600px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+}
